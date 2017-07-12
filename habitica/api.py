@@ -40,35 +40,29 @@ class Habitica(object):
                                 aspect=m)
 
     def _build_uri(self, **kwargs):
-        # for strange urls
-        uri_template = kwargs.pop(_uri_template, None)
         # build up URL... Habitica's api is the *teeniest* bit annoying
         # so either i need to find a cleaner way here, or i should
         # get involved in the API itself and... help it.
         aspect_id = kwargs.pop('_id', None)
         direction = kwargs.pop('_direction', None)
         uri = '%s/%s' % (self.auth['url'], API_URI_BASE)
-        if uri_template:
-            uri = uri_template.format(
-                uri, self=self, aspect_id=aspect_id, direction=direction)
-            return uri, kwargs
         if self.aspect:
             if aspect_id is not None:
-                uri = '%s/%s/%s' % (uri,
-                                    self.aspect,
-                                    str(aspect_id))
+                uri_template = "{0}/{self.aspect}/{aspect_id}"
             elif self.aspect == 'tasks':
-                uri = '%s/%s/%s' % (uri,
-                                    self.aspect,
-                                    self.resource)
+                uri_template = "{0}/{self.aspect}/{self.resource}"
             else:
-                uri = '%s/%s/%s' % (uri,
-                                    self.resource,
-                                    self.aspect)
+                uri_template = "{0}/{self.resource}/{self.aspect}"
             if direction is not None:
-                uri = '%s/score/%s' % (uri, direction)
+                uri_template += "/score/{direction}"
         else:
-            uri = '%s/%s' % ( uri,self.resource)
+            uri_template = '{0}/{self.resource}'
+        # for strange urls
+        _uri_template = kwargs.pop('_uri_template', None)
+        if _uri_template:
+            uri_template = _uri_template
+        uri = uri_template.format(
+              uri, self=self, aspect_id=aspect_id, direction=direction)
         return uri, kwargs
 
     def __call__(self, **kwargs):
