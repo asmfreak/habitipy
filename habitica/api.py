@@ -39,17 +39,20 @@ class Habitica(object):
                 return Habitica(auth=self.auth, resource=self.resource,
                                 aspect=m)
 
-    def __call__(self, **kwargs):
-        method = kwargs.pop('_method', 'get')
-
+    def _build_uri(self, **kwargs):
+        # for strange urls
+        uri_template = kwargs.pop(_uri_template, None)
         # build up URL... Habitica's api is the *teeniest* bit annoying
         # so either i need to find a cleaner way here, or i should
         # get involved in the API itself and... help it.
+        aspect_id = kwargs.pop('_id', None)
+        direction = kwargs.pop('_direction', None)
+        uri = '%s/%s' % (self.auth['url'], API_URI_BASE)
+        if uri_template:
+            uri = uri_template.format(
+                uri, self=self, aspect_id=aspect_id, direction=direction)
+            return uri, kwargs
         if self.aspect:
-            aspect_id = kwargs.pop('_id', None)
-            direction = kwargs.pop('_direction', None)
-            uri = '%s/%s' % (self.auth['url'],
-                             API_URI_BASE)
             if aspect_id is not None:
                 uri = '%s/%s/%s' % (uri,
                                     self.aspect,
@@ -65,9 +68,13 @@ class Habitica(object):
             if direction is not None:
                 uri = '%s/score/%s' % (uri, direction)
         else:
-            uri = '%s/%s/%s' % (self.auth['url'],
-                                API_URI_BASE,
-                                self.resource)
+            uri = '%s/%s' % ( uri,self.resource)
+        return uri, kwargs
+
+    def __call__(self, **kwargs):
+        method = kwargs.pop('_method', 'get')
+
+        uri, kwargs = self._build_uri( **kwargs)
 
         # actually make the request of the API
         if method in ['put', 'post', 'delete']:
