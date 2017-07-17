@@ -10,6 +10,7 @@ http://github.com/philadams/habitica
 
 
 import json
+from typing import Tuple, Dict
 
 import requests
 
@@ -22,16 +23,16 @@ class Habitica(object):
     A minimalist Habitica API class.
     """
 
-    def __init__(self, auth=None, resource=None, aspect=None):
+    def __init__(self, auth:Dict=None, resource:str=None, aspect:str=None) -> None:
         self.auth = auth
         self.resource = resource
         self.aspect = aspect
-        self.headers = auth if auth else {}
+        self.headers = auth if auth else {}  # type: Dict
         self.headers.update({'content-type': API_CONTENT_TYPE})
 
-    def __getattr__(self, m):
+    def __getattr__(self, m: str) -> 'Habitica':
         try:
-            return object.__getattr__(self, m)
+            return object.__getattr__(self, m)  # type: ignore
         except AttributeError:
             if not self.resource:
                 return Habitica(auth=self.auth, resource=m)
@@ -39,7 +40,7 @@ class Habitica(object):
                 return Habitica(auth=self.auth, resource=self.resource,
                                 aspect=m)
 
-    def _build_uri(self, **kwargs):
+    def _build_uri(self, **kwargs) -> Tuple[str, Dict]:
         # build up URL... Habitica's api is the *teeniest* bit annoying
         # so either i need to find a cleaner way here, or i should
         # get involved in the API itself and... help it.
@@ -65,7 +66,7 @@ class Habitica(object):
               uri, self=self, aspect_id=aspect_id, direction=direction)
         return uri, kwargs
 
-    def __call__(self, **kwargs):
+    def __call__(self, **kwargs) -> Dict:
         method = kwargs.pop('_method', 'get')
 
         uri, kwargs = self._build_uri( **kwargs)
@@ -79,7 +80,6 @@ class Habitica(object):
                                             params=kwargs)
 
         # print(res.url)  # debug...
-        if res.status_code in [requests.codes.ok, requests.codes.created]:
-            return res.json()["data"]
-        else:
+        if res.status_code not in [requests.codes.ok, requests.codes.created]:
             res.raise_for_status()
+        return res.json()["data"]
