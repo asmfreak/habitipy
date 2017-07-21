@@ -122,6 +122,11 @@ class ApiNode(object):
         self.paths[part] = val
         return val
 
+    def keys(self):
+        if self.param:
+            yield self.param_name
+        yield from self.paths.keys()
+
     def __repr__(self):
         text = '<ApiNode {self.param_name}: {self.param} paths: {self.paths}>'
         return text.format(self=self)
@@ -268,13 +273,15 @@ class ApiEndpoint(object):
         p = Param(type_, field, description)
         self.params[group][p.field] = p
 
-
     def success(self, group=None, type_='', field='', description=''):
         group = group or '(200)'
         group = group.lower()[1:-1]
         self.retcode = self.retcode or group
         if group != self.retcode:
             raise ValueError('Two or more retcodes!')
+        type_ = type_ or '{String}'
+        p = Param(type_, field, description)
+        self.params['responce'][p.field] = p
 
 
     def __repr__(self):
@@ -282,10 +289,20 @@ class ApiEndpoint(object):
 
     def render_docstring(self):
         res = '{{{self.method}}} {self.uri} {self.title}\n'.format(self=self)
-        #if self.params:
-        #    res+='Request data\n'
+        if self.params:
+            #res+='Request data\n'
+            for group, params in self.params.items():
+                res += group + ' group\n'
+                for field, param in params.items():
+                    res += param.render_docstring()
         return res
 
+# TODO: fix type checking
+_valid_types = {
+    'string': lambda  x: isinstance(x, str),
+    'sring': lambda  x: isinstance(x, str),
+    'number': lambda x: isinstance(x, float)
+}
 
 class Param(object):
     'represents param of request or responce'
@@ -307,8 +324,19 @@ class Param(object):
             self.type, self.possible_values = self.type.split('=')
             self.possible_values = list(map(
                 lambda s: s if s[0] != '"' else s[1:-1],
-                self.possible_values))
+                self.possible_values.split(',')))
         else:
             self.possible_values = []
         self.type = self.type.lower()
         self.description = description
+
+    def validate(self, val):
+        pass
+
+    def render_docstring(self):
+        default = (' = ' +str(self.default)) if self.default else ''
+        opt = 'optional' if self.is_optional else ''
+        can_be = ' '.join(self.possible_values) if self.possible_values else ''
+        can_be = 'can be one of [{}]'.format(can_be) if can_be else ''
+        type_ = 'of type ' + self.type
+        return ' '.join([opt, '"'+self.field+'"', default, type_, can_be, '\n']).replace('  ', ' ').lstrip()
