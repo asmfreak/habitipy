@@ -17,5 +17,4 @@ setup(
         'docopt',
         'requests',
     ],
-    scripts=['bin/habitica'],
 )
