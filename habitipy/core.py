@@ -18,7 +18,6 @@ import logging
 import os.path
 import sys
 from time import sleep
-from webbrowser import open_new_tab
 
 from docopt import docopt
 
@@ -50,6 +49,7 @@ DEFAULT_PARTY = 'Not currently in a party'
 DEFAULT_QUEST = 'Not currently on a quest'
 DEFAULT_PET = 'No pet currently'
 DEFAULT_MOUNT = 'Not currently mounted'
+
 
 
 def load_auth(configfile):
@@ -120,25 +120,7 @@ def update_quest_cache(configfile, **kwargs):
     return cache
 
 
-def get_task_ids(tids):
-    """
-    handle task-id formats such as:
-        habitica todos done 3
-        habitica todos done 1,2,3
-        habitica todos done 2 3
-        habitica todos done 1-3,4 8
-    tids is a seq like (last example above) ('1-3,4' '8')
-    """
-    logging.debug('raw task ids: %s' % tids)
-    task_ids = []
-    for raw_arg in tids:
-        for bit in raw_arg.split(','):
-            if '-' in bit:
-                start, stop = [int(e) for e in bit.split('-')]
-                task_ids.extend(range(start, stop + 1))
-            else:
-                task_ids.append(int(bit))
-    return [e - 1 for e in set(task_ids)]
+
 
 
 def updated_task_list(tasks, tids):

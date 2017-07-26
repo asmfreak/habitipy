@@ -1,6 +1,8 @@
 venv-*
 fabfile.py
 *.pyc
-habitica.egg-info
+habitipy.egg-info
 *.swp
 .mypy*
+cover
+.coverage
