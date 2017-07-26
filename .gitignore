@@ -1,8 +1,9 @@
 venv-*
 fabfile.py
 *.pyc
-habitipy.egg-info
+*.egg-info
 *.swp
 .mypy*
 cover
 .coverage
+.tox
