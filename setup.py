@@ -4,17 +4,23 @@ with open('README.md') as f:
     readme = f.read()
 
 setup(
-    name='habitica',
-    version='0.0.16',
+    name='habitipy',
+    version='0.1.1',
     author='Phil Adams',
     author_email='philadams.net@gmail.com',
     url='https://github.com/philadams/habitica',
     license='LICENSE.txt',
     description='Commandline interface to Habitica (http://habitica.com)',
     long_description=readme,
-    packages=find_packages(exclude=('dist', 'tests')),
+    packages=['habitipy'],
+    # console_scripts=[],
     install_requires=[
-        'docopt',
+        'plumbum',
         'requests',
     ],
+    entry_points={ 
+        'console_scripts': [
+            'habitipy = habitipy.cli:HabiticaCli',
+        ],
+    },
 )
