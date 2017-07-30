@@ -15,8 +15,8 @@ import uuid
 from keyword import kwlist
 import warnings
 import textwrap
-from collections import defaultdict, namedtuple
-from typing import Tuple, Dict, Union
+from collections import defaultdict
+from typing import Tuple, Dict, Union, List, Iterator, Any
 
 import pkg_resources
 import requests
@@ -39,19 +39,22 @@ class ApiNode(object):
     def __init__(self, param_name=None, param=None, paths=None):
         self.param = param
         self.param_name = None
-        self.paths = paths or {}
+        self.paths = paths or {} # type: Dict[str, Union[ApiNode,ApiEndpoint]]
 
-    def into(self, val: str):
+    def into(self, val: str) -> Union['ApiNode', 'ApiEndpoint']:
+        'Get another leaf node with name `val` if possible'
         if val in self.paths:
             return self.paths[val]
         if self.param:
             return self.param
         raise IndexError("Value {} is missing from api".format(val))
 
-    def can_into(self, val: str):
+    def can_into(self, val: str) -> bool:
+        'Determine if there is a leaf node with name `val`'
         return val in self.paths or (self.param and self.param_name == val)
 
     def place(self, part: str, val: Union['ApiNode', 'ApiEndpoint']):
+        'place a leaf node '
         if part.startswith(':'):
             if self.param and self.param != part:
                 err = 'Cannot place param "{}" as "{self.param_name}" exist on node already!'
@@ -62,12 +65,12 @@ class ApiNode(object):
         self.paths[part] = val
         return val
 
-    def keys(self):
+    def keys(self) -> Iterator[str]:
         if self.param:
             yield self.param_name
         yield from self.paths.keys()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         text = '<ApiNode {self.param_name}: {self.param} paths: {self.paths}>'
         return text.format(self=self)
 
@@ -110,7 +113,7 @@ class Habitipy(object):
             self.__doc__ = self._node.render_docstring()
 
     @staticmethod
-    def _make_apis_dict(apis):
+    def _make_apis_dict(apis) -> ApiNode:
         node = ApiNode()
         for api in apis:
             cur_node = node
@@ -124,7 +127,7 @@ class Habitipy(object):
                     except ParamAlreadyExist:
                         warnings.warn('Ignoring conflicting param. Don\'t use {}'.format(api.uri))
                         _node = cur_node.param
-                cur_node = _node
+                cur_node = _node  # type: ignore
                 prev_part += '/' + part
             cur_node.place(api.method, api)
         return node
@@ -140,9 +143,9 @@ class Habitipy(object):
     def __dir__(self):
         return super().__dir__() + list(escape_keywords(self._node.keys()))
 
-    def __getattr__(self, val):
+    def __getattr__(self, val: str) -> Union[Any, 'Habitipy']:
         if val in dir(super()):
-            return super().__getattr__(val)
+            return super().__getattr__(val)  # pylint: disable=no-member
         try:
             val = val if not val.endswith('_') else val.rstrip('_')
             _node = self._node.into(val)
@@ -159,7 +162,7 @@ class Habitipy(object):
             pass
         raise IndexError('{} not found in this API!'.format(val))
 
-    def __call__(self, **kwargs):
+    def __call__(self, **kwargs) -> Union[Dict, List]:
         uri = '/'.join([self._conf['url'], *self._current[:-1]])
         if not self._is_request:
             raise ValueError('{} is not an endpoint!'.format(uri))
@@ -180,7 +183,7 @@ class Habitipy(object):
         return res.json()["data"]
 
 API_URI_BASE = '/api/v3'
-def download_api(branch=None):
+def download_api(branch=None) -> str:
     'download API documentation from _branch_ of Habitica\'s repo on Github'
     habitica_github_api = 'https://api.github.com/repos/HabitRPG/habitica'
     if not branch:
@@ -193,9 +196,13 @@ def download_api(branch=None):
     return (curl | tar | grep | sed)()
 
 
-def parse_apidoc(file_or_branch, from_github=False, save_github_version=True):
+def parse_apidoc(
+        file_or_branch,
+        from_github=False,
+        save_github_version=True
+    ) -> List['ApiEndpoint']:
     'read file and parse apiDoc lines'
-    apis = []
+    apis = [] # type: List[ApiEndpoint]
     regex = r'(?P<group>\([^)]*\)){0,1} *(?P<type_>{[^}]*}){0,1} *'
     regex += r'(?P<field>[^ ]*) *(?P<description>.*)$'
     param_regex = re.compile(r'^@apiParam {1,}'+regex)
