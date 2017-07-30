@@ -1,26 +1,35 @@
-from setuptools import setup, find_packages
+""" habitipy - tools and library for Habitica restful API"""
+from setuptools import setup
 
 with open('README.md') as f:
-    readme = f.read()
+    README = f.read()
 
 setup(
     name='habitipy',
     version='0.1.1',
-    author='Phil Adams',
-    author_email='philadams.net@gmail.com',
-    url='https://github.com/philadams/habitica',
+    author='Pavel Pletenev',
+    author_email='cpp.create@gmail.com',
+    url='',
     license='LICENSE.txt',
     description='Commandline interface to Habitica (http://habitica.com)',
-    long_description=readme,
+    long_description=README,
     packages=['habitipy'],
-    # console_scripts=[],
     install_requires=[
         'plumbum',
         'requests',
     ],
-    entry_points={ 
+    package_data={
+        '': ['README.md'],
+        'habitipy': [
+            '*.pyi'
+        ]
+    },
+    entry_points={
         'console_scripts': [
             'habitipy = habitipy.cli:HabiticaCli',
         ],
+    },
+    extras_require={
+        'emoji':  ['emoji'],
     },
 )

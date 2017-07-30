@@ -1,15 +1,14 @@
-Habitica
+Habitipy
 ========
+A set of scripts to interact with [Habitica](http://habitica.com):
 
-Two tools for interacting with [Habitica](http://habitica.com):
-
-1. Python wrapper for the RESTful Habitica API (`habitica.api`)
-2. Command-line interface with subcommands (e.g. `> habitica todos`)
+1. Python wrapper for the RESTful Habitica API (`habitica.api.Habitipy` class)
+2. Command-line interface with subcommands (e.g. `> habitipy todos`)
 
 Install
 -------
 
-`pip install habitica`.
+`pip install habitipy`.
 
 I push to pip fairly frequently, but if you'd like to be on the bleeding edge,
 clone this project and install it by hand:
@@ -22,9 +21,9 @@ Configure
 
 You'll need to let the tool know how to connect to your Habitica account. To do
 this, you'll need to add the following credentials section in the file
-`~/.config/habitica/auth.cfg` (you may need to create the folder(s) and file):
+`~/.config/habitipy/config` (you may need to create the folder(s) and file):
 
-    [Habitica]
+    [habitipy]
     url = https://habitica.com
     login = USER_ID
     password = API_KEY
@@ -34,11 +33,10 @@ There's a template for this file at `auth.cfg.sample`.
 Replace USER\_ID and API\_KEY with the corresponding tokens from [your Habitica
 settings>API page](https://habitica.com/#/options/settings/api).
 
-You can replace `url` as needed, for example if you're self-hosting a Habitica
-server.
+You can replace `url` as needed, for example if you're self-hosting a Habitica server.
 
 Lastly, remember to `chmod 600 ~/.config/habitica/auth.cfg` to keep your
-credentials secret.
+credentials secret. This is enforced by `habitipy` cli command.
 
 Usage
 -----
@@ -172,6 +170,65 @@ Via `habitica --help`:
     To show checklists with "todos" and "dailies" permanently, set
     'checklists' in your auth.cfg file to `checklists = true`.
 
+API
+---
+
+Habitica restfull API is accessible through `habitipy.api.Habitipy` class. API as long as other useful functions are exposed from top-level of `habitipy` package to ease the usage, so you can `from habitipy import Habitipy`.
+It is using parsed [apiDoc from Habitica](https://habitica.com/apidoc) by downloading and parsing latest source from [Habitica's Github repository](https://github.com/HabitRPG/habitica). This enables you with API endpoint completion and documentation from `ipython` console. Here is an example:
+
+```python
+In [1]: from habitipy import Habitipy, load_conf,DEFAULT_CONF
+In [2]: api = Habitipy(load_conf(DEFAULT_CONF))
+In [3]: api.
+     api.approvals     api.debug         api.models        api.tags          
+     api.challenges    api.group         api.notifications api.tasks         
+     api.content       api.groups        api.reorder-tags  api.user          
+     api.coupons       api.hall          api.shops                           
+     api.cron          api.members       api.status                          
+ In [84]: api.user.get?
+ Signature:   api.user.get(**kwargs)
+ Type:        Habitipy
+ String form: <habitipy.api.Habitipy object at 0x7fa6fd7966d8>
+ File:        ~/projects/python/habitica/habitipy/api.py
+ Docstring:  
+ {get} /api/v3/user Get the authenticated user's profile
+
+ responce params:
+ "data" of type "object"
+```
+
+From other Python consoles you can just run:
+
+```python
+>>> dir(api)
+['__call__', '__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattr__', '__getattribute__', '__getitem__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', '_apis', '_conf', '_current', '_is_request', '_make_apis_dict', '_make_headers', '_node', 'approvals', 'challenges', 'content', 'coupons', 'cron', 'debug', 'group', 'groups', 'hall', 'members', 'models', 'notifications', 'reorder-tags', 'shops', 'status', 'tags', 'tasks', 'user']
+>>> print(api.user.get.__doc__)
+{get} /api/v3/user Get the authenticated user's profile
+
+responce params:
+"data" of type "object"
+
+```
+
+If you are planning to create some cli tool on top of `habitipy`, you can use preconfigured class with enabled logging `habitipy.cli.ApplicationWithApi`. This class is using [`plumbum`'s Application class](http://plumbum.readthedocs.io/en/latest/cli.html#command-line-interface-cli). Here is an example of such subclass:
+
+```python
+from habitipy import ApplicationWithApi
+
+class MyCliTool(ApplicationWithApi):
+    """Tool to print json data about user"""
+    def main(self):
+        super().main()
+        print(self.api.user.get())
+
+```
+The `super().main()` line is critical - all initialization takes place here.
+
+
+I18N
+----
+`habitipy` command is meant to be internationalized. It is done using Python's standard library's `gettext` module.
+
 Shell completion
 ----------------
 
@@ -189,7 +246,7 @@ Thanks
 
 Many thanks to the following excellent projects:
 
-- [docopt](https://github.com/docopt/docopt)
+- [plumbum]()
 - [requests](https://github.com/kennethreitz/requests)
 
-And to [contributors to this project](./CONTRIBUTORS.md).
+And to the original author of [habitica]().

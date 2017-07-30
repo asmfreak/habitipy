@@ -3,7 +3,7 @@ fabfile.py
 *.pyc
 *.egg-info
 *.swp
-.mypy*
+.mypy_*
 cover
 .coverage
 .tox
