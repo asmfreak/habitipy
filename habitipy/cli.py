@@ -1,3 +1,9 @@
+"""
+    habitipy - tools and library for Habitica restful API
+    command-line interface library using plumbum
+"""
+# pylint: disable=arguments-differ, attribute-defined-outside-init
+# pylint: disable=invalid-name, logging-format-interpolation
 import warnings
 import logging
 import os
@@ -5,12 +11,17 @@ from bisect import bisect
 from contextlib import contextmanager
 from functools import partial
 from textwrap import dedent, wrap
+from typing import List, Union, Dict, Any  # pylint: disable=unused-import
 from plumbum import local, cli, colors
 import requests
 from .api import Habitipy
-
+try:
+    from emoji import emojize
+except ImportError:
+    emojize = None
 DEFAULT_CONF = '~/.config/habitipy/config'
 SUBCOMMANDS_JSON = '~/.config/habitipy/subcommands.json'
+
 
 @contextmanager
 def umask(mask):
@@ -26,11 +37,12 @@ def is_secure_file(fn):
     st = os.stat(fn)
     return (st.st_mode & 0o777) == 0o600
 
-
 secure_filestore = partial(umask, 0o077)
+
 
 class SecurityError(ValueError):
     pass
+
 
 def load_conf(configfile, config=None):
     """Get authentication data from the AUTH_CONF file."""
@@ -51,21 +63,27 @@ def load_conf(configfile, config=None):
         config['password'] = conf.get('habitipy.password', default_password)
 
     if config['login'] == default_login or config['password'] == default_password:
-        warnings.warn("Your creditentials may be unconfigured.")
+        warnings.warn("Your creditentials may be unconfigured.")  # noqa: Q000
     return config
 
 
 class ConfiguredApplication(cli.Application):
     'Application with config'
-    config = cli.SwitchAttr(
+    config_filename = cli.SwitchAttr(
         ['-c', '--config'], argtype=cli.ExistingFile, default=DEFAULT_CONF,
-        argname='CONFIG', help="Use CONFIG for config")
+        argname='CONFIG',
+        help="Use file CONFIG for config")  # noqa: Q000
     verbose = cli.Flag(
-        ['-v', '--verbose'], help = "Verbose output - log everything.", excludes=['-s','--silent'])
+        ['-v', '--verbose'],
+        help="Verbose output - log everything.",  # noqa: Q000
+        excludes=['-s', '--silent'])
     silence_level = cli.CountOf(
-        ['-s', '--silent'], help="Make program more silent", excludes=['-v', '--verbose'])
+        ['-s', '--silent'],
+        help="Make program more silent",  # noqa: Q000
+        excludes=['-v', '--verbose'])
+
     def main(self):
-        self.config = load_conf(self.config)
+        self.config = load_conf(self.config_filename)
         self.log = logging.getLogger(str(self.__class__).split("'")[1])
         self.log.addHandler(logging.StreamHandler())
         if self.verbose:
@@ -77,13 +95,11 @@ class ConfiguredApplication(cli.Application):
 
 class ApplicationWithApi(ConfiguredApplication):
     'Application with configured Habitica API'
-    api = None
+    api = None  # type: Habitipy
 
     def main(self):
         super().main()
         self.api = Habitipy(self.config)
-
-
 
 
 class HabiticaCli(ConfiguredApplication):
@@ -91,27 +107,31 @@ class HabiticaCli(ConfiguredApplication):
 
 @HabiticaCli.subcommand('status')
 class Status(ApplicationWithApi):
-    """Show HP, XP, GP, and more"""
+    DESCRIPTION = "Show HP, XP, GP, and more"
     def main(self):
         super().main()
         user = self.api.user.get()
 
+class ScoreInfo(object):
+    'task value/score info: http://habitica.wikia.com/wiki/Task_Value'
+    scores = ['*', '**', '***', '****', '*****', '******', '*******']
+    max_scores_len = max(map(len, scores))
+    colors_ = ['Red3', 'Red1', 'DarkOrange', 'Gold3A', 'Green', 'LightCyan3', 'Cyan1']
+    breakpoints = [-20, -10, -1, 1, 5, 10]
+
+    def __new__(cls, value):
+        index = bisect(cls.breakpoints, value)
+        score = cls.scores[index]
+        score_col = colors.fg(cls.colors_[index])  # pylint: disable=no-member
+        score = '[' + score.center(cls.max_scores_len) + ']'
+        return score_col | score
 
 class TasksPrint(ApplicationWithApi):
     'Put all tasks from `domain` to print'
-    domain = None
+    domain = '' # type: str
     def domain_format(self, task):
         'format task for domain'
         raise NotImplementedError()
-
-    @staticmethod
-    def qualitative_task_score_from_value(value):
-        'task value/score info: http://habitica.wikia.com/wiki/Task_Value'
-        scores = ['*', '**', '***', '****', '*****', '******', '*******']
-        colors_ = ['Red3', 'Red1', 'DarkOrange', 'Gold3A', 'LightCyan3', 'Cyan1']
-        breakpoints = [-20, -10, -1, 1, 5, 10]
-        index = bisect(breakpoints, value)
-        return scores[index], colors.fg(colors_[index])
 
     def main(self):
         if self.nested_command:
@@ -126,39 +146,44 @@ class TasksPrint(ApplicationWithApi):
         if ident_size > termwidth:
             raise RuntimeError("Terminal too small")
         for i, task in enumerate(tasks):
-            i = number_format.format(i)
-            print('\n'.join(wrap(
+            i = number_format.format(i + 1)
+            res = '\n'.join(wrap(
                 self.domain_format(task),
                 width=termwidth, initial_indent=i,
-                subsequent_indent=indent)))
+                subsequent_indent=indent))
+            print(emojize(res) if emojize else res)
 
-@HabiticaCli.subcommand('habits')
+@HabiticaCli.subcommand('habits')  # pylint: disable=missing-docstring
 class Habits(TasksPrint):
-    'List, up and down habit tasks'
+    DESCRIPTION = "List, up and down habit tasks"
     domain = 'habits'
     def domain_format(self, habit):
-        return ''
+        score = ScoreInfo(habit['value'])
+        return "{} {text}".format(score, **habit)
 
-@HabiticaCli.subcommand('dailies')
-class Dailys(ApplicationWithApi):
-    'List, up and down daily tasks'
-    def main(self):
-        if self.nested_command:
-            return
-        super().main()
-        print("Ok")
+@HabiticaCli.subcommand('dailies')  # pylint: disable=missing-docstring
+class Dailys(TasksPrint):
+    DESCRIPTION = "List, up and down daily tasks"
+    domain = 'dailys'
+    def domain_format(self, daily):
+        score = ScoreInfo(daily['value'])
+        check = 'X' if daily['completed'] else ' '
+        res = "[{}] {} {text}".format(check, score, **daily)
+        if not daily['isDue']:
+            res = colors.strikeout + colors.dark_gray | res
+        return res
 
-@HabiticaCli.subcommand('todos')
-class ToDos(ApplicationWithApi):
-    'List, up and down todo tasks'
-    def main(self):
-        if self.nested_command:
-            return
-        super().main()
-        print("Ok")
+@HabiticaCli.subcommand('todos')  # pylint: disable=missing-docstring
+class ToDos(TasksPrint):
+    DESCRIPTION = "List, comlete, add or delete todo tasks"
+    domain = 'todos'
+    def domain_format(self, todo):
+        score = ScoreInfo(todo['value'])
+        check = 'X' if todo['completed'] else ' '
+        res = "[{}] {} {text}".format(check, score, **todo)
+        return res
 
-@cli.Predicate
-def TaskId(tids):
+class TaskId(List[Union[str, int]]):
     """
     handle task-id formats such as:
         habitica todos done 3 taskalias_or_uuid
@@ -166,90 +191,160 @@ def TaskId(tids):
         habitica todos done 2 3
         habitica todos done 1-3,4 8
     """
-    task_ids = []
-    for bit in tids.split(','):
-        try:
-            if '-' in bit:
-                start, stop = [int(e) for e in bit.split('-')]
-                task_ids.extend(range(start, stop + 1))
-            else:
-                task_ids.append(int(bit))
-        except ValueError:
-            task_ids.append(bit)
-    return [e - 1 if isinstance(e, int) else e for e in set(task_ids)]
+    def __new__(cls, tids: str):
+        task_ids = []  # type: List[Union[str, int]]
+        for bit in tids.split(','):
+            try:
+                if '-' in bit:
+                    start, stop = [int(e) for e in bit.split('-')]
+                    task_ids.extend(range(start, stop + 1))
+                else:
+                    task_ids.append(int(bit))
+            except ValueError:
+                task_ids.append(bit)
+        return [e - 1 if isinstance(e, int) else e for e in set(task_ids)] # type: ignore
 
 class TasksChange(ApplicationWithApi):
-    domain = None
-    def main(self, task_id: TaskId, *more_task_ids: TaskId):
+    'find all tasks specified by user and do self.op on them'
+    domain = '' # type: str
+    noop = cli.Flag(
+        ['--dry-run', '--noop'],
+        help="If passed, won't actually change anything on habitipy server")  # noqa: Q000
+
+    def main(self, task_id: TaskId, *more_task_ids: TaskId):  # type: ignore
         super().main()
         for mt in more_task_ids:
             task_id.extend(mt)
         tasks = self.api.tasks.user.get(type=self.domain)
         task_ids = [task['id'] for task in tasks]
         num_tasks = len(tasks)
-        aliases = [task['alias'] for task in tasks if 'alias' in task]
-        to_change = []
+        aliases = {task['alias']:task for task in tasks if 'alias' in task}
+        self.changing_tasks = {}  # type: Dict[Union[str,int], Dict[str, Any]]
         for tid in task_id:
             if isinstance(tid, int):
-                if tid < 0 or tid >= num_tasks:
-                    print("Task id {} invalid".format(tid))
-                to_change.append(task_ids[tid])
+                if tid >= 0 and tid <= num_tasks:
+                    self.changing_tasks[task_ids[tid]] = tasks[tid]
             elif isinstance(tid, str):
-                if tid in task_ids or tid in aliases:
-                    to_change.append(tid)
-            else:
-                print("Task id {} invalid".format(tid))
-        for tid in to_change:
-            self.op(tid)
+                if tid in task_ids:
+                    self.changing_tasks[tid] = tasks[task_ids.index(tid)]
+                elif tid in aliases:
+                    self.changing_tasks[tid] = aliases[tid]
+            self.log.error("Task id {} is invalid".format(tid))
+            return
+        self.log.info("Parsed task ids {}".format(self.changing_tasks))
+        self.tasks = self.api.tasks
+        for tid in self.changing_tasks:
+            if self.noop:
+                self.op(tid)
+            res = self.log_op(tid)
+            print(emojize(res) if emojize else res)
+        self.domain_print()
+
+    def validate(self, task):
+        'check if task is valid for the operation'
+        return True
 
     def op(self, tid):
+        'operation to be done on task with `tid`'
         raise NotImplementedError
 
-@Habits.subcommand('up')
-class HabitsUp(TasksChange):
-    'Up (+) a habit with task_id'
-    domain='habits'
+    def log_op(self, tid):
+        'return a message to show user on successful change of `tid`'
+        raise NotImplementedError
+
+    def domain_print(self):
+        'show domain to user again'
+        raise NotImplementedError
+
+
+class HabitsChange(TasksChange):  # pylint: disable=missing-docstring
+    domain = 'habits'
+    def domain_print(self):
+        Habits.invoke(config_filename=self.config_filename)
+
+
+@Habits.subcommand('up')  # pylint: disable=missing-docstring
+class HabitsUp(HabitsChange):
+    DESCRIPTION = "Up (+) a habit with task_id"
     def op(self, tid):
         self.tasks[tid].score['up'].post()
 
-@Habits.subcommand('down')
-class HabitsDown(TasksChange):
-    'Down (-) a habit with task_id'
-    domain='habits'
+    def validate(self, task):
+        return task['up']
+
+    def log_op(self, tid):
+        print("Incremented habit {text}".format(**self.changing_tasks[tid]))
+
+
+@Habits.subcommand('down')  # pylint: disable=missing-docstring
+class HabitsDown(HabitsChange):
+    DESCRIPTION = "Down (-) a habit with task_id"
     def op(self, tid):
         self.tasks[tid].score['down'].post()
 
-@Dailys.subcommand('done')
-class DailysUp(TasksChange):
-    "Check a dayly with task_id"
-    domain='dailys'
+    def validate(self, task):
+        return task['down']
+
+    def log_op(self, tid):
+        'show a message to user on successful change of `tid`'
+        print("Decremented habit {text}".format(**self.changing_tasks[tid]))
+
+class DailysChange(TasksChange):  # pylint: disable=missing-docstring
+    domain = 'dailys'
+    def domain_print(self):
+        Dailys.invoke(config_filename=self.config_filename)
+
+@Dailys.subcommand('done')  # pylint: disable=missing-docstring
+class DailysUp(DailysChange):
+    DESCRIPTION = "Check a dayly with task_id"
     def op(self, tid):
         self.tasks[tid].score['up'].post()
 
-@Dailys.subcommand('undo')
-class DailyDown(TasksChange):
-    "Uncheck a daily with task_id"
-    domain='dailys'
+    def log_op(self, tid):
+        print("Completed daily {text}".format(**self.changing_tasks[tid]))
+
+@Dailys.subcommand('undo')  # pylint: disable=missing-docstring
+class DailyDown(DailysChange):
+    DESCRIPTION = "Uncheck a daily with task_id"
     def op(self, tid):
         self.tasks[tid].score['down'].post()
 
-@ToDos.subcommand('done')
-class TodosUp(TasksChange):
-    "Check a todo with task_id"
-    domain='todos'
+    def log_op(self, tid):
+        print("Unchecked daily {text}".format(**self.changing_tasks[tid]))
+
+class TodosChange(TasksChange):  # pylint: disable=missing-docstring
+    domain = 'todos'
+    def domain_print(self):
+        ToDos.invoke(config_filename=self.config_filename)
+
+@ToDos.subcommand('done')  # pylint: disable=missing-docstring
+class TodosUp(TodosChange):
+    DESCRIPTION = "Check a todo with task_id"
     def op(self, tid):
         self.tasks[tid].score['up'].post()
 
-@ToDos.subcommand('delete')
-class TodosUp(TasksChange):
-    "Check a todo with task_id"
-    domain='todos'
+    def log_op(self, tid):
+        print("Completed todo {text}".format(**self.changing_tasks[tid]))
+
+@ToDos.subcommand('delete')  # pylint: disable=missing-docstring
+class TodosDelete(TodosChange):
+    DESCRIPTION = "Check a todo with task_id"
     def op(self, tid):
         self.tasks[tid].delete()
 
-@HabiticaCli.subcommand('home')
+    def log_op(self, tid):
+        print("Deleted todo {text}".format(**self.changing_tasks[tid]))
+
+@ToDos.subcommand('add')  # pylint: disable=missing-docstring
+class TodosAdd(ApplicationWithApi):
+    DESCRIPTION = "Add a todo <todo>"
+    def main(self):
+        super().main()
+        a = self.api.user.get()
+
+@HabiticaCli.subcommand('home')  # pylint: disable=missing-docstring
 class Home(ConfiguredApplication):
-    "Open habitica site in browser"
+    DESCRIPTION = "Open habitica site in browser"
     def main(self):
         super().main()
         from webbrowser import open_new_tab
@@ -258,20 +353,20 @@ class Home(ConfiguredApplication):
         self.log.info("Opening %s", home_url)
         open_new_tab(home_url)
 
-@HabiticaCli.subcommand('server')
+@HabiticaCli.subcommand('server')  # pylint: disable=missing-docstring
 class Server(ApplicationWithApi):
-    "Check habitica server availability"
+    DESCRIPTION = "Check habitica server availability"
     def main(self):
         super().main()
         try:
             ret = self.api.status.get()
             if isinstance(ret, dict) and ret['status'] == 'up':
-                self.log.info("Habitica server {} online".format(self.config['url']))
+                print("Habitica server {} online".format(self.config['url']))
                 return
         except (KeyError, requests.exceptions.ConnectionError):
             pass
         msg = "Habitica server {} offline or there is some issue with it"
-        self.log.info(msg.format(self.config['url']))
+        print(msg.format(self.config['url']))
         return -1
 
 
@@ -289,14 +384,3 @@ del sc
 
 if __name__ == '__main__':
     HabiticaCli.run()
-
-"""
-     dailies                 List daily tasks
-     dailies done            Mark daily <task-id> complete
-     dailies undo            Mark daily <task-id> incomplete
-     todos                   List todo tasks
-     todos done <task-id>    Mark one or more todo <task-id> completed
-     todos add <task>        Add todo with description <task>
-     todos delete <task-id>  Delete one or more todo <task-id>
-     server                  Show status of Habitica service
-"""

@@ -1,11 +1,6 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 """
-Phil Adams http://philadams.net
-
-Python wrapper around the Habitica (http://habitica.com) API
-http://github.com/philadams/habitica
+    habitipy - tools and library for Habitica restful API
+    RESTful api abstraction module using requests
 """
 
 
@@ -16,7 +11,7 @@ from keyword import kwlist
 import warnings
 import textwrap
 from collections import defaultdict
-from typing import Tuple, Dict, Union, List, Iterator, Any
+from typing import Dict, Union, List, Iterator, Any
 
 import pkg_resources
 import requests
@@ -145,7 +140,8 @@ class Habitipy(object):
 
     def __getattr__(self, val: str) -> Union[Any, 'Habitipy']:
         if val in dir(super()):
-            return super().__getattr__(val)  # pylint: disable=no-member
+            # pylint: disable=no-member
+            return super().__getattr__(val)  # type:ignore
         try:
             val = val if not val.endswith('_') else val.rstrip('_')
             _node = self._node.into(val)
