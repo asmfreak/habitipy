@@ -1,12 +1,12 @@
 """ habitipy - tools and library for Habitica restful API"""
 from setuptools import setup
 
-with open('README.md') as f:
+with open('README') as f:
     README = f.read()
 
 setup(
     name='habitipy',
-    version='0.1.1',
+    version='0.1.2',
     author='Pavel Pletenev',
     author_email='cpp.create@gmail.com',
     url='',
@@ -19,7 +19,7 @@ setup(
         'requests',
     ],
     package_data={
-        '': ['README.md'],
+        '': ['README'],
         'habitipy': [
             '*.pyi'
         ]
