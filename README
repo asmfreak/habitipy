@@ -10,8 +10,6 @@ Install
 
 `pip install habitipy`.
 
-I push to pip fairly frequently, but if you'd like to be on the bleeding edge,
-clone this project and install it by hand:
 
     > git clone https://github.com/philadams/habitica
     > pip install -e habitica
@@ -19,24 +17,13 @@ clone this project and install it by hand:
 Configure
 ---------
 
-You'll need to let the tool know how to connect to your Habitica account. To do
-this, you'll need to add the following credentials section in the file
-`~/.config/habitipy/config` (you may need to create the folder(s) and file):
-
-    [habitipy]
-    url = https://habitica.com
-    login = USER_ID
-    password = API_KEY
-
-There's a template for this file at `auth.cfg.sample`.
-
-Replace USER\_ID and API\_KEY with the corresponding tokens from [your Habitica
-settings>API page](https://habitica.com/#/options/settings/api).
+Most configuration of habitipy is done in `~/.config/habitipy/config`.
+You can run any habitica command - this file will be created for you with default settings. You should replace default `login` and `password` with user id and api key from 
+To use the API, you should replace login and password with the corresponding user id and API key from [your Habitica's API settings](https://habitica.com/#/options/settings/api).
 
 You can replace `url` as needed, for example if you're self-hosting a Habitica server.
 
-Lastly, remember to `chmod 600 ~/.config/habitica/auth.cfg` to keep your
-credentials secret. This is enforced by `habitipy` cli command.
+Lastly, you should not change access rights of the config to anything other then `600` - this enshures that  your credentials are kept secret from other users of your system.. This is enforced by `habitipy` cli command.
 
 Usage
 -----
