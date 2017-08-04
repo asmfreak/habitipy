@@ -2,7 +2,6 @@ import unittest
 
 from habitipy import Habitipy
 
-
 class TestHabitipy(unittest.TestCase):
     def test_python_keyword_escape(self):
         api = Habitipy(None)
@@ -13,15 +12,6 @@ class TestHabitipy(unittest.TestCase):
         self.assertIn('user', dir(api))
         self.assertIn('class_', dir(api.user))
         self.assertNotIn('class', dir(api.user))
-
-    def test_docstring(self):
-        api = Habitipy(None)
-        doc = '{get} /api/v3/tasks/user Get a user\'s tasks\
-\n\nquery params:\n\
-"type" of type "string" one of [habits dailys todos rewards completedTodos] \
-\n\nresponce params:\n"data" of type "array" \n'
-        self.assertEqual(api.tasks.user.get.__doc__, doc)
-
 
     def test_integration(self):
         api = Habitipy(None)

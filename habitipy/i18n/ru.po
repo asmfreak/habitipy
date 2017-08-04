@@ -1,0 +1,230 @@
+# Russian translations for PACKAGE package
+# Английские переводы для пакета PACKAGE.
+# Copyright (C) 2017 THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+#  <cpp.create@gmail.com>, 2017.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2017-08-05 00:18+0200\n"
+"PO-Revision-Date: 2017-08-04 18:52+0200\n"
+"Last-Translator:  <cpp.create@gmail.com>\n"
+"Language-Team: Russian\n"
+"Language: ru\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+
+#: habitipy/cli.py:28
+msgid "warrior"
+msgstr "воин"
+
+#: habitipy/cli.py:28
+msgid "rogue"
+msgstr "вор"
+
+#: habitipy/cli.py:28
+msgid "wizard"
+msgstr "волшебник"
+
+#: habitipy/cli.py:28
+msgid "healer"
+msgstr "лекарь"
+
+#: habitipy/cli.py:47
+msgid "Your creditentials may be unconfigured."
+msgstr "Возможно ваши настройки доступа не настроены"
+
+#: habitipy/cli.py:56
+msgid "Use file CONFIG for config"
+msgstr "Использовать CONFIG для конфигурации"
+
+#: habitipy/cli.py:59
+msgid "Verbose output - log everything."
+msgstr "Полный вывод сех сообщений"
+
+#: habitipy/cli.py:63
+msgid "Make program more silent"
+msgstr "Программа будет выводить меньше сообщений"
+
+#: habitipy/cli.py:125
+msgid "Show HP, XP, GP, and more"
+msgstr "Показать очки здоровья, опыта, золота и многое другое"
+
+#: habitipy/cli.py:137
+msgid "Pet: "
+msgstr "Питомец: "
+
+#: habitipy/cli.py:137
+msgid "No pet"
+msgstr "Питомец не выбран"
+
+#: habitipy/cli.py:141
+msgid "Mount: "
+msgstr "Ездовое животное: "
+
+#: habitipy/cli.py:143
+msgid "No mount"
+msgstr "Ездоое животное не выбрано"
+
+#: habitipy/cli.py:144
+#, python-brace-format
+msgid ""
+"\n"
+"Level {stats[lvl]} {stats[class]}\n"
+msgstr ""
+"\n"
+"Уровень {stats[lvl]} {stats[class]}\n"
+
+#: habitipy/cli.py:149
+#, python-brace-format
+msgid "Health: {stats[hp]}/{stats[maxHealth]}"
+msgstr "Здороье: {stats[hp]}/{stats[maxHealth]}"
+
+#: habitipy/cli.py:150
+#, python-brace-format
+msgid "XP: {stats[exp]}/{stats[toNextLevel]}"
+msgstr "Опыт: {stats[exp]}/{stats[toNextLevel]}"
+
+#: habitipy/cli.py:153
+#, python-brace-format
+msgid "({food} food item)"
+msgid_plural "({food} food items)"
+msgstr[0] "({food} единица еды)"
+msgstr[1] "({food} единицы еды)"
+msgstr[2] "({food} единиц еды)"
+
+#: habitipy/cli.py:154
+#, python-brace-format
+msgid "{mount}"
+msgstr "{mount}"
+
+#: habitipy/cli.py:191
+msgid "Terminal too small"
+msgstr "Терминал слишком мал"
+
+#: habitipy/cli.py:203
+msgid "List, up and down habit tasks"
+msgstr "Отобразить, улучшить или ухудшить привычку"
+
+#: habitipy/cli.py:207
+msgid "{} {text}"
+msgstr "{} {text}"
+
+#: habitipy/cli.py:212
+msgid "List, up and down daily tasks"
+msgstr "Отобразить ежедвневные задания, отметить или снять отметку на них"
+
+#: habitipy/cli.py:217 habitipy/cli.py:230
+msgid "[{}] {} {text}"
+msgstr "[{}] {} {text}"
+
+#: habitipy/cli.py:225
+msgid "List, comlete, add or delete todo tasks"
+msgstr "Отобразить, завершить, добавить или удалить задание"
+
+#: habitipy/cli.py:261
+msgid "If passed, won't actually change anything on habitipy server"
+msgstr "Если опция предоставлена, то данная команда не будет изменять данные на сервере Хабитики"
+
+#: habitipy/cli.py:285
+msgid "Task id {} is invalid"
+msgstr "Идентификатор задания {} неверный"
+
+#: habitipy/cli.py:287
+msgid "Parsed task ids {}"
+msgstr "Распознаны следующие идентификаторы заданий {}"
+
+#: habitipy/cli.py:321
+msgid "Up (+) a habit with task_id"
+msgstr "Улучшить (+) привычку с индентификатором task_id"
+
+#: habitipy/cli.py:329
+#, python-brace-format
+msgid "Incremented habit {text}"
+msgstr "Привычка {text} улучшена"
+
+#: habitipy/cli.py:334
+msgid "Down (-) a habit with task_id"
+msgstr "Ухудшить (-) привычку с индентификатором task_id"
+
+#: habitipy/cli.py:343
+#, python-brace-format
+msgid "Decremented habit {text}"
+msgstr "Привычка {text} ухудшена"
+
+#: habitipy/cli.py:354
+msgid "Check a dayly with task_id"
+msgstr "Отметить ежедневное задание с идентификатором task_id"
+
+#: habitipy/cli.py:359
+#, python-brace-format
+msgid "Completed daily {text}"
+msgstr "Отмечено ежедневное задание {text}"
+
+#: habitipy/cli.py:364
+msgid "Uncheck a daily with task_id"
+msgstr "Снять отметку у ежедневного задания с идентификатором task_id"
+
+#: habitipy/cli.py:369
+#, python-brace-format
+msgid "Unchecked daily {text}"
+msgstr "Снята отметка у ежедневного задания {text}"
+
+#: habitipy/cli.py:380 habitipy/cli.py:390
+msgid "Check a todo with task_id"
+msgstr "Завершить задание с идентификатором task_id"
+
+#: habitipy/cli.py:385
+#, python-brace-format
+msgid "Completed todo {text}"
+msgstr "Завершено задание {text}"
+
+#: habitipy/cli.py:395
+#, python-brace-format
+msgid "Deleted todo {text}"
+msgstr "Удалено задание {text}"
+
+#: habitipy/cli.py:400
+msgid "Add a todo <todo>"
+msgstr "Добавить задачу <todo>"
+
+#: habitipy/cli.py:404
+msgid "Priority (complexity) of a todo"
+msgstr "Сложность (приоритет) задания"
+
+#: habitipy/cli.py:409
+msgid "Empty todo text!"
+msgstr "Пустой текст задания!"
+
+#: habitipy/cli.py:413
+msgid "Added todo '{}' with priority {}"
+msgstr "Добавлено задание '{}' со сложностью {}"
+
+#: habitipy/cli.py:419
+msgid "Open habitica site in browser"
+msgstr "Открыть сайт Хабитики в браузере"
+
+#: habitipy/cli.py:425
+msgid "Opening {}"
+msgstr "Открываю {}"
+
+#: habitipy/cli.py:431
+msgid "Check habitica server availability"
+msgstr "Проверить доступность сервера Хабитики"
+
+#: habitipy/cli.py:437
+msgid "Habitica server {} online"
+msgstr "Сервер Хабитики {} доступен"
+
+#: habitipy/cli.py:441
+msgid "Habitica server {} offline or there is some issue with it"
+msgstr "Сервер Хабитики {} не доступен или возникла какая-то ошибка"
+
+#: habitipy/api.py:56
+msgid "Value {} is missing from api"
+msgstr "Значения {} нет в API"

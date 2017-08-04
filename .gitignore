@@ -7,3 +7,5 @@ fabfile.py
 cover
 .coverage
 .tox
+*.po.new
+*messages.pot

@@ -17,9 +17,12 @@ import pkg_resources
 import requests
 from plumbum import local
 
+from .util import get_translation_functions
+
 API_URI_BASE = '/api/v3'
 API_CONTENT_TYPE = 'application/json'
 APIDOC_LOCAL_FILE = '~/.local/habitipy'
+_, ngettext = get_translation_functions('habitipy', names=('gettext', 'ngettext'))
 
 
 class ParamAlreadyExist(ValueError):
@@ -50,7 +53,7 @@ class ApiNode(object):
             return self.paths[val]
         if self.param:
             return self.param
-        raise IndexError("Value {} is missing from api".format(val))  # NOQA: Q000
+        raise IndexError(_("Value {} is missing from api").format(val))  # NOQA: Q000
 
     def can_into(self, val: str) -> bool:
         'Determine if there is a leaf node with name `val`'

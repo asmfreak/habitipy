@@ -1,5 +1,13 @@
 """ habitipy - tools and library for Habitica restful API"""
+import sys
 from setuptools import setup
+
+INSTALL_REQUIRES = [
+    'plumbum',
+    'requests',
+]
+if sys.version_info < (3, 5):
+    INSTALL_REQUIRES.append('typing')
 
 setup(
     name='habitipy',
@@ -10,10 +18,7 @@ setup(
     license='LICENSE.txt',
     description='tools and library for Habitica restful API (http://habitica.com)',
     packages=['habitipy'],
-    install_requires=[
-        'plumbum',
-        'requests',
-    ],
+    install_requires=INSTALL_REQUIRES,
     package_data={
         'habitipy': [
             '*.pyi'
