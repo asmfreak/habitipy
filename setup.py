@@ -21,7 +21,8 @@ setup(
     install_requires=INSTALL_REQUIRES,
     package_data={
         'habitipy': [
-            '*.pyi'
+            '*.pyi',
+            'i18n/*/LC_MESSAGES/*.mo'
         ]
     },
     entry_points={
