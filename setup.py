@@ -1,25 +1,20 @@
 """ habitipy - tools and library for Habitica restful API"""
 from setuptools import setup
 
-with open('README') as f:
-    README = f.read()
-
 setup(
     name='habitipy',
-    version='0.1.2',
+    version='0.1.3',
     author='Pavel Pletenev',
     author_email='cpp.create@gmail.com',
-    url='',
+    url='https://github.com/ASMfreaK/habitipy',
     license='LICENSE.txt',
-    description='Commandline interface to Habitica (http://habitica.com)',
-    long_description=README,
+    description='tools and library for Habitica restful API (http://habitica.com)',
     packages=['habitipy'],
     install_requires=[
         'plumbum',
         'requests',
     ],
     package_data={
-        '': ['README'],
         'habitipy': [
             '*.pyi'
         ]
@@ -32,4 +27,19 @@ setup(
     extras_require={
         'emoji':  ['emoji'],
     },
+    classifiers=[
+        'License :: OSI Approved :: MIT License',
+        'Development Status :: 4 - Beta',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Topic :: Software Development :: Libraries :: Python Modules',
+        'Topic :: Utilities',
+        'Topic :: Games/Entertainment',
+        'Topic :: Internet',
+        'Environment :: Console',
+        'Operating System :: OS Independent',
+        'Intended Audience :: Developers',
+        'Intended Audience :: End Users/Desktop',
+    ],
 )

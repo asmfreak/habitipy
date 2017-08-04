@@ -2,7 +2,7 @@
     habitipy - tools and library for Habitica restful API
     RESTful api abstraction module using requests
 """
-
+# pylint: disable=invalid-name,too-few-public-methods,too-many-locals, bad-continuation
 
 import json
 import re
@@ -17,24 +17,32 @@ import pkg_resources
 import requests
 from plumbum import local
 
-API_URI_BASE = 'api/v3'
+API_URI_BASE = '/api/v3'
 API_CONTENT_TYPE = 'application/json'
 APIDOC_LOCAL_FILE = '~/.local/habitipy'
 
+
 class ParamAlreadyExist(ValueError):
+    'Custom error type'
     pass
+
 
 class WrongReturnCode(ValueError):
+    'Custom error type'
     pass
+
 
 class WrongData(ValueError):
+    'Custom error type'
     pass
 
+
 class ApiNode(object):
+    'Represents a middle point in API'
     def __init__(self, param_name=None, param=None, paths=None):
         self.param = param
-        self.param_name = None
-        self.paths = paths or {} # type: Dict[str, Union[ApiNode,ApiEndpoint]]
+        self.param_name = param_name
+        self.paths = paths or {}  # type: Dict[str, Union[ApiNode,ApiEndpoint]]
 
     def into(self, val: str) -> Union['ApiNode', 'ApiEndpoint']:
         'Get another leaf node with name `val` if possible'
@@ -42,7 +50,7 @@ class ApiNode(object):
             return self.paths[val]
         if self.param:
             return self.param
-        raise IndexError("Value {} is missing from api".format(val))
+        raise IndexError("Value {} is missing from api".format(val))  # NOQA: Q000
 
     def can_into(self, val: str) -> bool:
         'Determine if there is a leaf node with name `val`'
@@ -52,7 +60,7 @@ class ApiNode(object):
         'place a leaf node '
         if part.startswith(':'):
             if self.param and self.param != part:
-                err = 'Cannot place param "{}" as "{self.param_name}" exist on node already!'
+                err = """Cannot place param '{}' as '{self.param_name}' exist on node already!"""
                 raise ParamAlreadyExist(err.format(part, self=self))
             self.param = val
             self.param_name = part
@@ -61,6 +69,7 @@ class ApiNode(object):
         return val
 
     def keys(self) -> Iterator[str]:
+        'return all possible paths one can take from this ApiNode'
         if self.param:
             yield self.param_name
         yield from self.paths.keys()
@@ -70,19 +79,26 @@ class ApiNode(object):
         return text.format(self=self)
 
     def is_param(self, val):
+        """checks if val is this node's param"""
         return val == self.param_name
+
 
 def escape_keywords(arr):
     'append _ to all python keywords'
     for i in arr:
         yield i if i not in kwlist else i + '_'
 
+
 class Habitipy(object):
+    """Represents Habitica API
+
+    """
     def __init__(self, conf, *,
                  apis=None, current=None,
                  from_github=False, branch=None,
                  strict=False):
         self._conf = conf
+        self._strict = strict
         if isinstance(apis, (type(None), list)):
             if not apis:
                 fn = pkg_resources.resource_filename('habitipy', 'apidoc.txt')
@@ -164,10 +180,18 @@ class Habitipy(object):
             raise ValueError('{} is not an endpoint!'.format(uri))
         method = self._node.method
         headers = self._make_headers()
+        query = {}
+        if 'query' in self._node.params:
+            for name, param in self._node.params['query'].items():
+                if name in kwargs:
+                    query[name] = kwargs.pop(name)
+                elif not param.is_optional:
+                    raise TypeError('Mandatory param {} is missing'.format(name))
         if method in ['put', 'post', 'delete']:
-            res = getattr(requests, method)(uri, headers=headers, data=json.dumps(kwargs))
+            res = getattr(requests, method)(
+                uri, headers=headers, params=query, data=json.dumps(kwargs))
         else:
-            res = getattr(requests, method)(uri, headers=headers, params=kwargs)
+            res = getattr(requests, method)(uri, headers=headers, params=query)
         if res.status_code != self._node.retcode:
             res.raise_for_status()
             msg = """Got return code {res.status_code}, but {node.retcode} was
@@ -175,10 +199,13 @@ class Habitipy(object):
             Plase file an issue to https://github.com/HabitRPG/habitica/issues"""
             msg = textwrap.dedent(msg)
             msg = msg.replace('\n', ' ').format(res=res, node=self._node)
-            raise WrongReturnCode(msg)
-        return res.json()["data"]
+            if self._strict:
+                raise WrongReturnCode(msg)
+            else:
+                warnings.warn(msg)
+        return res.json()['data']
 
-API_URI_BASE = '/api/v3'
+
 def download_api(branch=None) -> str:
     'download API documentation from _branch_ of Habitica\'s repo on Github'
     habitica_github_api = 'https://api.github.com/repos/HabitRPG/habitica'
@@ -193,23 +220,23 @@ def download_api(branch=None) -> str:
 
 
 def parse_apidoc(
-        file_or_branch,
-        from_github=False,
-        save_github_version=True
-    ) -> List['ApiEndpoint']:
+    file_or_branch,
+    from_github=False,
+    save_github_version=True
+) -> List['ApiEndpoint']:
     'read file and parse apiDoc lines'
-    apis = [] # type: List[ApiEndpoint]
+    apis = []  # type: List[ApiEndpoint]
     regex = r'(?P<group>\([^)]*\)){0,1} *(?P<type_>{[^}]*}){0,1} *'
     regex += r'(?P<field>[^ ]*) *(?P<description>.*)$'
-    param_regex = re.compile(r'^@apiParam {1,}'+regex)
-    success_regex = re.compile(r'^@apiSuccess {1,}'+regex)
+    param_regex = re.compile(r'^@apiParam {1,}' + regex)
+    success_regex = re.compile(r'^@apiSuccess {1,}' + regex)
     if from_github:
         text = download_api(file_or_branch)
         if save_github_version:
             apidoc_local = local.path(APIDOC_LOCAL_FILE)
             if not apidoc_local.dirname.exists():
                 apidoc_local.dirname.mkdir()
-            with open(apidoc_local, "w") as f:
+            with open(apidoc_local, 'w') as f:
                 f.write(text)
     else:
         with open(file_or_branch) as f:
@@ -243,9 +270,9 @@ def parse_apidoc(
 
 
 class ApiEndpoint(object):
-    '''
+    """
     Represents a single api endpoint.
-    '''
+    """
     def __init__(self, method, uri, title=''):
         self.method = method
         self.uri = uri
@@ -272,7 +299,6 @@ class ApiEndpoint(object):
         p = Param(type_, field, description)
         self.params['responce'][p.field] = p
 
-
     def __repr__(self):
         return '<@api {{{self.method}}} {self.uri} {self.title}>'.format(self=self)
 
@@ -281,18 +307,20 @@ class ApiEndpoint(object):
         res = '{{{self.method}}} {self.uri} {self.title}\n'.format(self=self)
         if self.params:
             for group, params in self.params.items():
-                res += '\n'+ group + ' params:\n'
-                for field, param in params.items():
+                res += '\n' + group + ' params:\n'
+                for param in params.values():
                     res += param.render_docstring()
         return res
 
+
 # TODO: fix type checking
 _valid_types = {
-    'string': lambda  x: isinstance(x, str),
-    'sring': lambda  x: isinstance(x, str),
+    'string': lambda x: isinstance(x, str),
+    'sring': lambda x: isinstance(x, str),
     'number': lambda x: isinstance(x, float),
     'uuid': lambda u: isinstance(u, str) and u.replace('-', '') == uuid.UUID(u).hex
 }
+
 
 class Param(object):
     'represents param of request or responce'
@@ -331,7 +359,7 @@ class Param(object):
 
     def render_docstring(self):
         'make a nice docstring for ipython'
-        default = (' = ' +str(self.default)) if self.default else ''
+        default = (' = ' + str(self.default)) if self.default else ''
         opt = 'optional' if self.is_optional else ''
         can_be = ' '.join(self.possible_values) if self.possible_values else ''
         can_be = 'one of [{}]'.format(can_be) if can_be else ''

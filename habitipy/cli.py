@@ -3,10 +3,11 @@
     command-line interface library using plumbum
 """
 # pylint: disable=arguments-differ, attribute-defined-outside-init
-# pylint: disable=invalid-name, logging-format-interpolation
+# pylint: disable=invalid-name, logging-format-interpolation,too-few-public-methods
 import warnings
 import logging
 import os
+import json
 from bisect import bisect
 from contextlib import contextmanager
 from functools import partial
@@ -15,12 +16,18 @@ from typing import List, Union, Dict, Any  # pylint: disable=unused-import
 from plumbum import local, cli, colors
 import requests
 from .api import Habitipy
+
+
 try:
     from emoji import emojize
 except ImportError:
     emojize = None
 DEFAULT_CONF = '~/.config/habitipy/config'
 SUBCOMMANDS_JSON = '~/.config/habitipy/subcommands.json'
+CONTENT_JSON = local.path('~/.config/habitipy/content.json')
+# TODO: add I18N
+_ = lambda x: x  # NOQA: E731
+CLASSES = [_("warrior"), _("rogue"), _("wizard"), _("healer")]  # noqa: Q000
 
 
 @contextmanager
@@ -34,13 +41,16 @@ def umask(mask):
 
 
 def is_secure_file(fn):
+    'checks if a file can be accessed only by the owner'
     st = os.stat(fn)
     return (st.st_mode & 0o777) == 0o600
+
 
 secure_filestore = partial(umask, 0o077)
 
 
 class SecurityError(ValueError):
+    'Error fired when a secure file is stored in an insecure manner'
     pass
 
 
@@ -93,6 +103,39 @@ class ConfiguredApplication(cli.Application):
             self.log.setLevel(base_level + 10 * self.silence_level)
 
 
+def get_content(api, rebuild_cache=False):
+    'get content from server or cache'
+    if hasattr(get_content, 'cache') and not rebuild_cache:
+        return get_content.cache
+    if not os.path.exists(CONTENT_JSON) or rebuild_cache:
+        import locale
+        content_endpoint = api.content.get
+        try:
+            # pylint: disable=protected-access
+            loc = locale.getdefaultlocale()[0]
+            server_lang = content_endpoint._node.params['query']['language']
+            # handle something like 'ru_RU' not available - only 'ru'
+            for lang in [loc, loc[:2]]:
+                if lang in server_lang.possible_values:
+                    loc = {'language': lang}
+                    break
+            else:
+                loc = {}
+        except (IndexError, KeyError):
+            loc = {}
+        get_content.cache = content = content_endpoint(**loc)
+        with open(CONTENT_JSON, 'w') as f:
+            json.dump(content, f)
+        return content
+    else:
+        try:
+            with open(CONTENT_JSON) as f:
+                get_content.cache = content = json.load(f)
+            return content
+        except json.JSONDecodeError:
+            return get_content(api, rebuild_cache=True)
+
+
 class ApplicationWithApi(ConfiguredApplication):
     'Application with configured Habitica API'
     api = None  # type: Habitipy
@@ -102,15 +145,40 @@ class ApplicationWithApi(ConfiguredApplication):
         self.api = Habitipy(self.config)
 
 
-class HabiticaCli(ConfiguredApplication):
+class HabiticaCli(ConfiguredApplication):  # pylint: disable=missing-docstring
     VERSION = '0.1'
 
-@HabiticaCli.subcommand('status')
+
+@HabiticaCli.subcommand('status')  # pylint: disable=missing-docstring
 class Status(ApplicationWithApi):
-    DESCRIPTION = "Show HP, XP, GP, and more"
+    DESCRIPTION = "Show HP, XP, GP, and more"  # noqa: Q000
+
     def main(self):
         super().main()
         user = self.api.user.get()
+        for key in ['hp', 'mp', 'exp']:
+            user['stats'][key] = round(user['stats'][key])
+        user['stats']['class'] = _(user['stats']['class']).capitalize()
+        user['food'] = sum(user['items']['food'].values())
+        content = get_content(self.api)
+        user['pet'] = user['items']['currentPet']
+        user['pet'] = content['petInfo'][user['pet']]['text'] if user['pet'] else ''
+        user['pet'] = "Pet: " + user['pet'] if user['pet'] else "No pet"  # noqa: Q000
+        user['mount'] = user['items']['currentMount']
+        user['mount'] = content['mountInfo'][user['mount']]['text'] if user['mount'] else ''
+        user['mount'] = "Mount: " + user['mount'] if user['mount'] else "No mount"  # noqa: Q000
+        level = "\nLevel {stats[lvl]} {stats[class]}\n".format(**user)  # noqa: Q000
+        highlight = '-' * (len(level) - 2)
+        level = highlight + level + highlight
+        result = [
+            level,
+            "Health: {stats[hp]}/{stats[maxHealth]}",  # noqa: Q000
+            "XP: {stats[exp]}/{stats[toNextLevel]}",  # noqa: Q000
+            "Mana: {stats[mp]}/{stats[maxMP]}",  # noqa: Q000
+            "{pet} ({food} food items)",  # noqa: Q000
+            "{mount}"]  # noqa: Q000
+        print('\n'.join(result).format(**user))
+
 
 class ScoreInfo(object):
     'task value/score info: http://habitica.wikia.com/wiki/Task_Value'
@@ -126,9 +194,10 @@ class ScoreInfo(object):
         score = '[' + score.center(cls.max_scores_len) + ']'
         return score_col | score
 
+
 class TasksPrint(ApplicationWithApi):
     'Put all tasks from `domain` to print'
-    domain = '' # type: str
+    domain = ''  # type: str
     def domain_format(self, task):
         'format task for domain'
         raise NotImplementedError()
@@ -141,10 +210,10 @@ class TasksPrint(ApplicationWithApi):
         termwidth = cli.terminal.get_terminal_size()[0]
         habits_len = len(tasks)
         ident_size = len(str(habits_len)) + 2
-        number_format = '{{:{}d}}. '.format(ident_size-2)
+        number_format = '{{:{}d}}. '.format(ident_size - 2)
         indent = ' ' * ident_size
         if ident_size > termwidth:
-            raise RuntimeError("Terminal too small")
+            raise RuntimeError("Terminal too small")  # noqa: Q000
         for i, task in enumerate(tasks):
             i = number_format.format(i + 1)
             res = '\n'.join(wrap(
@@ -153,35 +222,39 @@ class TasksPrint(ApplicationWithApi):
                 subsequent_indent=indent))
             print(emojize(res) if emojize else res)
 
+
 @HabiticaCli.subcommand('habits')  # pylint: disable=missing-docstring
 class Habits(TasksPrint):
-    DESCRIPTION = "List, up and down habit tasks"
+    DESCRIPTION = "List, up and down habit tasks"  # noqa: Q000
     domain = 'habits'
     def domain_format(self, habit):
         score = ScoreInfo(habit['value'])
-        return "{} {text}".format(score, **habit)
+        return "{} {text}".format(score, **habit)  # noqa: Q000
+
 
 @HabiticaCli.subcommand('dailies')  # pylint: disable=missing-docstring
 class Dailys(TasksPrint):
-    DESCRIPTION = "List, up and down daily tasks"
+    DESCRIPTION = "List, up and down daily tasks"  # noqa: Q000
     domain = 'dailys'
     def domain_format(self, daily):
         score = ScoreInfo(daily['value'])
         check = 'X' if daily['completed'] else ' '
-        res = "[{}] {} {text}".format(check, score, **daily)
+        res = "[{}] {} {text}".format(check, score, **daily)  # noqa: Q000
         if not daily['isDue']:
-            res = colors.strikeout + colors.dark_gray | res
+            res = colors.strikeout + colors.dark_gray | res  # pylint: disable=no-member
         return res
+
 
 @HabiticaCli.subcommand('todos')  # pylint: disable=missing-docstring
 class ToDos(TasksPrint):
-    DESCRIPTION = "List, comlete, add or delete todo tasks"
+    DESCRIPTION = "List, comlete, add or delete todo tasks"  # noqa: Q000
     domain = 'todos'
     def domain_format(self, todo):
         score = ScoreInfo(todo['value'])
         check = 'X' if todo['completed'] else ' '
-        res = "[{}] {} {text}".format(check, score, **todo)
+        res = "[{}] {} {text}".format(check, score, **todo)  # noqa: Q000
         return res
+
 
 class TaskId(List[Union[str, int]]):
     """
@@ -202,36 +275,41 @@ class TaskId(List[Union[str, int]]):
                     task_ids.append(int(bit))
             except ValueError:
                 task_ids.append(bit)
-        return [e - 1 if isinstance(e, int) else e for e in set(task_ids)] # type: ignore
+        return [e - 1 if isinstance(e, int) else e for e in set(task_ids)]  # type: ignore
+
 
 class TasksChange(ApplicationWithApi):
     'find all tasks specified by user and do self.op on them'
-    domain = '' # type: str
+    domain = ''  # type: str
     noop = cli.Flag(
         ['--dry-run', '--noop'],
         help="If passed, won't actually change anything on habitipy server")  # noqa: Q000
 
-    def main(self, task_id: TaskId, *more_task_ids: TaskId):  # type: ignore
+    def main(self, *task_ids: TaskId):  # type: ignore
         super().main()
-        for mt in more_task_ids:
-            task_id.extend(mt)
+        task_id = []  # type: List[Union[str,int]]
+        for tids in task_ids:
+            task_id.extend(tids)
+        if not task_id:
+            self.log.error('No task_ids found!')
+            return 1
         tasks = self.api.tasks.user.get(type=self.domain)
-        task_ids = [task['id'] for task in tasks]
+        task_uuids = [task['id'] for task in tasks]
         num_tasks = len(tasks)
-        aliases = {task['alias']:task for task in tasks if 'alias' in task}
+        aliases = {task['alias']: task for task in tasks if 'alias' in task}
         self.changing_tasks = {}  # type: Dict[Union[str,int], Dict[str, Any]]
         for tid in task_id:
             if isinstance(tid, int):
                 if tid >= 0 and tid <= num_tasks:
-                    self.changing_tasks[task_ids[tid]] = tasks[tid]
+                    self.changing_tasks[task_uuids[tid]] = tasks[tid]
             elif isinstance(tid, str):
-                if tid in task_ids:
-                    self.changing_tasks[tid] = tasks[task_ids.index(tid)]
+                if tid in task_uuids:
+                    self.changing_tasks[tid] = tasks[task_uuids.index(tid)]
                 elif tid in aliases:
                     self.changing_tasks[tid] = aliases[tid]
-            self.log.error("Task id {} is invalid".format(tid))
+            self.log.error("Task id {} is invalid".format(tid))  # noqa: Q000
             return
-        self.log.info("Parsed task ids {}".format(self.changing_tasks))
+        self.log.info("Parsed task ids {}".format(self.changing_tasks))  # noqa: Q000
         self.tasks = self.api.tasks
         for tid in self.changing_tasks:
             if self.noop:
@@ -240,7 +318,7 @@ class TasksChange(ApplicationWithApi):
             print(emojize(res) if emojize else res)
         self.domain_print()
 
-    def validate(self, task):
+    def validate(self, task):  # pylint: disable=no-self-use,unused-argument
         'check if task is valid for the operation'
         return True
 
@@ -257,7 +335,7 @@ class TasksChange(ApplicationWithApi):
         raise NotImplementedError
 
 
-class HabitsChange(TasksChange):  # pylint: disable=missing-docstring
+class HabitsChange(TasksChange):  # pylint: disable=missing-docstring,abstract-method
     domain = 'habits'
     def domain_print(self):
         Habits.invoke(config_filename=self.config_filename)
@@ -265,7 +343,7 @@ class HabitsChange(TasksChange):  # pylint: disable=missing-docstring
 
 @Habits.subcommand('up')  # pylint: disable=missing-docstring
 class HabitsUp(HabitsChange):
-    DESCRIPTION = "Up (+) a habit with task_id"
+    DESCRIPTION = "Up (+) a habit with task_id"  # noqa: Q000
     def op(self, tid):
         self.tasks[tid].score['up'].post()
 
@@ -273,12 +351,12 @@ class HabitsUp(HabitsChange):
         return task['up']
 
     def log_op(self, tid):
-        print("Incremented habit {text}".format(**self.changing_tasks[tid]))
+        print("Incremented habit {text}".format(**self.changing_tasks[tid]))  # noqa: Q000
 
 
 @Habits.subcommand('down')  # pylint: disable=missing-docstring
 class HabitsDown(HabitsChange):
-    DESCRIPTION = "Down (-) a habit with task_id"
+    DESCRIPTION = "Down (-) a habit with task_id"  # noqa: Q000
     def op(self, tid):
         self.tasks[tid].score['down'].post()
 
@@ -287,100 +365,124 @@ class HabitsDown(HabitsChange):
 
     def log_op(self, tid):
         'show a message to user on successful change of `tid`'
-        print("Decremented habit {text}".format(**self.changing_tasks[tid]))
+        print("Decremented habit {text}".format(**self.changing_tasks[tid]))  # noqa: Q000
 
-class DailysChange(TasksChange):  # pylint: disable=missing-docstring
+
+class DailysChange(TasksChange):  # pylint: disable=missing-docstring,abstract-method
     domain = 'dailys'
     def domain_print(self):
         Dailys.invoke(config_filename=self.config_filename)
 
+
 @Dailys.subcommand('done')  # pylint: disable=missing-docstring
 class DailysUp(DailysChange):
-    DESCRIPTION = "Check a dayly with task_id"
+    DESCRIPTION = "Check a dayly with task_id"  # noqa: Q000
     def op(self, tid):
         self.tasks[tid].score['up'].post()
 
     def log_op(self, tid):
-        print("Completed daily {text}".format(**self.changing_tasks[tid]))
+        print("Completed daily {text}".format(**self.changing_tasks[tid]))  # noqa: Q000
+
 
 @Dailys.subcommand('undo')  # pylint: disable=missing-docstring
 class DailyDown(DailysChange):
-    DESCRIPTION = "Uncheck a daily with task_id"
+    DESCRIPTION = "Uncheck a daily with task_id"  # noqa: Q000
     def op(self, tid):
         self.tasks[tid].score['down'].post()
 
     def log_op(self, tid):
-        print("Unchecked daily {text}".format(**self.changing_tasks[tid]))
+        print("Unchecked daily {text}".format(**self.changing_tasks[tid]))  # noqa: Q000
 
-class TodosChange(TasksChange):  # pylint: disable=missing-docstring
+
+class TodosChange(TasksChange):  # pylint: disable=missing-docstring,abstract-method
     domain = 'todos'
     def domain_print(self):
         ToDos.invoke(config_filename=self.config_filename)
 
+
 @ToDos.subcommand('done')  # pylint: disable=missing-docstring
 class TodosUp(TodosChange):
-    DESCRIPTION = "Check a todo with task_id"
+    DESCRIPTION = "Check a todo with task_id"  # noqa: Q000
     def op(self, tid):
         self.tasks[tid].score['up'].post()
 
     def log_op(self, tid):
-        print("Completed todo {text}".format(**self.changing_tasks[tid]))
+        print("Completed todo {text}".format(**self.changing_tasks[tid]))  # noqa: Q000
+
 
 @ToDos.subcommand('delete')  # pylint: disable=missing-docstring
 class TodosDelete(TodosChange):
-    DESCRIPTION = "Check a todo with task_id"
+    DESCRIPTION = "Check a todo with task_id"  # noqa: Q000
     def op(self, tid):
         self.tasks[tid].delete()
 
     def log_op(self, tid):
-        print("Deleted todo {text}".format(**self.changing_tasks[tid]))
+        print("Deleted todo {text}".format(**self.changing_tasks[tid]))  # noqa: Q000
+
 
 @ToDos.subcommand('add')  # pylint: disable=missing-docstring
 class TodosAdd(ApplicationWithApi):
-    DESCRIPTION = "Add a todo <todo>"
-    def main(self):
+    DESCRIPTION = "Add a todo <todo>"  # noqa: Q000
+    priority = cli.SwitchAttr(
+        ['-p', '--priority'],
+        cli.Set('0.1', '1', '1.5', '2'), default='1',
+        help="Priority (complexity) of a todo")  # noqa: Q000
+
+    def main(self, *todo: str):
+        todo_str = ' '.join(todo)
+        if not todo:
+            self.log.error("Empty todo text!")  # noqa: Q000
+            return 1
         super().main()
-        a = self.api.user.get()
+        self.api.tasks.user.post(type='todo', text=todo_str, priority=self.priority)
+        print("Added todo '{}' with priority {}".format(todo_str, self.priority))  # noqa: Q000
+        ToDos.invoke(config_filename=self.config_filename)
+
 
 @HabiticaCli.subcommand('home')  # pylint: disable=missing-docstring
 class Home(ConfiguredApplication):
-    DESCRIPTION = "Open habitica site in browser"
+    DESCRIPTION = "Open habitica site in browser"  # noqa: Q000
     def main(self):
         super().main()
         from webbrowser import open_new_tab
         HABITICA_TASKS_PAGE = '/#/tasks'
         home_url = '{}{}'.format(self.config['url'], HABITICA_TASKS_PAGE)
-        self.log.info("Opening %s", home_url)
+        print("Opening {}".format(home_url))  # noqa: Q000
         open_new_tab(home_url)
+
 
 @HabiticaCli.subcommand('server')  # pylint: disable=missing-docstring
 class Server(ApplicationWithApi):
-    DESCRIPTION = "Check habitica server availability"
+    DESCRIPTION = "Check habitica server availability"  # noqa: Q000
     def main(self):
         super().main()
         try:
             ret = self.api.status.get()
             if isinstance(ret, dict) and ret['status'] == 'up':
-                print("Habitica server {} online".format(self.config['url']))
+                print("Habitica server {} online".format(self.config['url']))  # noqa: Q000
                 return
         except (KeyError, requests.exceptions.ConnectionError):
             pass
-        msg = "Habitica server {} offline or there is some issue with it"
+        msg = "Habitica server {} offline or there is some issue with it"  # noqa: Q000
         print(msg.format(self.config['url']))
         return -1
 
 
-sc = local.path(SUBCOMMANDS_JSON)
-if sc.exists():
-    import json
+subcommands_file = local.path(SUBCOMMANDS_JSON)
+if subcommands_file.exists():
     try:
-        with open(sc) as f:
-            c = json.load(f)
-        for name, mod in c:
-            HabiticaCli.subcommand(name, mod)
-    except json.JSONDecodeError as e:
-        warnings.warn('subcommands.json found, but it is invalid: {}'.format(e))
-del sc
+        with open(subcommands_file) as subcommands_file_obj:
+            subcommands = json.load(subcommands_file_obj)
+        del subcommands_file_obj
+        for name, module in subcommands.items():
+            HabiticaCli.subcommand(name, module)
+            del name
+            del module
+        del subcommands
+    except (AttributeError, json.JSONDecodeError) as error:
+        warnings.warn('subcommands.json found, but it is invalid: {}'.format(error))
+        del error
+del subcommands_file
 
 if __name__ == '__main__':
     HabiticaCli.run()

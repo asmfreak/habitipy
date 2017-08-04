@@ -1,13 +1,3 @@
-.DEFAULT_GOAL := help
-
-# display project help
-help:
-	cat README.md | head -n5
-
-# run our roundup tests
-#test:
-#	cd ./tests; sh ./test
-
 # register with pypi
 register:
 	python setup.py register
@@ -20,10 +10,13 @@ package:
 distribute:
 	python setup.py sdist upload
 
-# pep8 everything under /habitica
-pep8:
-	pep8 */*.py
 
-# remove .pyc files
-clean:
-	rm */*.pyc
+habitipy/apidoc.txt:
+	python3 -c 'from habitipy.api import download_api; print(download_api())' >  $@
+
+
+mkdocs: docs/* mkdocs.yml
+	mkdocs build
+
+test:
+	tox

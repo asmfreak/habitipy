@@ -1,5 +1,7 @@
+Original author of habitica python API is [philadams](https://github.com/philadams).
+ 
 Thank you! In alphabetical order. [Full list at
-/graphs/contributors](https://github.com/philadams/habitica/graphs/contributors).
+/graphs/contributors](https://github.com/ASMfreaK/habitipy/graphs/contributors).
 
 - [a-andreyev](https://github.com/a-andreyev)
 - [cool4zbl](https://github.com/cool4zbl)

@@ -17,7 +17,7 @@ class TestHabitipy(unittest.TestCase):
     def test_docstring(self):
         api = Habitipy(None)
         doc = '{get} /api/v3/tasks/user Get a user\'s tasks\
-\n\nurl params:\n\
+\n\nquery params:\n\
 "type" of type "string" one of [habits dailys todos rewards completedTodos] \
 \n\nresponce params:\n"data" of type "array" \n'
         self.assertEqual(api.tasks.user.get.__doc__, doc)
