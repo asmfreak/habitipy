@@ -200,7 +200,7 @@ class TasksPrint(ApplicationWithApi):
                 self.domain_format(task),
                 width=termwidth, initial_indent=i,
                 subsequent_indent=indent))
-            print(emojize(res) if emojize else res)
+            print(emojize(res, use_aliases=True) if emojize else res)
 
 
 @HabiticaCli.subcommand('habits')  # pylint: disable=missing-docstring
@@ -263,7 +263,8 @@ class TasksChange(ApplicationWithApi):
     domain = ''  # type: str
     noop = cli.Flag(
         ['--dry-run', '--noop'],
-        help=_("If passed, won't actually change anything on habitipy server"))  # noqa: Q000
+        help=_("If passed, won't actually change anything on habitipy server"),  # noqa: Q000
+        default=False)
 
     def main(self, *task_ids: TaskId):  # type: ignore
         super().main()
@@ -282,20 +283,24 @@ class TasksChange(ApplicationWithApi):
             if isinstance(tid, int):
                 if tid >= 0 and tid <= num_tasks:
                     self.changing_tasks[task_uuids[tid]] = tasks[tid]
+                    continue
             elif isinstance(tid, str):
                 if tid in task_uuids:
                     self.changing_tasks[tid] = tasks[task_uuids.index(tid)]
+                    continue
                 elif tid in aliases:
                     self.changing_tasks[tid] = aliases[tid]
+                    continue
             self.log.error(_("Task id {} is invalid").format(tid))  # noqa: Q000
             return
-        self.log.info(_("Parsed task ids {}").format(self.changing_tasks))  # noqa: Q000
+        idstr = ' '.join(self.changing_tasks.keys())
+        self.log.info(_("Parsed task ids {}").format(idstr))  # noqa: Q000
         self.tasks = self.api.tasks
         for tid in self.changing_tasks:
-            if self.noop:
+            if not self.noop:
                 self.op(tid)
             res = self.log_op(tid)
-            print(emojize(res) if emojize else res)
+            print(emojize(res, use_aliases=True) if emojize else res)
         self.domain_print()
 
     def validate(self, task):  # pylint: disable=no-self-use,unused-argument
@@ -331,7 +336,7 @@ class HabitsUp(HabitsChange):
         return task['up']
 
     def log_op(self, tid):
-        print(_("Incremented habit {text}").format(**self.changing_tasks[tid]))  # noqa: Q000
+        return _("Incremented habit {text}").format(**self.changing_tasks[tid])  # noqa: Q000
 
 
 @Habits.subcommand('down')  # pylint: disable=missing-docstring
@@ -345,7 +350,7 @@ class HabitsDown(HabitsChange):
 
     def log_op(self, tid):
         'show a message to user on successful change of `tid`'
-        print(_("Decremented habit {text}").format(**self.changing_tasks[tid]))  # noqa: Q000
+        return _("Decremented habit {text}").format(**self.changing_tasks[tid])  # noqa: Q000
 
 
 class DailysChange(TasksChange):  # pylint: disable=missing-docstring,abstract-method
@@ -361,7 +366,7 @@ class DailysUp(DailysChange):
         self.tasks[tid].score['up'].post()
 
     def log_op(self, tid):
-        print(_("Completed daily {text}").format(**self.changing_tasks[tid]))  # noqa: Q000
+        return _("Completed daily {text}").format(**self.changing_tasks[tid])  # noqa: Q000
 
 
 @Dailys.subcommand('undo')  # pylint: disable=missing-docstring
@@ -371,7 +376,7 @@ class DailyDown(DailysChange):
         self.tasks[tid].score['down'].post()
 
     def log_op(self, tid):
-        print(_("Unchecked daily {text}").format(**self.changing_tasks[tid]))  # noqa: Q000
+        return _("Unchecked daily {text}").format(**self.changing_tasks[tid])  # noqa: Q000
 
 
 class TodosChange(TasksChange):  # pylint: disable=missing-docstring,abstract-method
@@ -387,7 +392,7 @@ class TodosUp(TodosChange):
         self.tasks[tid].score['up'].post()
 
     def log_op(self, tid):
-        print(_("Completed todo {text}").format(**self.changing_tasks[tid]))  # noqa: Q000
+        return _("Completed todo {text}").format(**self.changing_tasks[tid])  # noqa: Q000
 
 
 @ToDos.subcommand('delete')  # pylint: disable=missing-docstring
@@ -397,7 +402,7 @@ class TodosDelete(TodosChange):
         self.tasks[tid].delete()
 
     def log_op(self, tid):
-        print(_("Deleted todo {text}").format(**self.changing_tasks[tid]))  # noqa: Q000
+        return _("Deleted todo {text}").format(**self.changing_tasks[tid])  # noqa: Q000
 
 
 @ToDos.subcommand('add')  # pylint: disable=missing-docstring
@@ -415,7 +420,8 @@ class TodosAdd(ApplicationWithApi):
             return 1
         super().main()
         self.api.tasks.user.post(type='todo', text=todo_str, priority=self.priority)
-        print(_("Added todo '{}' with priority {}").format(todo_str, self.priority))  # noqa: Q000
+        res = _("Added todo '{}' with priority {}").format(todo_str, self.priority)  # noqa: Q000
+        print(emojize(res, use_aliases=True) if emojize else res)
         ToDos.invoke(config_filename=self.config_filename)
 
 
