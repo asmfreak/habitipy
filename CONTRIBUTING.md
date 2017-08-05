@@ -30,18 +30,8 @@ Run these commands to get yourself a new translation file:
 make
 msginit -i habitipy/i18n/messages.pot -o habitipy/i18n/yourlang.po
 ```
-Then edit `habitica_planner/i18n/yourlang.po` with translations.
-After that add these lines to `Makefile`
-```
-habitica_planner/i18n/new_yourlang.po: habitica_planner/i18n/messages.pot habitica_planner/i18n/yourlang.po
-	msgmerge habitica_planner/i18n/yourlang.po habitica_planner/i18n/messages.pot > $@
-
-habitica_planner/i18n/yourlang/LC_MESSAGES/habitica_planner.mo: habitica_planner/i18n/new_yourlang.po
-	mkdir -p habitica_planner/i18n/yourlang/LC_MESSAGES/
-	msgfmt -o $@ $<
-```
-Please replace `yourlang` with actual language code. Also add `habitica_planner/i18n/yourlang/LC_MESSAGES/habitica_planner.mo` to `all` target.
-After that you can run make and get a binary `mo` file with your translation, then you can install the package to test your localization.
+Then edit `habitica_planner/i18n/yourlang.po` with translations. After that you can rerun `make` and get a binary `mo` file with your translation.
+Please commit both `po` and `mo` files. Then you can install the package to test your localization. If you've done the procedure right, you'll get `habitipy` cli tool with every message (except python standard) translated.d
 
 ### Localization update
 If there is a change in localization strings, you should run `make` again to get merged `habitica_planner/i18n/new_yourlang.po` then copy that over your `habitica_planner/i18n/yourlang.po`.  

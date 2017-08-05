@@ -1,5 +1,7 @@
 Habitipy
 ========
+[![PyPI](https://img.shields.io/pypi/v/habitipy.svg)](https://pypi.python.org/pypi/habitipy) [![PyPI](https://img.shields.io/pypi/pyversions/habitipy.svg)](https://pypi.python.org/pypi/habitipy) [![PyPI](https://img.shields.io/pypi/l/habitipy.svg)](https://pypi.python.org/pypi/habitipy) [![Build Status](https://travis-ci.org/ASMfreaK/habitipy.svg?branch=master)](https://travis-ci.org/ASMfreaK/habitipy)
+
 A set of scripts to interact with [Habitica](http://habitica.com):
 
 1. Python wrapper for the RESTful Habitica API (`habitica.api.Habitipy` class)

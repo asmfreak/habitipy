@@ -2,7 +2,7 @@
     habitipy - tools and library for Habitica restful API
     command-line interface library using plumbum
 """
-# pylint: disable=arguments-differ, attribute-defined-outside-init
+# pylint: disable=arguments-differ, attribute-defined-outside-init,ungrouped-imports
 # pylint: disable=invalid-name, logging-format-interpolation,too-few-public-methods
 import warnings
 import logging
@@ -17,6 +17,11 @@ import requests
 from .api import Habitipy
 from .util import assert_secure_file, secure_filestore, get_translation_functions
 
+
+try:
+    from json import JSONDecodeError  # type: ignore
+except ImportError:
+    JSONDecodeError = ValueError  # type: ignore
 try:
     from emoji import emojize
 except ImportError:
@@ -103,7 +108,7 @@ def get_content(api, rebuild_cache=False):
             with open(CONTENT_JSON) as f:
                 get_content.cache = content = json.load(f)
             return content
-        except json.JSONDecodeError:
+        except JSONDecodeError:
             return get_content(api, rebuild_cache=True)
 
 
@@ -454,7 +459,7 @@ if subcommands_file.exists():
             del name
             del module
         del subcommands
-    except (AttributeError, json.JSONDecodeError) as error:
+    except (AttributeError, JSONDecodeError) as error:
         warnings.warn('subcommands.json found, but it is invalid: {}'.format(error))
         del error
 del subcommands_file
