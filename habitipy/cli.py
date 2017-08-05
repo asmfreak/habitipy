@@ -278,7 +278,7 @@ class TasksChange(ApplicationWithApi):
         task_uuids = [task['id'] for task in tasks]
         num_tasks = len(tasks)
         aliases = {task['alias']: task for task in tasks if 'alias' in task}
-        self.changing_tasks = {}  # type: Dict[Union[str,int], Dict[str, Any]]
+        self.changing_tasks = {}  # type: Dict[Union[str], Dict[str, Any]]
         for tid in task_id:
             if isinstance(tid, int):
                 if tid >= 0 and tid <= num_tasks:
