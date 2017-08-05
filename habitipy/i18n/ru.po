@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-08-05 00:18+0200\n"
+"POT-Creation-Date: 2017-08-05 01:36+0200\n"
 "PO-Revision-Date: 2017-08-04 18:52+0200\n"
 "Last-Translator:  <cpp.create@gmail.com>\n"
 "Language-Team: Russian\n"
@@ -129,7 +129,9 @@ msgstr "Отобразить, завершить, добавить или уда
 
 #: habitipy/cli.py:261
 msgid "If passed, won't actually change anything on habitipy server"
-msgstr "Если опция предоставлена, то данная команда не будет изменять данные на сервере Хабитики"
+msgstr ""
+"Если опция предоставлена, то данная команда не будет изменять данные на "
+"сервере Хабитики"
 
 #: habitipy/cli.py:285
 msgid "Task id {} is invalid"

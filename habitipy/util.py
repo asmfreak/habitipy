@@ -53,5 +53,5 @@ def get_translation_functions(package_name: str, names: Tuple[str, ...]=('gettex
         localefile = gettext.find(package_name, localedir)
         if localefile:
             break
-    translation = gettext.translation(package_name, localedir=localedir)
+    translation = gettext.translation(package_name, localedir=localedir, fallback=True)
     return [getattr(translation, x) for x in names]

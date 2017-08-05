@@ -21,6 +21,7 @@ setup(
     install_requires=INSTALL_REQUIRES,
     package_data={
         'habitipy': [
+            'apidoc.txt',
             '*.pyi',
             'i18n/*/LC_MESSAGES/*.mo'
         ]
