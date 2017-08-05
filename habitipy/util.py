@@ -9,6 +9,7 @@ from contextlib import contextmanager
 from functools import partial
 from textwrap import dedent
 from typing import Tuple
+import logging
 import pkg_resources
 
 
@@ -53,5 +54,7 @@ def get_translation_functions(package_name: str, names: Tuple[str, ...]=('gettex
         localefile = gettext.find(package_name, localedir)
         if localefile:
             break
+    else:
+        logging.getLogger(__name__).warning('Translation for your language not found. ')
     translation = gettext.translation(package_name, localedir=localedir, fallback=True)
     return [getattr(translation, x) for x in names]
