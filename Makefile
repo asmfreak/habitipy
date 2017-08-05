@@ -36,8 +36,8 @@ push:
 	git push --tags
 
 pypi:
-	python setup.py register
-	python setup.py sdist upload
+	python setup.py register --identity="cpp.create@gmail.com" --sign
+	python setup.py sdist upload --identity="cpp.create@gmail.com" --sign
 
 
 mkdocs: docs/* mkdocs.yml

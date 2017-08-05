@@ -178,7 +178,7 @@ class Habitipy(object):
         raise IndexError('{} not found in this API!'.format(val))
 
     def __call__(self, **kwargs) -> Union[Dict, List]:
-        uri = '/'.join([self._conf['url']]+self._current[:-1])
+        uri = '/'.join([self._conf['url']] + self._current[:-1])
         if not self._is_request:
             raise ValueError('{} is not an endpoint!'.format(uri))
         method = self._node.method
