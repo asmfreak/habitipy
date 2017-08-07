@@ -15,7 +15,8 @@ from typing import List, Union, Dict, Any  # pylint: disable=unused-import
 from plumbum import local, cli, colors
 import requests
 from .api import Habitipy
-from .util import assert_secure_file, secure_filestore, get_translation_functions
+from .util import assert_secure_file, secure_filestore
+from .util import get_translation_functions, get_translation_for
 
 
 try:
@@ -86,18 +87,26 @@ def get_content(api, rebuild_cache=False):
     if not os.path.exists(CONTENT_JSON) or rebuild_cache:
         import locale
         content_endpoint = api.content.get
+        # pylint: disable=protected-access
+        try_langs = []
         try:
-            # pylint: disable=protected-access
+            lang = get_translation_for('habitipy').info()['language']
+            try_langs.append(lang)
+        except KeyError:
+            pass
+        try:
             loc = locale.getdefaultlocale()[0]
-            server_lang = content_endpoint._node.params['query']['language']
-            # handle something like 'ru_RU' not available - only 'ru'
-            for lang in [loc, loc[:2]]:
-                if lang in server_lang.possible_values:
-                    loc = {'language': lang}
-                    break
-            else:
-                loc = {}
-        except (IndexError, KeyError):
+            try_langs.append(loc)
+            try_langs.append(loc[:2])
+        except IndexError:
+            pass
+        server_lang = content_endpoint._node.params['query']['language']
+        # handle something like 'ru_RU' not available - only 'ru'
+        for lang in try_langs:
+            if lang in server_lang.possible_values:
+                loc = {'language': lang}
+                break
+        else:
             loc = {}
         get_content.cache = content = content_endpoint(**loc)
         with open(CONTENT_JSON, 'w') as f:
@@ -153,7 +162,7 @@ class Status(ApplicationWithApi):
             level,
             _("Health: {stats[hp]}/{stats[maxHealth]}"),  # noqa: Q000
             _("XP: {stats[exp]}/{stats[toNextLevel]}"),  # noqa: Q000
-            "Mana: {stats[mp]}/{stats[maxMP]}",  # noqa: Q000
+            _("Mana: {stats[mp]}/{stats[maxMP]}"),  # noqa: Q000
             '{pet} ' +
             ngettext("({food} food item)", "({food} food items)", user['food']),  # noqa: Q000
             _("{mount}")]  # noqa: Q000
