@@ -15,7 +15,8 @@ from typing import List, Union, Dict, Any  # pylint: disable=unused-import
 from plumbum import local, cli, colors
 import requests
 from .api import Habitipy
-from .util import assert_secure_file, secure_filestore, get_translation_functions, get_translation_for
+from .util import assert_secure_file, secure_filestore
+from .util import get_translation_functions, get_translation_for
 
 
 try:
