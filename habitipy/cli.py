@@ -187,7 +187,7 @@ class ScoreInfo(object):
 class TasksPrint(ApplicationWithApi):
     'Put all tasks from `domain` to print'
     domain = ''  # type: str
-    more_tasks = [] # type: List[Dict[str, Any]]
+    more_tasks = []  # type: List[Dict[str, Any]]
     def domain_format(self, task):
         'format task for domain'
         raise NotImplementedError()
@@ -270,7 +270,8 @@ class Rewards(TasksPrint):
         super().main()
 
     def domain_format(self, reward):
-        score = colors.yellow | _("{value} gp").format(**reward) # pylint: disable=no-member
+        # pylint: disable=no-member
+        score = colors.yellow | _("{value} gp").format(**reward) # noqa: Q000
         return _("{} {text}").format(score, **reward)  # noqa: Q000
 
 
@@ -303,7 +304,7 @@ class TasksChange(ApplicationWithApi):
         ['--dry-run', '--noop'],
         help=_("If passed, won't actually change anything on habitipy server"),  # noqa: Q000
         default=False)
-    more_tasks = [] # type: List[Dict[str, Any]]
+    more_tasks = []  # type: List[Dict[str, Any]]
     NO_TASK_ID = _("No task_ids found!")  # noqa: Q000
     TASK_ID_INVALID = _("Task id {} is invalid")  # noqa: Q000
     PARSED_TASK_IDS = _("Parsed task ids {}")  # noqa: Q000
