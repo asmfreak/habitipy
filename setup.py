@@ -15,7 +15,7 @@ setup(
     author='Pavel Pletenev',
     author_email='cpp.create@gmail.com',
     url='https://github.com/ASMfreaK/habitipy',
-    license='LICENSE.txt',
+    license='MIT',
     description='tools and library for Habitica restful API (http://habitica.com)',
     packages=['habitipy'],
     install_requires=INSTALL_REQUIRES,
