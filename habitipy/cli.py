@@ -245,6 +245,15 @@ class ToDos(TasksPrint):
         return res
 
 
+@HabiticaCli.subcommand('rewards')  # pylint: disable=missing-docstring
+class Rewards(TasksPrint):
+    DESCRIPTION = _("List, buy and add rewards")  # noqa: Q000
+    domain = 'rewards'
+    def domain_format(self, reward):
+        score = colors.yellow | _("{value} gp").format(**reward) # pylint: disable=no-member
+        return _("{} {text}").format(score, **reward)  # noqa: Q000
+
+
 class TaskId(List[Union[str, int]]):
     """
     handle task-id formats such as:
@@ -432,6 +441,28 @@ class TodosAdd(ApplicationWithApi):
         res = _("Added todo '{}' with priority {}").format(todo_str, self.priority)  # noqa: Q000
         print(emojize(res, use_aliases=True) if emojize else res)
         ToDos.invoke(config_filename=self.config_filename)
+
+
+RewardId = TaskId
+
+
+@Rewards.subcommand('buy')  # pylint: disable=missing-docstring
+class RewardsBuy(TasksChange):
+    DESCRIPTION = _("Buy a reward with reward_id")  # noqa: Q000
+    domain = 'rewards'
+    def main(self, *reward_id: RewardId):
+        # pylint: disable=useless-super-delegation
+        # reason: nicer prints
+        super().main(*reward_id)
+
+    def op(self, tid):
+        self.tasks[tid].score['up'].post()
+
+    def log_op(self, tid):
+        return _("Bought reward {text}").format(**self.changing_tasks[tid])  # noqa: Q000
+
+    def domain_print(self):
+        Rewards.invoke(config_filename=self.config_filename)
 
 
 @HabiticaCli.subcommand('home')  # pylint: disable=missing-docstring
