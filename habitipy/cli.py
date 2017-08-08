@@ -187,6 +187,7 @@ class ScoreInfo(object):
 class TasksPrint(ApplicationWithApi):
     'Put all tasks from `domain` to print'
     domain = ''  # type: str
+    more_tasks = [] # type: List[Dict[str, Any]]
     def domain_format(self, task):
         'format task for domain'
         raise NotImplementedError()
@@ -196,6 +197,7 @@ class TasksPrint(ApplicationWithApi):
             return
         super().main()
         tasks = self.api.tasks.user.get(type=self.domain)
+        tasks.extend(self.more_tasks)
         termwidth = cli.terminal.get_terminal_size()[0]
         habits_len = len(tasks)
         ident_size = len(str(habits_len)) + 2
@@ -245,10 +247,28 @@ class ToDos(TasksPrint):
         return res
 
 
+def get_additional_rewards(api):
+    'returns list of non-user rewards (potion, armoire, gear)'
+    c = get_content(api)
+    tasks = [c[i] for i in ['potion', 'armoire']]
+    tasks.extend(api.user.inventory.buy.get())
+    for task in tasks:
+        task['id'] = task['alias'] = task['key']
+    return tasks
+
+
 @HabiticaCli.subcommand('rewards')  # pylint: disable=missing-docstring
 class Rewards(TasksPrint):
     DESCRIPTION = _("List, buy and add rewards")  # noqa: Q000
     domain = 'rewards'
+
+    def main(self):
+        if self.nested_command:
+            return
+        ApplicationWithApi.main(self)
+        self.more_tasks = get_additional_rewards(self.api)
+        super().main()
+
     def domain_format(self, reward):
         score = colors.yellow | _("{value} gp").format(**reward) # pylint: disable=no-member
         return _("{} {text}").format(score, **reward)  # noqa: Q000
@@ -283,16 +303,21 @@ class TasksChange(ApplicationWithApi):
         ['--dry-run', '--noop'],
         help=_("If passed, won't actually change anything on habitipy server"),  # noqa: Q000
         default=False)
-
+    more_tasks = [] # type: List[Dict[str, Any]]
+    NO_TASK_ID = _("No task_ids found!")  # noqa: Q000
+    TASK_ID_INVALID = _("Task id {} is invalid")  # noqa: Q000
+    PARSED_TASK_IDS = _("Parsed task ids {}")  # noqa: Q000
     def main(self, *task_ids: TaskId):  # type: ignore
         super().main()
         task_id = []  # type: List[Union[str,int]]
         for tids in task_ids:
             task_id.extend(tids)
         if not task_id:
-            self.log.error('No task_ids found!')
+            self.log.error(self.NO_TASK_ID)
             return 1
         tasks = self.api.tasks.user.get(type=self.domain)
+        assert isinstance(tasks, list)
+        tasks.extend(self.more_tasks)
         task_uuids = [task['id'] for task in tasks]
         num_tasks = len(tasks)
         aliases = {task['alias']: task for task in tasks if 'alias' in task}
@@ -309,10 +334,10 @@ class TasksChange(ApplicationWithApi):
                 elif tid in aliases:
                     self.changing_tasks[tid] = aliases[tid]
                     continue
-            self.log.error(_("Task id {} is invalid").format(tid))  # noqa: Q000
+            self.log.error(self.TASK_ID_INVALID.format(tid))
             return
         idstr = ' '.join(self.changing_tasks.keys())
-        self.log.info(_("Parsed task ids {}").format(idstr))  # noqa: Q000
+        self.log.info(self.PARSED_TASK_IDS.format(idstr))  # noqa: Q000
         self.tasks = self.api.tasks
         for tid in self.changing_tasks:
             if not self.noop:
@@ -433,7 +458,7 @@ class TodosAdd(ApplicationWithApi):
 
     def main(self, *todo: str):
         todo_str = ' '.join(todo)
-        if not todo:
+        if not todo_str:
             self.log.error(_("Empty todo text!"))  # noqa: Q000
             return 1
         super().main()
@@ -450,18 +475,44 @@ RewardId = TaskId
 class RewardsBuy(TasksChange):
     DESCRIPTION = _("Buy a reward with reward_id")  # noqa: Q000
     domain = 'rewards'
+    NO_TASK_ID = _("No reward_ids found!")  # noqa: Q000
+    TASK_ID_INVALID = _("Reward id {} is invalid")  # noqa: Q000
+    PARSED_TASK_IDS = _("Parsed reward ids {}")  # noqa: Q000
     def main(self, *reward_id: RewardId):
-        # pylint: disable=useless-super-delegation
-        # reason: nicer prints
+        ApplicationWithApi.main(self)
+        self.more_tasks = get_additional_rewards(self.api)
         super().main(*reward_id)
 
     def op(self, tid):
-        self.tasks[tid].score['up'].post()
+        t = self.changing_tasks[tid]
+        if t['type'] != 'rewards':
+            self.api.user.buy[t['key']].post()
+        else:
+            self.tasks[tid].score['up'].post()
 
     def log_op(self, tid):
         return _("Bought reward {text}").format(**self.changing_tasks[tid])  # noqa: Q000
 
     def domain_print(self):
+        Rewards.invoke(config_filename=self.config_filename)
+
+
+@Rewards.subcommand('add')  # pylint: disable=missing-docstring
+class RewardsAdd(ApplicationWithApi):
+    DESCRIPTION = _("Add a reward <reward>")  # noqa: Q000
+    cost = cli.SwitchAttr(
+        ['--cost'], default='10',
+        help=_("Cost of a reward (gp)"))  # noqa: Q000
+
+    def main(self, *reward: str):
+        todo_str = ' '.join(reward)
+        if not todo_str:
+            self.log.error(_("Empty reward text!"))  # noqa: Q000
+            return 1
+        super().main()
+        self.api.tasks.user.post(type='reward', text=todo_str, value=self.cost)
+        res = _("Added reward '{}' with cost {}").format(todo_str, self.cost)  # noqa: Q000
+        print(emojize(res, use_aliases=True) if emojize else res)
         Rewards.invoke(config_filename=self.config_filename)
 
 
