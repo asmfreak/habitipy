@@ -58,8 +58,8 @@ class TestCli(unittest.TestCase):
         cli.emojize = mock.Mock()
         with to_devnull():
             cli.TasksPrint.invoke(config_filename=self.file.name)
-        cli.TasksPrint.domain_format.assert_called()
+        self.assertTrue(cli.TasksPrint.domain_format.called)
         data.extend(more)
         data = [((x,),) for x in data]
         cli.TasksPrint.domain_format.assert_has_calls(data)
-        cli.emojize.assert_called()
+        self.assertTrue(cli.emojize.called)
