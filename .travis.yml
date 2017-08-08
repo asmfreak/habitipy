@@ -3,6 +3,10 @@ python:
   - "3.4"
   - "3.5"
   - "3.6"
-install: "pip install tox"
+install: 
+  - pip install tox
+  - pip install codecov
 script: tox
+after_success:
+  - codecov
 sudo: false

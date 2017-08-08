@@ -9,9 +9,9 @@ import logging
 import os
 import json
 from bisect import bisect
-
 from textwrap import wrap
 from typing import List, Union, Dict, Any  # pylint: disable=unused-import
+import pkg_resources
 from plumbum import local, cli, colors
 import requests
 from .api import Habitipy
@@ -131,7 +131,7 @@ class ApplicationWithApi(ConfiguredApplication):
 
 
 class HabiticaCli(ConfiguredApplication):  # pylint: disable=missing-docstring
-    VERSION = '0.1'
+    VERSION = pkg_resources.get_distribution('habitipy').version
 
 
 @HabiticaCli.subcommand('status')  # pylint: disable=missing-docstring
@@ -271,7 +271,7 @@ class Rewards(TasksPrint):
 
     def domain_format(self, reward):
         # pylint: disable=no-member
-        score = colors.yellow | _("{value} gp").format(**reward) # noqa: Q000
+        score = colors.yellow | _("{value} gp").format(**reward)  # noqa: Q000
         return _("{} {text}").format(score, **reward)  # noqa: Q000
 
 
