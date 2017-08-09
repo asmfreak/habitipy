@@ -2,7 +2,7 @@ all: habitipy/i18n/*/LC_MESSAGES/habitipy.mo
 .PRECIOUS: habitipy/i18n/%.po.new
 # scrape sources for messages
 habitipy/i18n/messages.pot: habitipy/*.py
-	xgettext -L python -o $@ $^
+	xgettext --from-code utf-8  -L python -o $@ $^
 
 # merge changes with previous translations
 habitipy/i18n/%.po.new: habitipy/i18n/messages.pot habitipy/i18n/%.po
