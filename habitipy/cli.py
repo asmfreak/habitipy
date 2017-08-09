@@ -93,8 +93,9 @@ def get_content(api, rebuild_cache=False):
             pass
         try:
             loc = locale.getdefaultlocale()[0]
-            try_langs.append(loc)
-            try_langs.append(loc[:2])
+            if loc:
+                try_langs.append(loc)
+                try_langs.append(loc[:2])
         except IndexError:
             pass
         server_lang = content_endpoint._node.params['query']['language']

@@ -10,7 +10,7 @@ from functools import partial
 from textwrap import dedent
 import re
 from typing import Tuple
-import logging
+# import logging
 import pkg_resources
 from plumbum import colors
 try:
@@ -94,7 +94,8 @@ def get_translation_for(package_name: str) -> gettext.NullTranslations:
         if localefile:
             break
     else:
-        logging.getLogger(__name__).warning('Translation for your language not found. ')
+        pass
+        #logging.getLogger(__name__).warning('Translation for your language not found. ')
     return gettext.translation(package_name, localedir=localedir, fallback=True)
 
 
