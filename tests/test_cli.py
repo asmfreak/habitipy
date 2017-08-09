@@ -1,5 +1,6 @@
 import unittest
 from unittest import mock
+from unittest.mock import patch
 import os
 from contextlib import contextmanager
 import tempfile
@@ -40,9 +41,15 @@ class TestCli(unittest.TestCase):
     def tearDown(self):
         os.remove(self.file.name)
 
+    @patch.object(cli.TasksPrint, 'domain', 'testdomain')
+    @patch.object(
+        cli.TasksPrint, 'domain_format',
+        mock.Mock(wraps=cli.TasksPrint.domain_format, return_value=''))
+    @patch('habitipy.cli.prettify', mock.Mock(wraps=cli.prettify))
     @responses.activate
     def test_task_print(self):
         data = [{'first':1}, {'second':2}]
+        more = [{'third':3}]
         responses.add(
             responses.GET,
             url='https://habitica.com/api/v3/tasks/user?type=testdomain',
@@ -50,16 +57,10 @@ class TestCli(unittest.TestCase):
             match_querystring=True,
             json=dict(data=data)
             )
-        cli.TasksPrint.domain = 'testdomain'
-        cli.TasksPrint.domain_format = mock.Mock(
-            wraps=cli.TasksPrint.domain_format, return_value='')
-        more = [{'third':3}]
-        cli.TasksPrint.more_tasks = more
-        cli.emojize = mock.Mock()
-        with to_devnull():
+        with patch.object(cli.TasksPrint, 'more_tasks', more),to_devnull():
             cli.TasksPrint.invoke(config_filename=self.file.name)
-        self.assertTrue(cli.TasksPrint.domain_format.called)
-        data.extend(more)
-        data = [((x,),) for x in data]
-        cli.TasksPrint.domain_format.assert_has_calls(data)
-        self.assertTrue(cli.emojize.called)
+            self.assertTrue(cli.TasksPrint.domain_format.called)
+            data.extend(more)
+            data = [((x,),) for x in data]
+            cli.TasksPrint.domain_format.assert_has_calls(data)
+            self.assertTrue(cli.prettify.called)
