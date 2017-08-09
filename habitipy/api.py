@@ -106,7 +106,7 @@ class Habitipy(object):
             if not apis:
                 fn = local.path(APIDOC_LOCAL_FILE)
                 if not fn.exists():
-                    fn = pkg_resources.resource_filename('habitipy', 'apidoc.txt') 
+                    fn = pkg_resources.resource_filename('habitipy', 'apidoc.txt')
                 fn = branch if from_github else fn
                 apis = parse_apidoc(fn, from_github)
             with warnings.catch_warnings():
