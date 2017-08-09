@@ -31,7 +31,7 @@ class TestHabitipy(unittest.TestCase):
         with self.assertRaises(TypeError):
             api = Habitipy(None, current='abracadabra')
 
-    @unittest.skipIf(os.environ.get('CONTINIOUS_INTEGRATION', '') != 'true', 'network-heavy')
+    @unittest.skipIf(os.environ.get('CI', '') != 'true', 'network-heavy')
     def test_github(self):
         lp = local.path(APIDOC_LOCAL_FILE)
         Habitipy(None, from_github=True, branch='develop')
