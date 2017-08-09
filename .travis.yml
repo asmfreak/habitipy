@@ -3,10 +3,15 @@ python:
   - "3.4"
   - "3.5"
   - "3.6"
+env:
+  global:
+    - COLUMNS=80
 install: 
   - pip install tox
   - pip install codecov
-script: tox
+script:
+  - stty cols 80 
+  - tox
 after_success:
   - codecov
 sudo: false
