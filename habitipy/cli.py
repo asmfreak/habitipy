@@ -9,6 +9,7 @@ import logging
 import os
 import json
 from bisect import bisect
+from textwrap import dedent
 from typing import List, Union, Dict, Any  # pylint: disable=unused-import
 import pkg_resources
 from plumbum import local, cli, colors
@@ -158,13 +159,56 @@ class Status(ApplicationWithApi):
         level = highlight + level + highlight
         result = [
             level,
-            _("Health: {stats[hp]}/{stats[maxHealth]}"),  # noqa: Q000
-            _("XP: {stats[exp]}/{stats[toNextLevel]}"),  # noqa: Q000
-            _("Mana: {stats[mp]}/{stats[maxMP]}"),  # noqa: Q000
+            colors.red | _("Health: {stats[hp]}/{stats[maxHealth]}"),  # noqa: Q000
+            colors.yellow | _("XP: {stats[exp]}/{stats[toNextLevel]}"),  # noqa: Q000
+            colors.blue | _("Mana: {stats[mp]}/{stats[maxMP]}"),  # noqa: Q000
+            colors.light_yellow | _("GP: {stats[gp]:.2f}"),  # noqa: Q000
             '{pet} ' +
             ngettext("({food} food item)", "({food} food items)", user['food']),  # noqa: Q000
-            _("{mount}")]  # noqa: Q000
+            '{mount}']
+        quest = self.quest_info(user)
+        if quest:
+            result.append(quest)
         print('\n'.join(result).format(**user))
+
+    def quest_info(self, user):
+        'Get current quest info or return None'
+        key = user['party']['quest']['key']
+        if '_id' not in user['party'] or key is None:
+            return
+        for refresh in False, True:
+            content = get_content(self.api, refresh)
+            quest = content['quests'].get(key, None)
+            if quest:
+                break
+        else:
+            self.log.warning(dedent(_(
+                """Quest {} not found in Habitica's content.
+                Please file an issue to https://github.com/ASMfreaK/habitipy/issues
+                """)).format(key))
+            return
+        for quest_type, quest_template in (
+                ('collect', _("""
+                Quest: {quest[text]} (collect-type)
+                {user[party][quest][progress][collectedItems]} quest items collected
+                """)),
+                ('boss', _("""
+                Quest: {quest[text]} (boss)
+                {user[party][quest][progress][up]:.1f} damage will be dealt to {quest[boss][name]}
+                """))):
+            if quest_type in quest:
+                try:
+                    return dedent(quest_template.format(quest=quest, user=user))[1:-1]
+                except KeyError:
+                    self.log.warning(dedent(_(
+                        """Something went wrong when formatting quest {}.
+                        Please file an issue to https://github.com/ASMfreaK/habitipy/issues
+                        """)).format(key))
+                    return
+        self.log.warning(dedent(_(
+            """Quest {} isn't neither a collect-type or a boss-type.
+            Please file an issue to https://github.com/ASMfreaK/habitipy/issues
+            """)).format(key))
 
 
 class ScoreInfo(object):
@@ -177,7 +221,7 @@ class ScoreInfo(object):
     def __new__(cls, value):
         index = bisect(cls.breakpoints, value)
         score = cls.scores[index]
-        score_col = colors.fg(cls.colors_[index])  # pylint: disable=no-member
+        score_col = colors.fg(cls.colors_[index])
         score = '[' + score.center(cls.max_scores_len) + ']'
         return score_col | score
 
@@ -223,7 +267,7 @@ class Dailys(TasksPrint):
         check = 'X' if daily['completed'] else ' '
         res = _("[{}] {} {text}").format(check, score, **daily)  # noqa: Q000
         if not daily['isDue']:
-            res = colors.strikeout + colors.dark_gray | res  # pylint: disable=no-member
+            res = colors.strikeout + colors.dark_gray | res
         return res
 
 
@@ -261,7 +305,6 @@ class Rewards(TasksPrint):
         super().main()
 
     def domain_format(self, reward):
-        # pylint: disable=no-member
         score = colors.yellow | _("{value} gp").format(**reward)  # noqa: Q000
         return _("{} {text}").format(score, **reward)  # noqa: Q000
 

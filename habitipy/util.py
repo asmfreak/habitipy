@@ -95,7 +95,6 @@ def get_translation_for(package_name: str) -> gettext.NullTranslations:
             break
     else:
         pass
-        #logging.getLogger(__name__).warning('Translation for your language not found. ')
     return gettext.translation(package_name, localedir=localedir, fallback=True)
 
 

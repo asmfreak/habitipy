@@ -89,7 +89,9 @@ class ApiNode(object):
 def escape_keywords(arr):
     'append _ to all python keywords'
     for i in arr:
-        yield i if i not in kwlist else i + '_'
+        i = i if i not in kwlist else i + '_'
+        i = i if '-' not in i else i.replace('-', '_')
+        yield i
 
 
 class Habitipy(object):
@@ -165,6 +167,7 @@ class Habitipy(object):
             return super().__getattr__(val)  # type:ignore
         try:
             val = val if not val.endswith('_') else val.rstrip('_')
+            val = val if '_' not in val else val.replace('_', '-')
             _node = self._node.into(val)
             return Habitipy(self._conf, apis=self._apis, current=self._current + [val])
         except IndexError:
