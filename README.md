@@ -1,11 +1,21 @@
 Habitipy
 ========
-[![PyPI](https://img.shields.io/pypi/v/habitipy.svg)](https://pypi.python.org/pypi/habitipy) [![PyPI](https://img.shields.io/pypi/pyversions/habitipy.svg)](https://pypi.python.org/pypi/habitipy) [![PyPI](https://img.shields.io/pypi/l/habitipy.svg)](https://pypi.python.org/pypi/habitipy) [![Build Status](https://travis-ci.org/ASMfreaK/habitipy.svg?branch=master)](https://travis-ci.org/ASMfreaK/habitipy)
+[![PyPI](https://img.shields.io/pypi/v/habitipy.svg)](https://pypi.python.org/pypi/habitipy) [![PyPI](https://img.shields.io/pypi/pyversions/habitipy.svg)](https://pypi.python.org/pypi/habitipy) [![PyPI](https://img.shields.io/pypi/l/habitipy.svg)](https://pypi.python.org/pypi/habitipy) [![Build Status](https://travis-ci.org/ASMfreaK/habitipy.svg?branch=master)](https://travis-ci.org/ASMfreaK/habitipy) [![Say Thanks!](https://img.shields.io/badge/Say%20Thanks-!-1EAEDB.svg)](https://saythanks.io/to/ASMfreaK)
 
 A set of scripts to interact with [Habitica](http://habitica.com):
 
 1. Python wrapper for the RESTful Habitica API (`habitica.api.Habitipy` class)
 2. Command-line interface with subcommands (e.g. `> habitipy todos`)
+
+Features
+--------
+
+* Access to your Habitica account from command line
+* Colourful output
+* Easy and intuitive subcommands syntax
+* Pluggable and extendable architecture
+* API with built-in help
+
 
 Install
 -------
