@@ -70,14 +70,14 @@ class TestHabitipy(unittest.TestCase):
         Habitipy(None, from_github=True, branch='develop')
         self.assertTrue(mock.called)
         self.assertTrue(lp.exists())
-        with patch('habitipy.api.open', MagicMock(wraps=builtins.open)) as mock:
+        with patch('builtins.open', MagicMock(wraps=builtins.open)) as mock:
             Habitipy(None)
             mock.assert_called_with(lp)
         os.remove(lp)
         Habitipy(None, from_github=True)
         self.assertTrue(mock.called)
         self.assertTrue(lp.exists())
-        with patch('habitipy.api.open', MagicMock(wraps=builtins.open)) as mock:
+        with patch('builtins.open', MagicMock(wraps=builtins.open)) as mock:
             Habitipy(None)
             mock.assert_called_with(lp)
         os.remove(lp)
