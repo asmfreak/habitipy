@@ -1,6 +1,10 @@
 import unittest
+from unittest.mock import patch, MagicMock
+import os
 
 from habitipy import Habitipy
+from habitipy.api import APIDOC_LOCAL_FILE
+from plumbum import local
 
 class TestHabitipy(unittest.TestCase):
     def test_python_keyword_escape(self):
@@ -27,7 +31,18 @@ class TestHabitipy(unittest.TestCase):
         with self.assertRaises(TypeError):
             api = Habitipy(None, current='abracadabra')
 
-    @unittest.skip
+    @unittest.skipIf(
+        os.environ.get('CI', '') != 'true',
+        'network-heavy (not in CI env(CI="{}"))'.format(os.environ.get('CI', '')))
     def test_github(self):
+        lp = local.path(APIDOC_LOCAL_FILE)
         Habitipy(None, from_github=True, branch='develop')
+        self.assertTrue(lp.exists())
+        os.remove(lp)
         Habitipy(None, from_github=True)
+        self.assertTrue(lp.exists())
+        import builtins
+        with patch('habitipy.api.open', MagicMock(wraps=builtins.open)) as mock:
+            Habitipy(None)
+            mock.assert_called_with(APIDOC_LOCAL_FILE)
+        os.remove(lp)

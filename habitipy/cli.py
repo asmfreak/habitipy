@@ -9,7 +9,6 @@ import logging
 import os
 import json
 from bisect import bisect
-from textwrap import wrap
 from typing import List, Union, Dict, Any  # pylint: disable=unused-import
 import pkg_resources
 from plumbum import local, cli, colors
@@ -17,16 +16,14 @@ import requests
 from .api import Habitipy
 from .util import assert_secure_file, secure_filestore
 from .util import get_translation_functions, get_translation_for
-
+from .util import prettify
 
 try:
     from json import JSONDecodeError  # type: ignore
 except ImportError:
     JSONDecodeError = ValueError  # type: ignore
-try:
-    from emoji import emojize
-except ImportError:
-    emojize = None
+
+
 DEFAULT_CONF = '~/.config/habitipy/config'
 SUBCOMMANDS_JSON = '~/.config/habitipy/subcommands.json'
 CONTENT_JSON = local.path('~/.config/habitipy/content.json')
@@ -198,20 +195,13 @@ class TasksPrint(ApplicationWithApi):
         super().main()
         tasks = self.api.tasks.user.get(type=self.domain)
         tasks.extend(self.more_tasks)
-        termwidth = cli.terminal.get_terminal_size()[0]
         habits_len = len(tasks)
         ident_size = len(str(habits_len)) + 2
         number_format = '{{:{}d}}. '.format(ident_size - 2)
-        indent = ' ' * ident_size
-        if ident_size > termwidth:
-            raise RuntimeError(_("Terminal too small"))  # noqa: Q000
         for i, task in enumerate(tasks):
             i = number_format.format(i + 1)
-            res = '\n'.join(wrap(
-                self.domain_format(task),
-                width=termwidth, initial_indent=i,
-                subsequent_indent=indent))
-            print(emojize(res, use_aliases=True) if emojize else res)
+            res = i + prettify(self.domain_format(task))
+            print(res)
 
 
 @HabiticaCli.subcommand('habits')  # pylint: disable=missing-docstring
@@ -344,7 +334,7 @@ class TasksChange(ApplicationWithApi):
             if not self.noop:
                 self.op(tid)
             res = self.log_op(tid)
-            print(emojize(res, use_aliases=True) if emojize else res)
+            print(prettify(res))
         self.domain_print()
 
     def validate(self, task):  # pylint: disable=no-self-use,unused-argument
@@ -465,7 +455,7 @@ class TodosAdd(ApplicationWithApi):
         super().main()
         self.api.tasks.user.post(type='todo', text=todo_str, priority=self.priority)
         res = _("Added todo '{}' with priority {}").format(todo_str, self.priority)  # noqa: Q000
-        print(emojize(res, use_aliases=True) if emojize else res)
+        print(prettify(res))
         ToDos.invoke(config_filename=self.config_filename)
 
 
@@ -513,7 +503,7 @@ class RewardsAdd(ApplicationWithApi):
         super().main()
         self.api.tasks.user.post(type='reward', text=todo_str, value=self.cost)
         res = _("Added reward '{}' with cost {}").format(todo_str, self.cost)  # noqa: Q000
-        print(emojize(res, use_aliases=True) if emojize else res)
+        print(prettify(res))
         Rewards.invoke(config_filename=self.config_filename)
 
 

@@ -20,23 +20,36 @@ Features
 Install
 -------
 
-`pip install habitipy`.
+Habitipy cones in two main versions: basic an emoji. If don't ant emoji on your terminal you are free to to with just only:
+`$ pip install habitipy`
 
+If you want something like `:thumbsup:` to be converted to actual emoji unicode symbols before it will be printed to terminal, you should use this command:
+`$ pip install habitipy[emoji]`
 
-    > git clone https://github.com/philadams/habitica
-    > pip install -e habitica
+In both cases you should put `sudo` in front of command, if you are installing `habitipy` package to system directory. To install `habitipy` just for you, use
+`$ pip install --user habitipy`
 
-Configure
----------
+And the last, but not the least thing abount installation - if you want bleeding edge development version (potentially unstable!), you should clone the repository and install `habitipy`
+```
+    $ git clone https://github.com/ASMfreaK/habitipy
+    $ pip install -e habitipy
+```
 
-Most configuration of habitipy is done in `~/.config/habitipy/config`.
+Configuration
+-------------
+
+Most configuration of `habitipy` is done in `~/.config/habitipy/config`.
 You can run any habitica command - this file will be created for you with default settings. You should replace default `login` and `password` with the corresponding user id and API key from [your Habitica's API settings](https://habitica.com/#/options/settings/api).
 
 You can replace `url` as needed, for example if you're self-hosting a Habitica server.
 
 Lastly, you should not change access rights of the config to anything other then `600` - this ensures that  your credentials are kept secret from other users of your system. This is enforced by `habitipy` cli command.
 
-
+It you have other tools using plumbum's `Application` class you want to integrate under `habitipy` cli command you can state them in `~/.config/habitipy/subcommands.json` like this:
+```json
+{"subcommand_name":"package.module.SubcommandClass"}
+```
+Using the above configuration, on startup `habitipy` will import `SubcommandClass` `package.module` and add a new subcommand with `subcommand_name` to `habitipy`.
 
 API
 ---

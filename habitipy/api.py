@@ -21,7 +21,7 @@ from .util import get_translation_functions
 
 API_URI_BASE = '/api/v3'
 API_CONTENT_TYPE = 'application/json'
-APIDOC_LOCAL_FILE = '~/.local/habitipy'
+APIDOC_LOCAL_FILE = '~/.config/habitipy/apidoc.txt'
 _, ngettext = get_translation_functions('habitipy', names=('gettext', 'ngettext'))
 
 
@@ -104,7 +104,9 @@ class Habitipy(object):
         self._strict = strict
         if isinstance(apis, (type(None), list)):
             if not apis:
-                fn = pkg_resources.resource_filename('habitipy', 'apidoc.txt')
+                fn = local.path(APIDOC_LOCAL_FILE)
+                if not fn.exists():
+                    fn = pkg_resources.resource_filename('habitipy', 'apidoc.txt')
                 fn = branch if from_github else fn
                 apis = parse_apidoc(fn, from_github)
             with warnings.catch_warnings():

@@ -8,9 +8,48 @@ import gettext
 from contextlib import contextmanager
 from functools import partial
 from textwrap import dedent
+import re
 from typing import Tuple
 import logging
 import pkg_resources
+from plumbum import colors
+try:
+    from emoji import emojize
+except ImportError:
+    emojize = None
+_progressed_regex_str = r'!\[[^]]*\]\(http://progressed\.io/bar/([0-9]{1,3})( *"[^"]*")\)'
+_progressed_regex = re.compile(_progressed_regex_str)
+
+
+def _progressed_bar(count, total=100, status='', bar_len=10):
+    'render a progressed.io like progress bar'
+    count = count if count <= total else total
+    filled_len = int(round(bar_len * count / float(total)))
+    percents = 100.0 * count / float(total)
+    color = '#5cb85c'
+    if percents < 30.0:
+        color = '#d9534f'
+    if percents < 70.0:
+        color = '#f0ad4e'
+    color = colors.fg(color)  # pylint: disable=no-member
+    nc_color = colors.dark_gray  # pylint: disable=no-member
+    percents = int(percents)
+    progressbar = (color | ('█' * filled_len)) + (nc_color | ('█' * (bar_len - filled_len)))
+    return progressbar + (color | (str(percents) + '% ' + status))
+
+
+def progressed(string):
+    'replace all links to progressed.io with progress bars'
+    return _progressed_regex.sub(
+        lambda m: _progressed_bar(int(m.group(1))),
+        string)
+
+
+def prettify(string):
+    'replace markup emoji and progressbars with actual things'
+    string = emojize(string, use_aliases=True) if emojize else string
+    string = progressed(string)
+    return string
 
 
 @contextmanager
