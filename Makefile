@@ -43,7 +43,7 @@ push:
 
 pypi:
 	python3 setup.py sdist upload --sign
-	python3 setup.py bdist_wheel upload --sign
+#	python3 setup.py bdist_wheel upload --sign
 
 
 mkdocs: docs/* mkdocs.yml
