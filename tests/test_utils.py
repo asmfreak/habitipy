@@ -14,7 +14,8 @@ class TestUtils(unittest.TestCase):
         touch(self.filename)
 
     def tearDown(self):
-        os.remove(self.filename)
+        if os.path.exists(self.filename):
+            os.remove(self.filename)
 
     def test_secure_filestore(self):
         with open(self.filename, 'w') as f:

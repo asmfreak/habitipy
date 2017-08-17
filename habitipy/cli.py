@@ -328,7 +328,7 @@ class TaskId(List[Union[str, int]]):
                     task_ids.append(int(bit))
             except ValueError:
                 task_ids.append(bit)
-        return [e - 1 if isinstance(e, int) else e for e in set(task_ids)]  # type: ignore
+        return [e - 1 if isinstance(e, int) else e for e in task_ids]  # type: ignore
 
 
 class TasksChange(ApplicationWithApi):
@@ -339,6 +339,7 @@ class TasksChange(ApplicationWithApi):
         help=_("If passed, won't actually change anything on habitipy server"),  # noqa: Q000
         default=False)
     more_tasks = []  # type: List[Dict[str, Any]]
+    ids_can_overlap = False
     NO_TASK_ID = _("No task_ids found!")  # noqa: Q000
     TASK_ID_INVALID = _("Task id {} is invalid")  # noqa: Q000
     PARSED_TASK_IDS = _("Parsed task ids {}")  # noqa: Q000
@@ -357,24 +358,30 @@ class TasksChange(ApplicationWithApi):
         num_tasks = len(tasks)
         aliases = {task['alias']: task for task in tasks if 'alias' in task}
         self.changing_tasks = {}  # type: Dict[Union[str], Dict[str, Any]]
+        changing_tasks_ids = [] # type: List[str]
         for tid in task_id:
             if isinstance(tid, int):
                 if tid >= 0 and tid <= num_tasks:
+                    changing_tasks_ids.append(task_uuids[tid])
                     self.changing_tasks[task_uuids[tid]] = tasks[tid]
                     continue
             elif isinstance(tid, str):
                 if tid in task_uuids:
+                    changing_tasks_ids.append(tid)
                     self.changing_tasks[tid] = tasks[task_uuids.index(tid)]
                     continue
                 elif tid in aliases:
+                    changing_tasks_ids.append(aliases[tid]['id'])
                     self.changing_tasks[tid] = aliases[tid]
                     continue
             self.log.error(self.TASK_ID_INVALID.format(tid))
-            return
+            return 1
         idstr = ' '.join(self.changing_tasks.keys())
         self.log.info(self.PARSED_TASK_IDS.format(idstr))  # noqa: Q000
         self.tasks = self.api.tasks
-        for tid in self.changing_tasks:
+        if not self.ids_can_overlap:
+            changing_tasks_ids = list(set(changing_tasks_ids))
+        for tid in changing_tasks_ids:
             if not self.noop:
                 self.op(tid)
             res = self.log_op(tid)
@@ -400,6 +407,7 @@ class TasksChange(ApplicationWithApi):
 
 class HabitsChange(TasksChange):  # pylint: disable=missing-docstring,abstract-method
     domain = 'habits'
+    ids_can_overlap = True
     def domain_print(self):
         Habits.invoke(config_filename=self.config_filename)
 
@@ -510,6 +518,7 @@ RewardId = TaskId
 class RewardsBuy(TasksChange):
     DESCRIPTION = _("Buy a reward with reward_id")  # noqa: Q000
     domain = 'rewards'
+    ids_can_overlap = True
     NO_TASK_ID = _("No reward_ids found!")  # noqa: Q000
     TASK_ID_INVALID = _("Reward id {} is invalid")  # noqa: Q000
     PARSED_TASK_IDS = _("Parsed reward ids {}")  # noqa: Q000
