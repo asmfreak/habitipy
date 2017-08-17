@@ -6,6 +6,7 @@ from contextlib import contextmanager, ExitStack
 import tempfile
 from textwrap import dedent
 import responses
+from flaky import flaky
 from hypothesis import given, assume
 from hypothesis.strategies import uuids, integers, text, lists, booleans
 from hypothesis.strategies import one_of, sampled_from, composite
@@ -58,7 +59,9 @@ def test_data(draw):
     can_overlap = draw(booleans())
     user_tasks = draw(task_lists)
     more_tasks = draw(task_lists)
-    all_tasks = [*user_tasks,*more_tasks]
+    all_tasks = []
+    all_tasks.extend(user_tasks)
+    all_tasks.extend(more_tasks)
     index_lists = lists(
         one_of(
             index_id_alias(len(user_tasks)),
@@ -158,11 +161,14 @@ class TestCli(unittest.TestCase):
             self.assertIsNotNone(instance)
             self.assertIsNone(retcode)
             self.assertTrue(cli.TasksPrint.domain_format.called)
-            data_calls = [call(x) for x in [*data, *more]]
+            all_data = []
+            all_data.extend(data)
+            all_data.extend(more)
+            data_calls = [call(x) for x in all_data]
             cli.TasksPrint.domain_format.assert_has_calls(data_calls)
             self.assertTrue(cli.prettify.called)
 
-
+    @flaky
     @given(test_data())
     def test_tasks_change(self, arg):
         can_overlap, user_tasks, more_tasks, all_tasks, arguments_strings, task_ids, args = arg

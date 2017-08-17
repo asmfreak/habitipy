@@ -225,6 +225,12 @@ class ScoreInfo(object):
         score = '[' + score.center(cls.max_scores_len) + ']'
         return score_col | score
 
+    @classmethod
+    def color(cls, value):
+        'task value/score color'
+        index = bisect(cls.breakpoints, value)
+        return colors.fg(cls.colors_[index])
+
 
 class TasksPrint(ApplicationWithApi):
     'Put all tasks from `domain` to print'
@@ -358,7 +364,7 @@ class TasksChange(ApplicationWithApi):
         num_tasks = len(tasks)
         aliases = {task['alias']: task for task in tasks if 'alias' in task}
         self.changing_tasks = {}  # type: Dict[Union[str], Dict[str, Any]]
-        changing_tasks_ids = [] # type: List[str]
+        changing_tasks_ids = []  # type: List[str]
         for tid in task_id:
             if isinstance(tid, int):
                 if tid >= 0 and tid <= num_tasks:
