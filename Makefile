@@ -45,9 +45,31 @@ pypi:
 	python3 setup.py sdist upload --sign
 #	python3 setup.py bdist_wheel upload --sign
 
+pydocmdinit: SHELL:=/bin/bash
+pydocmdinit:
+	(\
+		python3 -m venv .pydocenv &&\
+		source .pydocenv/bin/activate &&\
+		pip install pydoc-markdown mkdocs-material fontawesome_markdown&&\
+		pip install -e . \
+	)
 
-mkdocs: docs/* mkdocs.yml
-	mkdocs build
+docs_build: SHELL:=/bin/bash
+docs_build: docs/* pydocmd.yml
+	(\
+		source .pydocenv/bin/activate && \
+		pydocmd build\
+	)
 
-clean:
+docs_deploy: SHELL:=/bin/bash
+docs_deploy: docs/* pydocmd.yml
+	(\
+		source .pydocenv/bin/activate && \
+		pydocmd gh-deploy\
+	)
+
+clean_translation:
 	rm -f habitipy/i18n/*.new habitipy/i18n/messages.pot
+
+clean_docs:
+	rm -rf .pydocenv

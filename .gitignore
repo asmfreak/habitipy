@@ -11,3 +11,4 @@ cover
 build/
 _build/
 dist/
+.pydocenv/

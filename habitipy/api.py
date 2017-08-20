@@ -3,6 +3,7 @@
     RESTful api abstraction module using requests
 """
 # pylint: disable=invalid-name,too-few-public-methods,too-many-locals, bad-continuation
+# pylint: disable=bad-whitespace
 
 import json
 import re
@@ -11,7 +12,7 @@ from keyword import kwlist
 import warnings
 import textwrap
 from collections import defaultdict
-from typing import Dict, Union, List, Iterator, Any, Optional
+from typing import Dict, Union, List, Tuple, Iterator, Any, Optional
 
 import pkg_resources
 import requests
@@ -36,6 +37,11 @@ class WrongReturnCode(ValueError):
 
 
 class WrongData(ValueError):
+    'Custom error type'
+    pass
+
+
+class WrongPath(ValueError):
     'Custom error type'
     pass
 
@@ -142,7 +148,15 @@ class Habitipy(object):
 
     ```python
     >>> dir(api)
-    ['__call__', '__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattr__', '__getattribute__', '__getitem__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', '_apis', '_conf', '_current', '_is_request', '_make_apis_dict', '_make_headers', '_node', 'approvals', 'challenges', 'content', 'coupons', 'cron', 'debug', 'group', 'groups', 'hall', 'members', 'models', 'notifications', 'reorder-tags', 'shops', 'status', 'tags', 'tasks', 'user']
+    ['__call__', '__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__',
+    '__format__', '__ge__', '__getattr__', '__getattribute__', '__getitem__', '__gt__',
+    '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__', '__ne__',
+    '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__',
+    '__subclasshook__', '__weakref__', '_apis', '_conf', '_current', '_is_request',
+    '_make_apis_dict', '_make_headers', '_node',
+    'approvals', 'challenges', 'content', 'coupons', 'cron', 'debug', 'group', 'groups', 'hall',
+    'members', 'models', 'notifications', 'reorder-tags',
+    'shops', 'status', 'tags', 'tasks', 'user']
     >>> print(api.user.get.__doc__)
     {get} /api/v3/user Get the authenticated user's profile
 
@@ -151,10 +165,10 @@ class Habitipy(object):
 
     ```
     """
-    def __init__(self, conf:Dict[str, str], *,
+    def __init__(self, conf: Dict[str, str], *,
                  apis=None, current: Optional[List[str]]=None,
                  from_github=False, branch=None,
-                 strict=False):
+                 strict=False) -> None:
         self._conf = conf
         self._strict = strict
         if isinstance(apis, (type(None), list)):
@@ -174,13 +188,15 @@ class Habitipy(object):
         current = current or ['api', 'v3']
         if not isinstance(current, list):
             raise TypeError('Wrong current api position {}'.format(current))
-        _node = self._apis
+        _node = self._apis  # type: Union[ApiNode, ApiEndpoint]
         for part in current:
-            _node = _node.into(part)
+            if isinstance(_node, ApiNode):
+                _node = _node.into(part)
+            else:
+                raise WrongPath("""Can't enter into {} with part {}""".format(_node, part))
         self._node = _node
         self._current = current
-        self._is_request = isinstance(self._node, ApiEndpoint)
-        if self._is_request:
+        if isinstance(self._node, ApiEndpoint):
             self.__doc__ = self._node.render_docstring()
 
     @staticmethod
@@ -218,26 +234,21 @@ class Habitipy(object):
         if val in dir(super()):
             # pylint: disable=no-member
             return super().__getattr__(val)  # type:ignore
-        try:
-            val = val if not val.endswith('_') else val.rstrip('_')
-            val = val if '_' not in val else val.replace('_', '-')
-            _node = self._node.into(val)
-            return Habitipy(self._conf, apis=self._apis, current=self._current + [val])
-        except IndexError:
-            pass
-        raise AttributeError('{} not found in this API!'.format(val))
+        val = val if not val.endswith('_') else val.rstrip('_')
+        val = val if '_' not in val else val.replace('_', '-')
+        return Habitipy(self._conf, apis=self._apis, current=self._current + [val])
 
-    def __getitem__(self, val):
-        try:
-            _node = self._node.into(val)
+    def __getitem__(self, val: Union[str, List[str], Tuple[str, ...]]) -> 'Habitipy':
+        if isinstance(val, str):
             return Habitipy(self._conf, apis=self._apis, current=self._current + [val])
-        except IndexError:
-            pass
+        elif isinstance(val, (list, tuple)):
+            current = self._current + list(val)
+            return Habitipy(self._conf, apis=self._apis, current=current)
         raise IndexError('{} not found in this API!'.format(val))
 
     def __call__(self, **kwargs) -> Union[Dict, List]:
         uri = '/'.join([self._conf['url']] + self._current[:-1])
-        if not self._is_request:
+        if not isinstance(self._node, ApiEndpoint):
             raise ValueError('{} is not an endpoint!'.format(uri))
         method = self._node.method
         headers = self._make_headers()

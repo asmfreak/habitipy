@@ -16,6 +16,7 @@ class TestHabitipy(unittest.TestCase):
         self.assertEqual(api.user.class_._current, ['api', 'v3', 'user', 'class'])
         self.assertEqual(api['user']['class']._current, api.user.class_._current)
         self.assertEqual(api['user']['buy-armoire']._current, api.user.buy_armoire._current)
+        self.assertEqual(api['user', 'buy-armoire']._current, api.user.buy_armoire._current)
         self.assertIn('tasks', dir(api))
         self.assertIn('user', dir(api.tasks))
         self.assertIn('user', dir(api))
@@ -24,7 +25,7 @@ class TestHabitipy(unittest.TestCase):
 
     def test_integration(self):
         api = Habitipy(None)
-        with self.assertRaises(AttributeError):
+        with self.assertRaises(IndexError):
             api.abracadabra
         with self.assertRaises(IndexError):
             api['abracadabra']
