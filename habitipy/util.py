@@ -39,14 +39,37 @@ def _progressed_bar(count, total=100, status='', bar_len=10):
 
 
 def progressed(string):
-    'replace all links to progressed.io with progress bars'
+    """
+    helper function to replace all links to progressed.io with progress bars
+
+    # Example
+    ```python
+    from habitipy.util import progressed
+    text_from_habitica = 'Write thesis ![progress](http://progressed.io/bar/0 "progress")'
+    print(progressed(text_from_habitica))
+    ```
+    ```
+    Write thesis ██████████0%
+    ```
+    """
     return _progressed_regex.sub(
         lambda m: _progressed_bar(int(m.group(1))),
         string)
 
 
 def prettify(string):
-    'replace markup emoji and progressbars with actual things'
+    """
+    replace markup emoji and progressbars with actual things
+
+    # Example
+    ```python
+    from habitipy.util import progressed
+    print(prettify('Write thesis :book: ![progress](http://progressed.io/bar/0 "progress")'))
+    ```
+    ```
+    Write thesis 📖 ██████████0%
+    ```
+    """
     string = emojize(string, use_aliases=True) if emojize else string
     string = progressed(string)
     return string
@@ -54,7 +77,21 @@ def prettify(string):
 
 @contextmanager
 def umask(mask):
-    'temporarily change umask'
+    """
+    temporarily change umask
+
+    # Arguments
+    mask : a umask (invese of chmod argument)
+
+    # Example
+    ```python
+    with umask(0o077), open('yay.txt') as f:
+        f.write('nyaroo~n')
+
+    ```
+
+    `yay.txt` will be written with 600 file mode
+    """
     prev = os.umask(mask)
     try:
         yield

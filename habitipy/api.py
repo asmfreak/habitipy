@@ -11,7 +11,7 @@ from keyword import kwlist
 import warnings
 import textwrap
 from collections import defaultdict
-from typing import Dict, Union, List, Iterator, Any
+from typing import Dict, Union, List, Iterator, Any, Optional
 
 import pkg_resources
 import requests
@@ -95,11 +95,64 @@ def escape_keywords(arr):
 
 
 class Habitipy(object):
-    """Represents Habitica API
-
     """
-    def __init__(self, conf, *,
-                 apis=None, current=None,
+    Represents Habitica API
+    # Arguments
+    conf : Configuration dictionary for API. Should contain `url`, `login` and `password` fields
+    apis (None, List[ApiEndpoint], ApiNode): Field, representing API endpoints.
+    current : current position in the API
+    from_github : whether it is needed to download apiDoc from habitica's github
+    branch : branch to use to download apiDoc from habitica's github
+    strict : show warnings on inconsistent apiDocs
+
+    # Example
+    ```python
+    from habitipy import Habitipy
+    conf = {
+        'url': 'https://habitica.com',
+        'login': 'your-login-uuid-to-replace',
+        'password': 'your-password-uuid-here'
+    api = Habitipy(conf)
+    print(api.user.get())
+    ```
+    Interactive help:
+
+    ```python
+    In [1]: from habitipy import Habitipy, load_conf,DEFAULT_CONF
+    In [2]: api = Habitipy(load_conf(DEFAULT_CONF))
+    In [3]: api.<tab>
+         api.approvals     api.debug         api.models        api.tags
+         api.challenges    api.group         api.notifications api.tasks
+         api.content       api.groups        api.reorder-tags  api.user
+         api.coupons       api.hall          api.shops
+         api.cron          api.members       api.status
+     In [84]: api.user.get?
+     Signature:   api.user.get(**kwargs)
+     Type:        Habitipy
+     String form: <habitipy.api.Habitipy object at 0x7fa6fd7966d8>
+     File:        ~/projects/python/habitica/habitipy/api.py
+     Docstring:
+     {get} /api/v3/user Get the authenticated user's profile
+
+     responce params:
+     "data" of type "object"
+    ```
+
+    From other Python consoles you can just run:
+
+    ```python
+    >>> dir(api)
+    ['__call__', '__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__getattr__', '__getattribute__', '__getitem__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__weakref__', '_apis', '_conf', '_current', '_is_request', '_make_apis_dict', '_make_headers', '_node', 'approvals', 'challenges', 'content', 'coupons', 'cron', 'debug', 'group', 'groups', 'hall', 'members', 'models', 'notifications', 'reorder-tags', 'shops', 'status', 'tags', 'tasks', 'user']
+    >>> print(api.user.get.__doc__)
+    {get} /api/v3/user Get the authenticated user's profile
+
+    responce params:
+    "data" of type "object"
+
+    ```
+    """
+    def __init__(self, conf:Dict[str, str], *,
+                 apis=None, current: Optional[List[str]]=None,
                  from_github=False, branch=None,
                  strict=False):
         self._conf = conf

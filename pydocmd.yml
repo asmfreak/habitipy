@@ -1,0 +1,40 @@
+site_name: habitipy documentation
+site_url: https://pythonhosted.com/
+theme : material
+
+copyright: 'Copyright &copy; 2017 Pavel Pletenev'
+
+repo_name: ASMfreaK/habitipy
+repo_url: https://github.com/ASMfreaK/habitipy
+
+extra:
+  logo: 'assets/images/logo-borderless.svg'
+  font:
+    text: 'Ubuntu'
+    code: 'Hack'
+  social:
+    - type: 'github'
+      link: 'https://github.com/ASMfreaK/'
+  feature:
+    tabs: true
+
+markdown_extensions:
+  - fontawesome_markdown
+  - toc(permalink=true)
+  - admonition
+  - codehilite(guess_lang=false)
+
+generate:
+  - api.md:
+    - habitipy.api.Habitipy
+  - cli.md:
+    - habitipy.cli+
+  - util.md:
+    - habitipy.util++
+docs_dir: docs
+pages:
+  - 'habitipy': 'index.md'
+  - API Documentation:
+    - REST API Module: api.md
+    - Command line interface library: cli.md
+    - Utility functions: util.md

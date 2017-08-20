@@ -9,4 +9,5 @@ cover
 *.po.new
 *messages.pot
 build/
+_build/
 dist/
