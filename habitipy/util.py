@@ -17,25 +17,56 @@ try:
     from emoji import emojize
 except ImportError:
     emojize = None
-_progressed_regex_str = r'!\[[^]]*\]\(http://progressed\.io/bar/([0-9]{1,3})( *"[^"]*")\)'
-_progressed_regex = re.compile(_progressed_regex_str)
 
 
-def _progressed_bar(count, total=100, status='', bar_len=10):
+def progressed_bar(count, total=100, status=None, suffix=None, bar_len=10):
     'render a progressed.io like progress bar'
-    count = count if count <= total else total
-    filled_len = int(round(bar_len * count / float(total)))
+    status = status or ''
+    suffix = suffix or '%'
+    assert isinstance(count, int)
+    count_normalized = count if count <= total else total
+    filled_len = int(round(bar_len * count_normalized / float(total)))
     percents = 100.0 * count / float(total)
     color = '#5cb85c'
     if percents < 30.0:
         color = '#d9534f'
     if percents < 70.0:
         color = '#f0ad4e'
-    color = colors.fg(color)  # pylint: disable=no-member
-    nc_color = colors.dark_gray  # pylint: disable=no-member
-    percents = int(percents)
-    progressbar = (color | ('█' * filled_len)) + (nc_color | ('█' * (bar_len - filled_len)))
-    return progressbar + (color | (str(percents) + '% ' + status))
+    text_color = colors.fg(color)
+    bar_color = text_color + colors.bg(color)
+    nc_color = colors.dark_gray
+    progressbar = (colors.bg('#428bca') | status) if status else ''
+    progressbar += (bar_color | ('█' * filled_len))
+    progressbar += (nc_color | ('█' * (bar_len - filled_len)))
+    progressbar += (text_color | (str(count) + suffix))
+    return progressbar
+
+
+_progressed_regex_str = r"""
+!
+\[[^]]*\]
+\(\s*http://progressed\.io/bar/(?P<progress>[0-9]{1,3})
+(
+\?((
+(title=(?P<title>[^&) "]*))|
+(scale=(?P<scale>[^&) "]*))|
+(suffix=(?P<suffix>[^&) "]*))
+)&*)*
+){0,1}
+\s*("[^"]*")*\)
+"""
+_progressed_regex = re.compile(_progressed_regex_str, re.VERBOSE)
+
+
+def _progressed_match(m, bar_len=10):
+    progress = m['progress']
+    scale = m['scale']
+    progress = int(progress) if progress is not None else 0
+    scale = int(scale) if scale is not None else 100
+    return progressed_bar(
+        progress, total=scale,
+        status=m['title'], suffix=m['suffix'],
+        bar_len=bar_len)
 
 
 def progressed(string):
@@ -52,9 +83,7 @@ def progressed(string):
     Write thesis ██████████0%
     ```
     """
-    return _progressed_regex.sub(
-        lambda m: _progressed_bar(int(m.group(1))),
-        string)
+    return _progressed_regex.sub(_progressed_match, string)
 
 
 def prettify(string):
