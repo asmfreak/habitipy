@@ -141,7 +141,7 @@ msgstr "Мана: {stats[mp]}/{stats[maxMP]}"
 #: habitipy/cli.py:192
 #, python-brace-format
 msgid "GP: {stats[gp]:.2f}"
-msgstr "ЗМ: {stats[gp:.2f]}"
+msgstr "ЗМ: {stats[gp]:.2f}"
 
 #: habitipy/cli.py:194
 #, python-brace-format
