@@ -236,14 +236,14 @@ class Habitipy(object):
             return super().__getattr__(val)  # type:ignore
         val = val if not val.endswith('_') else val.rstrip('_')
         val = val if '_' not in val else val.replace('_', '-')
-        return Habitipy(self._conf, apis=self._apis, current=self._current + [val])
+        return self.__class__(self._conf, apis=self._apis, current=self._current + [val])
 
     def __getitem__(self, val: Union[str, List[str], Tuple[str, ...]]) -> 'Habitipy':
         if isinstance(val, str):
-            return Habitipy(self._conf, apis=self._apis, current=self._current + [val])
+            return self.__class__(self._conf, apis=self._apis, current=self._current + [val])
         elif isinstance(val, (list, tuple)):
             current = self._current + list(val)
-            return Habitipy(self._conf, apis=self._apis, current=current)
+            return self.__class__(self._conf, apis=self._apis, current=current)
         raise IndexError('{} not found in this API!'.format(val))
 
     def __call__(self, **kwargs) -> Union[Dict, List]:
