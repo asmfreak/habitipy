@@ -266,9 +266,10 @@ class Habitipy(object):
             res = getattr(requests, method)(uri, headers=headers, params=query)
         if res.status_code != self._node.retcode:
             res.raise_for_status()
-            msg = """Got return code {res.status_code}, but {node.retcode} was
+            msg = _("""
+            Got return code {res.status_code}, but {node.retcode} was
             expected for {node.uri}. It may be a typo in Habitica apiDoc.
-            Plase file an issue to https://github.com/HabitRPG/habitica/issues"""
+            Please file an issue to https://github.com/HabitRPG/habitica/issues""")
             msg = textwrap.dedent(msg)
             msg = msg.replace('\n', ' ').format(res=res, node=self._node)
             if self._strict:
