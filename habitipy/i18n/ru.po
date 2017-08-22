@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-08-12 00:05+0200\n"
+"POT-Creation-Date: 2017-08-22 06:57+0200\n"
 "PO-Revision-Date: 2017-08-12 00:14+0200\n"
 "Last-Translator: cpp.create@gmail.com\n"
 "Language-Team: Russian\n"
@@ -20,59 +20,100 @@ msgstr ""
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Generator: Poedit 2.0.3\n"
 
-#: habitipy/cli.py:32
+#: habitipy/cli.py:33
 msgid "warrior"
 msgstr "воин"
 
-#: habitipy/cli.py:32
+#: habitipy/cli.py:33
 msgid "rogue"
 msgstr "вор"
 
-#: habitipy/cli.py:32
+#: habitipy/cli.py:33
 msgid "wizard"
 msgstr "волшебник"
 
-#: habitipy/cli.py:32
+#: habitipy/cli.py:33
 msgid "healer"
 msgstr "лекарь"
 
-#: habitipy/cli.py:51
-msgid "Your creditentials may be unconfigured."
-msgstr "Возможно ваши настройки доступа не настроены."
+#: habitipy/cli.py:58
+msgid "Your creditentials are invalid. Do you want to enter them now?"
+msgstr "Персональные данные доступа не настроены. Хотите настроить сейчас?"
 
 #: habitipy/cli.py:60
+msgid ""
+"\n"
+"                You can get your login information at\n"
+"                https://habitica.com/#/options/settings/api\n"
+"                Both your user id and API token should look like this:\n"
+"                xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx\n"
+"                where 'x' is a number between 0-9 or a character a-f.\n"
+"                "
+msgstr ""
+"\n"
+"                Вы можете получить персональные данные доступа на странице\n"
+"                https://habitica.com/#/options/settings/api\n"
+"                Ваши ID пользователя и токен API должня выглядеть следующим образом:\n"
+"                xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx\n"
+"                где 'x' - число от 0 до 9 или буква a-f.\n"
+"                "
+
+#: habitipy/cli.py:68
+msgid "Please enter your login (user ID)"
+msgstr "Пожалуйста, введите свой логин (ID пользователя)"
+
+#: habitipy/cli.py:70
+msgid "Please enter your password (API token)"
+msgstr "Пожалуйта, введите ваш пароль (токен API)"
+
+#: habitipy/cli.py:74
+#, python-brace-format
+msgid ""
+"\n"
+"                Your creditentials are securely stored in\n"
+"                {configfile}\n"
+"                You can edit that file later if you need.\n"
+"                "
+msgstr ""
+"\n"
+"                Ваши персональные данные доступа безопасно сохранены в файл\n"
+"                {configfile}\n"
+"                Вы можете отредактировать его позже, если это необходимо.\n"
+"                "
+
+#: habitipy/cli.py:87
 msgid "Use file CONFIG for config"
 msgstr "Использовать CONFIG для конфигурации"
 
-#: habitipy/cli.py:63
+#: habitipy/cli.py:90
 msgid "Verbose output - log everything."
 msgstr "Полный вывод всех сообщений."
 
-#: habitipy/cli.py:67
+#: habitipy/cli.py:94
 msgid "Make program more silent"
 msgstr "Программа будет выводить меньше сообщений"
 
-#: habitipy/cli.py:138
+#: habitipy/cli.py:165
 msgid "Show HP, XP, GP, and more"
 msgstr "Показать очки здоровья, опыта, золота и многое другое"
 
-#: habitipy/cli.py:150
+#: habitipy/cli.py:177
 msgid "Pet: "
 msgstr "Питомец: "
 
-#: habitipy/cli.py:150
+#: habitipy/cli.py:177
 msgid "No pet"
 msgstr "Питомец не выбран"
 
-#: habitipy/cli.py:154
+#: habitipy/cli.py:181
 msgid "Mount: "
 msgstr "Ездовое животное: "
 
-#: habitipy/cli.py:156
+#: habitipy/cli.py:183
 msgid "No mount"
 msgstr "Ездовое животное не выбрано"
 
-#: habitipy/cli.py:157
+#: habitipy/cli.py:184
 #, python-brace-format
 msgid ""
 "\n"
@@ -81,27 +122,27 @@ msgstr ""
 "\n"
 "Уровень {stats[lvl]} {stats[class]}\n"
 
-#: habitipy/cli.py:162
+#: habitipy/cli.py:189
 #, python-brace-format
 msgid "Health: {stats[hp]}/{stats[maxHealth]}"
 msgstr "Здоровье: {stats[hp]}/{stats[maxHealth]}"
 
-#: habitipy/cli.py:163
+#: habitipy/cli.py:190
 #, python-brace-format
 msgid "XP: {stats[exp]}/{stats[toNextLevel]}"
 msgstr "Опыт: {stats[exp]}/{stats[toNextLevel]}"
 
-#: habitipy/cli.py:164
+#: habitipy/cli.py:191
 #, python-brace-format
 msgid "Mana: {stats[mp]}/{stats[maxMP]}"
 msgstr "Мана: {stats[mp]}/{stats[maxMP]}"
 
-#: habitipy/cli.py:165
-#, fuzzy, python-brace-format
+#: habitipy/cli.py:192
+#, python-brace-format
 msgid "GP: {stats[gp]:.2f}"
-msgstr "ЗМ: {stats[gp]}"
+msgstr "ЗМ: {stats[gp:.2f]}"
 
-#: habitipy/cli.py:167
+#: habitipy/cli.py:194
 #, python-brace-format
 msgid "({food} food item)"
 msgid_plural "({food} food items)"
@@ -109,7 +150,7 @@ msgstr[0] "({food} единица еды)"
 msgstr[1] "({food} единицы еды)"
 msgstr[2] "({food} единиц еды)"
 
-#: habitipy/cli.py:186
+#: habitipy/cli.py:213
 msgid ""
 "Quest {} not found in Habitica's content.\n"
 "                Please file an issue to https://github.com/ASMfreaK/habitipy/"
@@ -121,7 +162,7 @@ msgstr ""
 "habitipy/issues\n"
 "                "
 
-#: habitipy/cli.py:191
+#: habitipy/cli.py:218
 #, python-brace-format
 msgid ""
 "\n"
@@ -132,10 +173,11 @@ msgid ""
 msgstr ""
 "\n"
 "                Квест: {quest[text]} (сбор предметов)\n"
-"                Собрано квестовых предмето {user[party][quest][progress][collectedItems]}\n"
+"                Собрано квестовых предмето {user[party][quest][progress]"
+"[collectedItems]}\n"
 "                "
 
-#: habitipy/cli.py:195
+#: habitipy/cli.py:222
 #, python-brace-format
 msgid ""
 "\n"
@@ -150,7 +192,7 @@ msgstr ""
 "боссу {quest[boss][name]}\n"
 "                "
 
-#: habitipy/cli.py:204
+#: habitipy/cli.py:231
 msgid ""
 "Something went wrong when formatting quest {}.\n"
 "                        Please file an issue to https://github.com/ASMfreaK/"
@@ -158,11 +200,11 @@ msgid ""
 "                        "
 msgstr ""
 "Произошла какая-то ошибка прм форматировании квеста {}.\n"
-"                        Пожалуйста, отправьте issue на https://github.com/ASMfreaK/"
-"habitipy/issues\n"
+"                        Пожалуйста, отправьте issue на https://github.com/"
+"ASMfreaK/habitipy/issues\n"
 "                        "
 
-#: habitipy/cli.py:209
+#: habitipy/cli.py:236
 msgid ""
 "Quest {} isn't neither a collect-type or a boss-type.\n"
 "            Please file an issue to https://github.com/ASMfreaK/habitipy/"
@@ -170,183 +212,186 @@ msgid ""
 "            "
 msgstr ""
 "Квест {} - это ни квест на сбор предметов ни на бой с боссом.\n"
-"            Пожалуйста, отправьте issue на https://github.com/ASMfreaK/habitipy/"
-"issues\n"
+"            Пожалуйста, отправьте issue на https://github.com/ASMfreaK/"
+"habitipy/issues\n"
 "            "
 
-#: habitipy/cli.py:254
+#: habitipy/cli.py:287
 msgid "List, up and down habit tasks"
 msgstr "Отобразить, улучшить или ухудшить привычку"
 
-#: habitipy/cli.py:258 habitipy/cli.py:309
+#: habitipy/cli.py:291 habitipy/cli.py:342
 msgid "{} {text}"
 msgstr "{} {text}"
 
-#: habitipy/cli.py:263
+#: habitipy/cli.py:296
 msgid "List, up and down daily tasks"
 msgstr "Отобразить ежедвневные задания, отметить или снять отметку на них"
 
-#: habitipy/cli.py:268 habitipy/cli.py:281
+#: habitipy/cli.py:301 habitipy/cli.py:314
 msgid "[{}] {} {text}"
 msgstr "[{}] {} {text}"
 
-#: habitipy/cli.py:276
+#: habitipy/cli.py:309
 msgid "List, comlete, add or delete todo tasks"
 msgstr "Отобразить, завершить, добавить или удалить задание"
 
-#: habitipy/cli.py:297
+#: habitipy/cli.py:330
 msgid "List, buy and add rewards"
 msgstr "Отобразить, купить или добавить награду"
 
-#: habitipy/cli.py:308
+#: habitipy/cli.py:341
 #, python-brace-format
 msgid "{value} gp"
 msgstr "{value} зм"
 
-#: habitipy/cli.py:339
+#: habitipy/cli.py:372
 msgid "If passed, won't actually change anything on habitipy server"
 msgstr ""
 "Если опция предоставлена, то данная команда не будет изменять данные на "
 "сервере Хабитики"
 
-#: habitipy/cli.py:342
+#: habitipy/cli.py:376
 msgid "No task_ids found!"
 msgstr "Идентификаторы задания не найдены!"
 
-#: habitipy/cli.py:343
+#: habitipy/cli.py:377
 msgid "Task id {} is invalid"
 msgstr "Идентификатор задания {} неверный"
 
-#: habitipy/cli.py:344
+#: habitipy/cli.py:378
 msgid "Parsed task ids {}"
 msgstr "Распознаны следующие идентификаторы заданий {}"
 
-#: habitipy/cli.py:409
+#: habitipy/cli.py:450
 msgid "Up (+) a habit with task_id"
 msgstr "Улучшить (+) привычку с индентификатором task_id"
 
-#: habitipy/cli.py:417
+#: habitipy/cli.py:458
 #, python-brace-format
 msgid "Incremented habit {text}"
 msgstr "Привычка {text} улучшена"
 
-#: habitipy/cli.py:422
+#: habitipy/cli.py:463
 msgid "Down (-) a habit with task_id"
 msgstr "Ухудшить (-) привычку с индентификатором task_id"
 
-#: habitipy/cli.py:431
+#: habitipy/cli.py:472
 #, python-brace-format
 msgid "Decremented habit {text}"
 msgstr "Привычка {text} ухудшена"
 
-#: habitipy/cli.py:442
+#: habitipy/cli.py:483
 msgid "Check a dayly with task_id"
 msgstr "Отметить ежедневное задание с идентификатором task_id"
 
-#: habitipy/cli.py:447
+#: habitipy/cli.py:488
 #, python-brace-format
 msgid "Completed daily {text}"
 msgstr "Отмечено ежедневное задание {text}"
 
-#: habitipy/cli.py:452
+#: habitipy/cli.py:493
 msgid "Uncheck a daily with task_id"
 msgstr "Снять отметку у ежедневного задания с идентификатором task_id"
 
-#: habitipy/cli.py:457
+#: habitipy/cli.py:498
 #, python-brace-format
 msgid "Unchecked daily {text}"
 msgstr "Снята отметка у ежедневного задания {text}"
 
-#: habitipy/cli.py:468 habitipy/cli.py:478
+#: habitipy/cli.py:509 habitipy/cli.py:519
 msgid "Check a todo with task_id"
 msgstr "Завершить задание с идентификатором task_id"
 
-#: habitipy/cli.py:473
+#: habitipy/cli.py:514
 #, python-brace-format
 msgid "Completed todo {text}"
 msgstr "Завершено задание {text}"
 
-#: habitipy/cli.py:483
+#: habitipy/cli.py:524
 #, python-brace-format
 msgid "Deleted todo {text}"
 msgstr "Удалено задание {text}"
 
-#: habitipy/cli.py:488
+#: habitipy/cli.py:529
 msgid "Add a todo <todo>"
 msgstr "Добавить задачу <todo>"
 
-#: habitipy/cli.py:492
+#: habitipy/cli.py:533
 msgid "Priority (complexity) of a todo"
 msgstr "Сложность (приоритет) задания"
 
-#: habitipy/cli.py:497
+#: habitipy/cli.py:538
 msgid "Empty todo text!"
 msgstr "Пустой текст задания!"
 
-#: habitipy/cli.py:501
+#: habitipy/cli.py:542
 msgid "Added todo '{}' with priority {}"
 msgstr "Добавлено задание '{}' со сложностью {}"
 
-#: habitipy/cli.py:511
+#: habitipy/cli.py:552
 msgid "Buy a reward with reward_id"
 msgstr "Купить награду с reward_id"
 
-#: habitipy/cli.py:513
+#: habitipy/cli.py:555
 msgid "No reward_ids found!"
 msgstr "Идентификаторы задания не найдены!"
 
-#: habitipy/cli.py:514
+#: habitipy/cli.py:556
 msgid "Reward id {} is invalid"
 msgstr "Идентификатор награды {} неверный"
 
-#: habitipy/cli.py:515
+#: habitipy/cli.py:557
 msgid "Parsed reward ids {}"
 msgstr "Распознаны следующие идентификаторы наград {}"
 
-#: habitipy/cli.py:529
+#: habitipy/cli.py:571
 #, python-brace-format
 msgid "Bought reward {text}"
 msgstr "Приобретена награда {text}"
 
-#: habitipy/cli.py:537
+#: habitipy/cli.py:579
 msgid "Add a reward <reward>"
 msgstr "Добавить награду <reward>"
 
-#: habitipy/cli.py:540
+#: habitipy/cli.py:582
 msgid "Cost of a reward (gp)"
 msgstr "Стоимость награды (зм)"
 
-#: habitipy/cli.py:545
+#: habitipy/cli.py:587
 msgid "Empty reward text!"
 msgstr "Пустой текст награды!"
 
-#: habitipy/cli.py:549
+#: habitipy/cli.py:591
 msgid "Added reward '{}' with cost {}"
 msgstr "Добавлена награда '{}' стоимостью {}"
 
-#: habitipy/cli.py:556
+#: habitipy/cli.py:598
 msgid "Open habitica site in browser"
 msgstr "Открыть сайт Хабитики в браузере"
 
-#: habitipy/cli.py:562
+#: habitipy/cli.py:604
 msgid "Opening {}"
 msgstr "Открываю {}"
 
-#: habitipy/cli.py:568
+#: habitipy/cli.py:610
 msgid "Check habitica server availability"
 msgstr "Проверить доступность сервера Хабитики"
 
-#: habitipy/cli.py:574
+#: habitipy/cli.py:616
 msgid "Habitica server {} online"
 msgstr "Сервер Хабитики {} доступен"
 
-#: habitipy/cli.py:578
+#: habitipy/cli.py:620
 msgid "Habitica server {} offline or there is some issue with it"
 msgstr "Сервер Хабитики {} не доступен или возникла какая-то ошибка"
 
-#: habitipy/api.py:56
+#: habitipy/api.py:62
 msgid "Value {} is missing from api"
 msgstr "Значения {} нет в API"
+
+#~ msgid "Your creditentials may be unconfigured."
+#~ msgstr "Возможно ваши настройки доступа не настроены."
 
 #~ msgid "{mount}"
 #~ msgstr "{mount}"

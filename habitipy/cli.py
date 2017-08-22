@@ -8,6 +8,7 @@ import warnings
 import logging
 import os
 import json
+import uuid
 from bisect import bisect
 from textwrap import dedent
 from typing import List, Union, Dict, Any  # pylint: disable=unused-import
@@ -32,6 +33,12 @@ _, ngettext = get_translation_functions('habitipy', names=('gettext', 'ngettext'
 CLASSES = [_("warrior"), _("rogue"), _("wizard"), _("healer")]  # noqa: Q000
 
 
+def is_uuid(u):
+    if isinstance(u, str) and u.replace('-', '') == uuid.UUID(u).hex:
+        return u
+    return False
+
+
 def load_conf(configfile, config=None):
     """Get authentication data from the AUTH_CONF file."""
     default_login = 'your-login-for-api-here'
@@ -46,16 +53,36 @@ def load_conf(configfile, config=None):
         config['url'] = conf.get('habitipy.url', 'https://habitica.com')
         config['login'] = conf.get('habitipy.login', default_login)
         config['password'] = conf.get('habitipy.password', default_password)
-
-    if config['login'] == default_login or config['password'] == default_password:
-        warnings.warn(_("Your creditentials may be unconfigured."))  # noqa: Q000
+        if config['login'] == default_login or config['password'] == default_password:
+            if cli.terminal.ask(
+                    _("""Your creditentials are invalid. Do you want to enter them now?"""),
+                    default=True):
+                msg = _("""
+                You can get your login information at
+                https://habitica.com/#/options/settings/api
+                Both your user id and API token should look like this:
+                xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+                where 'x' is a number between 0-9 or a character a-f.
+                """)
+                print(dedent(msg))
+                msg = _("""Please enter your login (user ID)""")
+                config['login'] = cli.terminal.prompt(msg, validator=is_uuid)
+                msg = _("""Please enter your password (API token)""")
+                config['password'] = cli.terminal.prompt(msg, validator=is_uuid)
+                conf.set('habitipy.login', config['login'])
+                conf.set('habitipy.password', config['password'])
+                print(dedent(_("""
+                Your creditentials are securely stored in
+                {configfile}
+                You can edit that file later if you need.
+                """)).format(configfile=configfile))
     return config
 
 
 class ConfiguredApplication(cli.Application):
     'Application with config'
     config_filename = cli.SwitchAttr(
-        ['-c', '--config'], argtype=cli.ExistingFile, default=DEFAULT_CONF,
+        ['-c', '--config'], argtype=local.path, default=DEFAULT_CONF,
         argname='CONFIG',
         help=_("Use file CONFIG for config"))  # noqa: Q000
     verbose = cli.Flag(

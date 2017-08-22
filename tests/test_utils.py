@@ -3,12 +3,13 @@ import os
 
 from habitipy.cli import load_conf
 from habitipy.util import secure_filestore, SecurityError, assert_secure_file, is_secure_file
+from habitipy.util import progressed
 
 def touch(fname, times=None):
     with open(fname, 'a'):
         os.utime(fname, times)
 
-class TestUtils(unittest.TestCase):
+class TestFileUtils(unittest.TestCase):
     def setUp(self):
         self.filename = 'test.yay'
         touch(self.filename)
