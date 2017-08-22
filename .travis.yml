@@ -10,6 +10,7 @@ install:
   - pip install tox
   - pip install codecov
 script:
+  - python3 -c 'import sys; f = sys.exit(0) if sys.version_info>=(3,5) else open("tox.ini", "a"); f.write("\nexclude=habitipy/async.py\n"); f.close(); from subprocess import check_call; check_call(["sed", "-i", "-e", "s/^ignore=CVS/ignore=CVS,async.py/g", "pylintrc"])'
   - stty cols 80 
   - tox
 after_success:
