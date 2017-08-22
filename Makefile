@@ -24,6 +24,7 @@ release:
 	make tag
 	make push
 	make pypi
+	make docs_deploy
 	make clean
 
 tox:
@@ -45,31 +46,35 @@ pypi:
 	python3 setup.py sdist upload --sign
 #	python3 setup.py bdist_wheel upload --sign
 
-pydocmdinit: SHELL:=/bin/bash
-pydocmdinit:
+.pydocenv: SHELL:=/bin/bash
+.pydocenv:
 	(\
 		python3 -m venv .pydocenv &&\
 		source .pydocenv/bin/activate &&\
 		pip install pydoc-markdown mkdocs-material fontawesome_markdown&&\
-		pip install -e . \
+		pip install -e .[emoji,async] \
 	)
 
 docs_build: SHELL:=/bin/bash
-docs_build: docs/* pydocmd.yml
+docs_build: .pydocenv docs/* pydocmd.main.yml mkdocs.main.yml pages.yml
 	(\
 		source .pydocenv/bin/activate && \
-		pydocmd build\
+		cat pydocmd.main.yml pages.yml > pydocmd.yml && \
+		cat mkdocs.main.yml pages.yml > mkdocs.yml && \
+		pydocmd build &&\
+		cp -r docs/* _build/pydocmd && \
+		mkdocs build \
 	)
 
 docs_deploy: SHELL:=/bin/bash
-docs_deploy: docs/* pydocmd.yml
+docs_deploy: .pydocenv docs_build docs/* pydocmd.main.yml mkdocs.main.yml pages.yml
 	(\
 		source .pydocenv/bin/activate && \
-		pydocmd gh-deploy\
+		mkdocs gh-deploy\
 	)
 
 clean_translation:
 	rm -f habitipy/i18n/*.new habitipy/i18n/messages.pot
 
 clean_docs:
-	rm -rf .pydocenv
+	rm -rf .pydocenv mkdocs.yml pydocmd.yml

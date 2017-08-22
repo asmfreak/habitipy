@@ -1,4 +1,5 @@
-# Welcome to habitipy documentation
+# Welcome to habitipy documentation!
+![logo](assets/images/logo.svg) 
 
 [![PyPI](https://img.shields.io/pypi/v/habitipy.svg)](https://pypi.python.org/pypi/habitipy) [![PyPI](https://img.shields.io/pypi/pyversions/habitipy.svg)](https://pypi.python.org/pypi/habitipy) [![PyPI](https://img.shields.io/pypi/l/habitipy.svg)](https://pypi.python.org/pypi/habitipy) [![Say Thanks!](https://img.shields.io/badge/Say%20Thanks-!-1EAEDB.svg)](https://saythanks.io/to/ASMfreaK)
 

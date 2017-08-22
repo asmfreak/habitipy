@@ -1,0 +1,32 @@
+site_name: habitipy documentation
+site_url: https://asmfreak.github.io/habitipy
+docs_dir: _build/pydocmd
+site_dir: _build/site
+theme : material
+copyright: 'Copyright &copy; 2017 Pavel Pletenev'
+
+repo_name: ASMfreaK/habitipy
+repo_url: https://github.com/ASMfreaK/habitipy
+
+extra:
+  logo: 'assets/images/logo.svg'
+  font:
+    text: 'Ubuntu'
+    code: 'Hack'
+  social:
+    - type: 'github'
+      link: 'https://github.com/ASMfreaK/'
+    - type: 'twitter'
+      link: 'https://twitter.com/asmik09'
+  feature:
+    tabs: true
+  palette:
+    primary: 'green'
+    accent: 'purple'
+
+markdown_extensions:
+  - fontawesome_markdown
+  - toc(permalink=true)
+  - admonition
+  - codehilite(guess_lang=false)
+

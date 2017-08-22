@@ -1,0 +1,9 @@
+generate:
+  - api.md:
+    - habitipy.api.Habitipy
+  - cli.md:
+    - habitipy.cli+
+  - util.md:
+    - habitipy.util++
+  - async.md:
+      - habitipy.async.HabitipyAsync+
