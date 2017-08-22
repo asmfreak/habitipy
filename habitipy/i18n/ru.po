@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-08-22 10:17+0300\n"
+"POT-Creation-Date: 2017-08-22 10:33+0200\n"
 "PO-Revision-Date: 2017-08-12 00:14+0200\n"
 "Last-Translator: cpp.create@gmail.com\n"
 "Language-Team: Russian\n"
@@ -19,43 +19,6 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Generator: Poedit 2.0.3\n"
-
-#: habitipy/api.py:62
-msgid "Value {} is missing from api"
-msgstr "Значения {} нет в API"
-
-#: habitipy/api.py:269
-#, python-brace-format
-msgid ""
-"\n"
-"            Got return code {res.status_code}, but {node.retcode} was\n"
-"            expected for {node.uri}. It may be a typo in Habitica apiDoc.\n"
-"            Please file an issue to https://github.com/HabitRPG/habitica/"
-"issues"
-msgstr ""
-"\n"
-"            Получен код {res.status_code}, но {node.retcode} ожидался\n"
-"            ожидался при запросе {node.uri}. Возможно, это ошибка в "
-"документации на API Хабитики.\n"
-"            Пожалуйста, напишите об этом на сайт https://github.com/HabitRPG/"
-"habitica/issues"
-
-#: habitipy/async.py:25
-#, python-brace-format
-msgid ""
-"\n"
-"                Got return code {res.status_code}, but {node.retcode} was\n"
-"                expected for {node.uri}. It may be a typo in Habitica "
-"apiDoc.\n"
-"                Please file an issue to https://github.com/HabitRPG/habitica/"
-"issues"
-msgstr ""
-"\n"
-"            Получен код {res.status_code}, но {node.retcode} ожидался\n"
-"            ожидался при запросе {node.uri}. Возможно, это ошибка в "
-"документации на API Хабитики.\n"
-"            Пожалуйста, напишите об этом на сайт https://github.com/HabitRPG/"
-"habitica/issues"
 
 #: habitipy/cli.py:33
 msgid "warrior"
@@ -423,6 +386,43 @@ msgstr "Сервер Хабитики {} доступен"
 #: habitipy/cli.py:620
 msgid "Habitica server {} offline or there is some issue with it"
 msgstr "Сервер Хабитики {} не доступен или возникла какая-то ошибка"
+
+#: habitipy/async.py:30
+#, python-brace-format
+msgid ""
+"\n"
+"                Got return code {res.status}, but {node.retcode} was\n"
+"                expected for {node.uri}. It may be a typo in Habitica "
+"apiDoc.\n"
+"                Please file an issue to https://github.com/HabitRPG/habitica/"
+"issues"
+msgstr ""
+"\n"
+"            Получен код {res.status}, но {node.retcode} ожидался\n"
+"            ожидался при запросе {node.uri}. Возможно, это ошибка в "
+"документации на API Хабитики.\n"
+"            Пожалуйста, напишите об этом на сайт https://github.com/HabitRPG/"
+"habitica/issues"
+
+#: habitipy/api.py:62
+msgid "Value {} is missing from api"
+msgstr "Значения {} нет в API"
+
+#: habitipy/api.py:269
+#, python-brace-format
+msgid ""
+"\n"
+"            Got return code {res.status_code}, but {node.retcode} was\n"
+"            expected for {node.uri}. It may be a typo in Habitica apiDoc.\n"
+"            Please file an issue to https://github.com/HabitRPG/habitica/"
+"issues"
+msgstr ""
+"\n"
+"            Получен код {res.status_code}, но {node.retcode} ожидался\n"
+"            ожидался при запросе {node.uri}. Возможно, это ошибка в "
+"документации на API Хабитики.\n"
+"            Пожалуйста, напишите об этом на сайт https://github.com/HabitRPG/"
+"habitica/issues"
 
 #~ msgid "Your creditentials may be unconfigured."
 #~ msgstr "Возможно ваши настройки доступа не настроены."
