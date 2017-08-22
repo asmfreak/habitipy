@@ -1,12 +1,17 @@
-import json
+"""
+    habitipy - tools and library for Habitica restful API
+    RESTful api abstraction module with asyncio backend
+"""
+# pylint: disable=too-few-public-methods,invalid-name
 import textwrap
 import warnings
-import aiohttp
 from typing import Union, Dict, List
-from .api import Habitipy, ApiEndpoint, WrongReturnCode
-from .util import get_translation_functions
+import aiohttp  # pylint: disable=import-error
 
+from .api import Habitipy, WrongReturnCode
+from .util import get_translation_functions
 _, ngettext = get_translation_functions('habitipy', names=('gettext', 'ngettext'))
+
 
 class HabitipyAsync(Habitipy):
     """
@@ -41,29 +46,13 @@ class HabitipyAsync(Habitipy):
     loop.run_until_complete(main(api))
     ```
     """
+    def __call__(   # type: ignore
+            self,
+            session: aiohttp.ClientSession,
+            **kwargs) -> Union[Dict, List]:
+        return self._request(*self._prepare_request(backend=session, **kwargs))
 
-    async def __call__(
-        self,
-        session: aiohttp.ClientSession,
-        **kwargs
-    ) -> Union[Dict, List]:
-        uri = '/'.join([self._conf['url']] + self._current[:-1])
-        if not isinstance(self._node, ApiEndpoint):
-            raise ValueError('{} is not an endpoint!'.format(uri))
-        method = self._node.method
-        headers = self._make_headers()
-        query = {}
-        if 'query' in self._node.params:
-            for name, param in self._node.params['query'].items():
-                if name in kwargs:
-                    query[name] = kwargs.pop(name)
-                elif not param.is_optional:
-                    raise TypeError('Mandatory param {} is missing'.format(name))
-        request = getattr(session, method)
-        request_args = (uri,)
-        request_kwargs = dict(headers=headers, params=query)
-        if method in ['put', 'post', 'delete']:
-            request_kwargs['data'] = json.dumps(kwargs)
+    async def _request(self, request, request_args, request_kwargs):
         async with request(*request_args, **request_kwargs) as resp:
             if resp.status != self._node.retcode:
                 resp.raise_for_status()

@@ -34,6 +34,7 @@ CLASSES = [_("warrior"), _("rogue"), _("wizard"), _("healer")]  # noqa: Q000
 
 
 def is_uuid(u):
+    'validator for plumbum prompt'
     if isinstance(u, str) and u.replace('-', '') == uuid.UUID(u).hex:
         return u
     return False

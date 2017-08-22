@@ -246,7 +246,7 @@ class Habitipy(object):
             return self.__class__(self._conf, apis=self._apis, current=current)
         raise IndexError('{} not found in this API!'.format(val))
 
-    def __call__(self, **kwargs) -> Union[Dict, List]:
+    def _prepare_request(self, backend=requests, **kwargs):
         uri = '/'.join([self._conf['url']] + self._current[:-1])
         if not isinstance(self._node, ApiEndpoint):
             raise ValueError('{} is not an endpoint!'.format(uri))
@@ -259,11 +259,15 @@ class Habitipy(object):
                     query[name] = kwargs.pop(name)
                 elif not param.is_optional:
                     raise TypeError('Mandatory param {} is missing'.format(name))
+        request = getattr(backend, method)
+        request_args = (uri,)
+        request_kwargs = dict(headers=headers, params=query)
         if method in ['put', 'post', 'delete']:
-            res = getattr(requests, method)(
-                uri, headers=headers, params=query, data=json.dumps(kwargs))
-        else:
-            res = getattr(requests, method)(uri, headers=headers, params=query)
+            request_kwargs['data'] = json.dumps(kwargs)
+        return request, request_args, request_kwargs
+
+    def _request(self, request, request_args, request_kwargs):
+        res = request(*request_args, **request_kwargs)
         if res.status_code != self._node.retcode:
             res.raise_for_status()
             msg = _("""
@@ -277,6 +281,9 @@ class Habitipy(object):
             else:
                 warnings.warn(msg)
         return res.json()['data']
+
+    def __call__(self, **kwargs) -> Union[Dict, List]:
+        return self._request(*self._prepare_request(**kwargs))
 
 
 def download_api(branch=None) -> str:
