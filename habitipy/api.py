@@ -236,14 +236,14 @@ class Habitipy(object):
             return super().__getattr__(val)  # type:ignore
         val = val if not val.endswith('_') else val.rstrip('_')
         val = val if '_' not in val else val.replace('_', '-')
-        return Habitipy(self._conf, apis=self._apis, current=self._current + [val])
+        return self.__class__(self._conf, apis=self._apis, current=self._current + [val])
 
     def __getitem__(self, val: Union[str, List[str], Tuple[str, ...]]) -> 'Habitipy':
         if isinstance(val, str):
-            return Habitipy(self._conf, apis=self._apis, current=self._current + [val])
+            return self.__class__(self._conf, apis=self._apis, current=self._current + [val])
         elif isinstance(val, (list, tuple)):
             current = self._current + list(val)
-            return Habitipy(self._conf, apis=self._apis, current=current)
+            return self.__class__(self._conf, apis=self._apis, current=current)
         raise IndexError('{} not found in this API!'.format(val))
 
     def __call__(self, **kwargs) -> Union[Dict, List]:
@@ -266,9 +266,10 @@ class Habitipy(object):
             res = getattr(requests, method)(uri, headers=headers, params=query)
         if res.status_code != self._node.retcode:
             res.raise_for_status()
-            msg = """Got return code {res.status_code}, but {node.retcode} was
+            msg = _("""
+            Got return code {res.status_code}, but {node.retcode} was
             expected for {node.uri}. It may be a typo in Habitica apiDoc.
-            Plase file an issue to https://github.com/HabitRPG/habitica/issues"""
+            Please file an issue to https://github.com/HabitRPG/habitica/issues""")
             msg = textwrap.dedent(msg)
             msg = msg.replace('\n', ' ').format(res=res, node=self._node)
             if self._strict:

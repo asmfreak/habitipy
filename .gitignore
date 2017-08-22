@@ -12,3 +12,5 @@ build/
 _build/
 dist/
 .pydocenv/
+mkdocs.yml
+pydocmd.yml

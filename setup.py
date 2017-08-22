@@ -33,6 +33,7 @@ setup(
     },
     extras_require={
         'emoji':  ['emoji'],
+        'async':  ['aiohttp']
     },
     classifiers=[
         'License :: OSI Approved :: MIT License',
