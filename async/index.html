@@ -8,24 +8,26 @@
       <meta http-equiv="x-ua-compatible" content="ie=edge">
       
       
+        <link rel="canonical" href="https://asmfreak.github.io/habitipy/async/">
       
       
-        <link rel="shortcut icon" href="/habitipy/assets/images/favicon.png">
+      
+        <link rel="shortcut icon" href="../assets/images/favicon.png">
       
       <meta name="generator" content="mkdocs-0.16.3, mkdocs-material-1.8.1">
     
     
       
-        <title>habitipy documentation</title>
+        <title>asyncio compatibility - habitipy documentation</title>
       
     
     
-      <script src="/habitipy/assets/javascripts/modernizr-1df76c4e58.js"></script>
+      <script src="../assets/javascripts/modernizr-1df76c4e58.js"></script>
     
     
-      <link rel="stylesheet" href="/habitipy/assets/stylesheets/application-bfecc7305d.css">
+      <link rel="stylesheet" href="../assets/stylesheets/application-bfecc7305d.css">
       
-        <link rel="stylesheet" href="/habitipy/assets/stylesheets/application-02c2a4388f.palette.css">
+        <link rel="stylesheet" href="../assets/stylesheets/application-02c2a4388f.palette.css">
       
     
     
@@ -65,7 +67,7 @@
       <div class="md-flex__cell md-flex__cell--shrink">
         
           <a href="https://asmfreak.github.io/habitipy" title="habitipy documentation" class="md-logo md-header-nav__button">
-            <img src="/habitipy/assets/images/logo.svg" width="24" height="24">
+            <img src="../assets/images/logo.svg" width="24" height="24">
           </a>
         
       </div>
@@ -76,7 +78,13 @@
         <span class="md-flex__ellipsis md-header-nav__title">
           
             
-            habitipy documentation
+              
+                <span class="md-header-nav__parent">
+                  API Documentation
+                </span>
+              
+            
+            asyncio compatibility
           
         </span>
       </div>
@@ -140,14 +148,16 @@
       
         
 
-<nav class="md-tabs" data-md-component="tabs">
+  
+
+<nav class="md-tabs md-tabs--active" data-md-component="tabs">
   <div class="md-tabs__inner md-grid">
     <ul class="md-tabs__list">
       
         
   <li class="md-tabs__item">
     
-      <a href="/habitipy/" title="habitipy" class="md-tabs__link md-tabs__link--active">
+      <a href=".." title="habitipy" class="md-tabs__link">
         habitipy
       </a>
     
@@ -159,7 +169,7 @@
   
     <li class="md-tabs__item">
       
-        <a href="/habitipy/api/" title="API Documentation" class="md-tabs__link">
+        <a href="../api/" title="API Documentation" class="md-tabs__link md-tabs__link--active">
           API Documentation
         </a>
       
@@ -182,7 +192,7 @@
   <label class="md-nav__title md-nav__title--site" for="drawer">
     
       <i class="md-logo md-nav__button">
-        <img src="/habitipy/assets/images/logo.svg">
+        <img src="../assets/images/logo.svg">
       </i>
     
     habitipy documentation
@@ -218,7 +228,7 @@
 
 
   <li class="md-nav__item">
-    <a href="/habitipy/" title="habitipy" class="md-nav__link">
+    <a href=".." title="habitipy" class="md-nav__link">
       habitipy
     </a>
   </li>
@@ -228,10 +238,12 @@
       
       
 
+  
 
-  <li class="md-nav__item md-nav__item--nested">
+
+  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-2" type="checkbox" id="nav-2">
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-2" type="checkbox" id="nav-2" checked>
     
     <label class="md-nav__link" for="nav-2">
       API Documentation
@@ -249,7 +261,7 @@
 
 
   <li class="md-nav__item">
-    <a href="/habitipy/api/" title="REST API Module" class="md-nav__link">
+    <a href="../api/" title="REST API Module" class="md-nav__link">
       REST API Module
     </a>
   </li>
@@ -261,7 +273,7 @@
 
 
   <li class="md-nav__item">
-    <a href="/habitipy/cli/" title="Command line interface library" class="md-nav__link">
+    <a href="../cli/" title="Command line interface library" class="md-nav__link">
       Command line interface library
     </a>
   </li>
@@ -273,7 +285,7 @@
 
 
   <li class="md-nav__item">
-    <a href="/habitipy/util/" title="Utility functions" class="md-nav__link">
+    <a href="../util/" title="Utility functions" class="md-nav__link">
       Utility functions
     </a>
   </li>
@@ -283,11 +295,18 @@
           
           
 
+  
 
-  <li class="md-nav__item">
-    <a href="/habitipy/async/" title="asyncio compatibility" class="md-nav__link">
+
+  <li class="md-nav__item md-nav__item--active">
+    
+    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="toc">
+    
+    
+    <a href="./" title="asyncio compatibility" class="md-nav__link md-nav__link--active">
       asyncio compatibility
     </a>
+    
   </li>
 
         
@@ -303,12 +322,64 @@
               </div>
             
             
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary">
+  
+  
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
           
           <div class="md-content">
             <article class="md-content__inner md-typeset">
               
-  <h1>404 - Not found</h1>
+                
+                
+                <h1 id="habitipy.async.HabitipyAsync">HabitipyAsync</h1>
 
+<div class="codehilite"><pre><span></span><span class="n">HabitipyAsync</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conf</span><span class="p">:</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">apis</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">current</span><span class="p">:</span><span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">NoneType</span><span class="p">]</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">from_github</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">branch</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="bp">None</span>
+</pre></div>
+
+
+<p>Habitipy API using aiohttp as backend for request</p>
+<div class="codehilite"><pre><span></span><span class="n">async</span> <span class="k">def</span> <span class="nf">HabitipyAsync</span><span class="o">.</span><span class="fm">__call__</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">session</span><span class="p">:</span> <span class="n">aiohttp</span><span class="o">.</span><span class="n">ClientSession</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">]</span>
+</pre></div>
+
+
+<p><strong>Arguments</strong></p>
+<ul>
+<li><strong>session (aiohttp.ClientSession)</strong>: aiohttp session used to make request.</li>
+</ul>
+<p><strong>Example</strong></p>
+<div class="codehilite"><pre><span></span><span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">from</span> <span class="nn">aiohttp</span> <span class="kn">import</span> <span class="n">ClientSession</span>
+<span class="kn">from</span> <span class="nn">habitipy</span> <span class="kn">import</span> <span class="n">Habitipy</span><span class="p">,</span> <span class="n">load_conf</span><span class="p">,</span><span class="n">DEFAULT_CONF</span>
+<span class="kn">from</span> <span class="nn">habitipy.async</span> <span class="kn">import</span> <span class="n">HabitipyAsync</span>
+
+
+<span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">new_event_loop</span><span class="p">()</span>
+<span class="n">api</span> <span class="o">=</span> <span class="n">HabitipyAsync</span><span class="p">(</span><span class="n">load_conf</span><span class="p">(</span><span class="n">DEFAULT_CONF</span><span class="p">))</span>
+
+<span class="n">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">(</span><span class="n">api</span><span class="p">):</span>
+    <span class="n">async</span> <span class="k">with</span> <span class="n">ClientSession</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="n">await</span> <span class="n">api</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">u</span>
+<span class="n">loop</span><span class="o">.</span><span class="n">run_until_complete</span><span class="p">(</span><span class="n">main</span><span class="p">(</span><span class="n">api</span><span class="p">))</span>
+</pre></div>
+                
+                  
+                
+              
               
                 
               
@@ -319,6 +390,27 @@
       
         
 <footer class="md-footer">
+  
+    <div class="md-footer-nav">
+      <nav class="md-footer-nav__inner md-grid">
+        
+          <a href="../util/" title="Utility functions" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+            <div class="md-flex__cell md-flex__cell--shrink">
+              <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
+            </div>
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+              <span class="md-flex__ellipsis">
+                <span class="md-footer-nav__direction">
+                  Previous
+                </span>
+                Utility functions
+              </span>
+            </div>
+          </a>
+        
+        
+      </nav>
+    </div>
   
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">
@@ -353,10 +445,10 @@
       
     </div>
     
-      <script src="/habitipy/assets/javascripts/application-6940329b9f.js"></script>
+      <script src="../assets/javascripts/application-6940329b9f.js"></script>
       
       
-      <script>app.initialize({url:{base:"/habitipy"}})</script>
+      <script>app.initialize({url:{base:".."}})</script>
       
     
     
