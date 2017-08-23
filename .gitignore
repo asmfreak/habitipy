@@ -11,6 +11,6 @@ cover
 build/
 _build/
 dist/
-.pydocenv/
+.*env/
 mkdocs.yml
 pydocmd.yml
