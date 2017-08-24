@@ -56,15 +56,18 @@ def index_id_alias(draw, length):
 @composite
 def test_data(draw):
     can_overlap = draw(booleans())
-    user_tasks = draw(task_lists)
-    more_tasks = draw(task_lists)
-    all_tasks = []
-    all_tasks.extend(user_tasks)
-    all_tasks.extend(more_tasks)
+    all_tasks = draw(task_lists)
+    if all_tasks:
+        i = draw(integers(min_value=0,max_value=len(all_tasks)))
+        user_tasks = all_tasks[:i]
+        more_tasks = all_tasks[i:]
+    else:
+        user_tasks = []
+        more_tasks = []
     index_lists = lists(
         one_of(
-            index_id_alias(len(user_tasks)),
-            integer_range(0, len(user_tasks) - 1)),
+            index_id_alias(len(all_tasks)),
+            integer_range(0, len(all_tasks) - 1)),
         min_size=1, average_size=5)
     arguments = draw(lists(index_lists, min_size=1, average_size=5))
     arguments_strings = []
@@ -74,16 +77,16 @@ def test_data(draw):
         for index in indexes:
             comma = ',' if arg else ''
             if isinstance(index, tuple):
-                task_ids.extend(map(lambda x: user_tasks[x]['_id'], range(index[0],index[1]+1)))
+                task_ids.extend(map(lambda x: all_tasks[x]['_id'], range(index[0],index[1]+1)))
                 arg += '{comma}{0}-{1}'.format(index[0] + 1, index[1] + 1, comma=comma)
             elif isinstance(index, dict):
-                task_ids.append(user_tasks[index['i']]['_id'])
+                task_ids.append(all_tasks[index['i']]['_id'])
                 if index['type'] == 'index':
                     arg += '{comma}{i}'.format(i=index['i'] + 1, comma=comma)
                 elif index['type'] == 'id':
-                    arg += '{comma}{i}'.format(i=user_tasks[index['i']]['_id'], comma=comma)
+                    arg += '{comma}{i}'.format(i=all_tasks[index['i']]['_id'], comma=comma)
                 elif index['type'] == 'alias':
-                    arg += '{comma}{i}'.format(i=user_tasks[index['i']]['alias'], comma=comma)
+                    arg += '{comma}{i}'.format(i=all_tasks[index['i']]['alias'], comma=comma)
         arguments_strings.append(arg)
     if not can_overlap:
         task_ids = list(set(task_ids))
@@ -170,18 +173,27 @@ class TestCli(unittest.TestCase):
     @settings(suppress_health_check=[HealthCheck.too_slow])
     @given(test_data())
     def test_tasks_change(self, arg):
-        can_overlap, user_tasks, more_tasks, all_tasks, arguments_strings, task_ids, args = arg
+        can_overlap, user_tasks, _more_tasks, all_tasks, arguments_strings, task_ids, args = arg
+        op = mock.Mock()
+        log_op = mock.Mock()
+        domain_print = mock.Mock()
+        class TestDomain(cli.TasksChange):
+            domain = 'testdomain'
+            more_tasks = _more_tasks
+            ids_can_overlap = can_overlap
+            def op(tself, tid):
+                op(tid)
+                self.assertIn(tid, tself.changing_tasks)
+
+            def log_op(tself, tid):
+                log_op(tid)
+                self.assertIn(tid, tself.changing_tasks)
+
+            def domain_print(tself):
+                domain_print()
         context = [
             patch.object(cli.ConfiguredApplication, 'main', cfg_main),
-            patch.object(cli.TasksChange, 'domain', 'testdomain'),
-            patch.object(cli.TasksChange, 'ids_can_overlap', can_overlap),
-            patch.object(cli.TasksChange, 'op'),
-            patch.object(cli.TasksChange, 'log_op'),
-            patch.object(
-                cli.TasksChange, 'domain_print',
-                mock.Mock(wraps=cli.TasksChange.domain_print, return_value='')),
-            patch('habitipy.cli.prettify', mock.Mock(wraps=cli.prettify, return_value='')),
-            patch.object(cli.TasksPrint, 'more_tasks', more_tasks)]
+            patch('habitipy.cli.prettify', mock.Mock(wraps=cli.prettify, return_value=''))]
         rsps = responses.RequestsMock()
         context.extend([rsps, to_devnull()])
         with ExitStack() as stack:
@@ -193,15 +205,15 @@ class TestCli(unittest.TestCase):
                 content_type='application/json',
                 match_querystring=True,
                 json=dict(data=user_tasks))
-            instance, retcode = cli.TasksChange.invoke(
+            instance, retcode = TestDomain.invoke(
                 *arguments_strings, config_filename=self.file.name)
             self.assertIsNotNone(instance)
             self.assertIsNone(retcode)
-            self.assertTrue(cli.TasksChange.op.called)
-            self.assertTrue(cli.TasksChange.log_op.called)
+            self.assertTrue(op.called)
+            self.assertTrue(log_op.called)
             task_id_calls = [call(x) for x in task_ids]
-            cli.TasksChange.op.assert_has_calls(task_id_calls)
-            cli.TasksChange.log_op.assert_has_calls(task_id_calls)
-            self.assertTrue(cli.TasksChange.domain_print.called)
-            cli.TasksChange.domain_print.assert_has_calls([call()])
+            op.assert_has_calls(task_id_calls)
+            log_op.assert_has_calls(task_id_calls)
+            self.assertTrue(domain_print.called)
+            domain_print.assert_has_calls([call()])
             self.assertTrue(cli.prettify.called)

@@ -405,8 +405,9 @@ class TasksChange(ApplicationWithApi):
                     self.changing_tasks[tid] = tasks[task_uuids.index(tid)]
                     continue
                 elif tid in aliases:
-                    changing_tasks_ids.append(aliases[tid]['id'])
-                    self.changing_tasks[tid] = aliases[tid]
+                    t_id = aliases[tid]['id']
+                    changing_tasks_ids.append(t_id)
+                    self.changing_tasks[t_id] = aliases[tid]
                     continue
             self.log.error(self.TASK_ID_INVALID.format(tid))
             return 1
