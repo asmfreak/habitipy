@@ -158,7 +158,13 @@ class ApplicationWithApi(ConfiguredApplication):
 
 
 class HabiticaCli(ConfiguredApplication):  # pylint: disable=missing-docstring
+    DESCRIPTION = _("tools and library for Habitica restful API")  # noqa: Q000
     VERSION = pkg_resources.get_distribution('habitipy').version
+    def main(self):
+        if self.nested_command:
+            return
+        super().main()
+        self.log.error(_("No subcommand given, exiting"))
 
 
 @HabiticaCli.subcommand('status')  # pylint: disable=missing-docstring
@@ -622,6 +628,14 @@ class Server(ApplicationWithApi):
         msg = _("Habitica server {} offline or there is some issue with it")  # noqa: Q000
         print(msg.format(self.config['url']))
         return -1
+
+@HabiticaCli.subcommand('spells')
+class Spells(ApplicationWithApi):
+    def main(self):
+        if self.nested_command:
+            return
+        user = self.api.user.get()
+        content = get_content(self.api)
 
 
 subcommands_file = local.path(SUBCOMMANDS_JSON)
