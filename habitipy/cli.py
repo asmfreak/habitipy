@@ -294,7 +294,7 @@ class Habits(TasksPrint):
 
 @HabiticaCli.subcommand('dailies')  # pylint: disable=missing-docstring
 class Dailys(TasksPrint):
-    DESCRIPTION = _("List, up and down daily tasks")  # noqa: Q000
+    DESCRIPTION = _("List, check, uncheck daily tasks")  # noqa: Q000
     domain = 'dailys'
     def domain_format(self, daily):
         score = ScoreInfo(daily['value'])
@@ -445,6 +445,39 @@ class HabitsChange(TasksChange):  # pylint: disable=missing-docstring,abstract-m
     def domain_print(self):
         Habits.invoke(config_filename=self.config_filename)
 
+@Habits.subcommand('add')  # pylint: disable=missing-docstring
+class HabitsAdd(ApplicationWithApi):
+    DESCRIPTION = _("Add a habit <habit>")  # noqa: Q000
+    priority = cli.SwitchAttr(
+        ['-p', '--priority'],
+        cli.Set('0.1', '1', '1.5', '2'), default='1',
+        help=_("Priority (complexity) of a habit"))  # noqa: Q000
+    direction = cli.SwitchAttr(
+        ['-d', '--direction'],
+        cli.Set('positive', 'negative', 'both'), default='both',
+        help=_("positive/negative/both"))  # noqa: Q000
+
+    def main(self, *habit: str):
+        habit_str = ' '.join(habit)
+        if not habit_str:
+            self.log.error(_("Empty habit text!"))  # noqa: Q000
+            return 1
+        super().main()
+        self.api.tasks.user.post(type='habit', text=habit_str,
+                priority=self.priority, up=(self.direction != 'negative'),
+                down=(self.direction != 'positive'))
+        res = _("Added habit '{}' with priority {} and direction {}").format(habit_str, self.priority, self.direction)  # noqa: Q000
+        print(prettify(res))
+        Habits.invoke(config_filename=self.config_filename)
+
+@Habits.subcommand('delete')  # pylint: disable=missing-docstring
+class HabitsDelete(HabitsChange):
+    DESCRIPTION = _("Delete a habit with task_id")  # noqa: Q000
+    def op(self, tid):
+        self.tasks[tid].delete()
+
+    def log_op(self, tid):
+        return _("Deleted habit {text}").format(**self.changing_tasks[tid])  # noqa: Q000
 
 @Habits.subcommand('up')  # pylint: disable=missing-docstring
 class HabitsUp(HabitsChange):
@@ -517,7 +550,7 @@ class TodosUp(TodosChange):
 
 @ToDos.subcommand('delete')  # pylint: disable=missing-docstring
 class TodosDelete(TodosChange):
-    DESCRIPTION = _("Check a todo with task_id")  # noqa: Q000
+    DESCRIPTION = _("Delete a todo with task_id")  # noqa: Q000
     def op(self, tid):
         self.tasks[tid].delete()
 
