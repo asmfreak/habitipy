@@ -177,7 +177,9 @@ class Habitipy(object):
                 if not fn.exists():
                     fn = pkg_resources.resource_filename('habitipy', 'apidoc.txt')
                 fn = branch if from_github else fn
-                apis = parse_apidoc(fn, from_github)
+                with warnings.catch_warnings():
+                    warnings.simplefilter('error' if strict else 'ignore')
+                    apis = parse_apidoc(fn, from_github)
             with warnings.catch_warnings():
                 warnings.simplefilter('error' if strict else 'ignore')
                 apis = self._make_apis_dict(apis)
@@ -302,7 +304,8 @@ def download_api(branch=None) -> str:
 def parse_apidoc(
     file_or_branch,
     from_github=False,
-    save_github_version=True
+    save_github_version=True,
+    strict=True
 ) -> List['ApiEndpoint']:
     'read file and parse apiDoc lines'
     apis = []  # type: List[ApiEndpoint]
@@ -334,7 +337,8 @@ def parse_apidoc(
             assert method[0] == '{'
             assert method[-1] == '}'
             method = method[1:-1]
-            assert uri.startswith(API_URI_BASE)
+            if not uri.startswith(API_URI_BASE):
+                warnings.warn("Wrong api url: {}".format(uri))
             title = ' '.join(split_line[3:])
             apis.append(ApiEndpoint(method, uri, title))
         elif line.startswith('@apiParam '):

@@ -1,37 +1,74 @@
 @api {post} /api/v3/user/auth/local/register Register
-@apiParam (Body) {String} username Username of the new user
+@apiDescription Register a new user with email, login name, and password or attach local auth to a social user
+@apiName UserRegisterLocal
+@apiGroup User
+@apiParam (Body) {String} username Login name of the new user. Must be 1-36 characters, containing only a-z, 0-9, hyphens (-), or underscores (_).
 @apiParam (Body) {String} email Email address of the new user
 @apiParam (Body) {String} password Password for the new user
 @apiParam (Body) {String} confirmPassword Password confirmation
 @apiSuccess {Object} data The user object, if local auth was just attached to a social user then only user.auth.local
 @api {post} /api/v3/user/auth/local/login Login
+@apiDescription Login a user with email / username and password
+@apiName UserLoginLocal
+@apiGroup User
 @apiParam (Body) {String} username Username or email of the user
 @apiParam (Body) {String} password The user's password
 @apiSuccess {String} data._id The user's unique identifier
 @apiSuccess {String} data.apiToken The user's api token that must be used to authenticate requests.
 @apiSuccess {Boolean} data.newUser Returns true if the user was just created (always false for local login).
+@apiIgnore Private route
 @api {post} /api/v3/user/auth/pusher Pusher.com authentication
+@apiDescription Authentication for Pusher.com private and presence channels
+@apiName UserAuthPusher
+@apiGroup User
 @apiParam (Body) {String} socket_id A unique identifier for the specific client connection to Pusher
 @apiParam (Body) {String} channel_name The name of the channel being subscribed to
 @apiSuccess {String} auth The authentication token
 @api {put} /api/v3/user/auth/update-username Update username
+@apiDescription Update the username of a local user
+@apiName UpdateUsername
+@apiGroup User
 @apiParam (Body) {String} password The current user password
 @apiParam (Body) {String} username The new username
 @apiSuccess {String} data.username The new username
 @api {put} /api/v3/user/auth/update-password
+@apiDescription Update the password of a local user
+@apiName UpdatePassword
+@apiGroup User
 @apiParam (Body) {String} password The old password
 @apiParam (Body) {String} newPassword The new password
 @apiParam (Body) {String} confirmPassword New password confirmation
 @apiSuccess {Object} data An empty object
 @api {post} /api/v3/user/reset-password Reset password
+@apiDescription Send the user an email to let them reset their password
+@apiName ResetPassword
+@apiGroup User
 @apiParam (Body) {String} email The email address of the user
 @apiSuccess {String} message The localized success message
 @api {put} /api/v3/user/auth/update-email Update email
+@apiDescription Change the user email address
+@apiName UpdateEmail
+@apiGroup User
 @apiParam (Body) {String} newEmail The new email address.
 @apiParam (Body) {String} password The user password.
 @apiSuccess {String} data.email The updated email address
+@api {post} /api/v3/user/auth/reset-password-set-new-one Reser Password Set New one
+@apiDescription Set a new password for a user that reset theirs. Not meant for public usage.
+@apiName ResetPasswordSetNewOne
+@apiGroup User
+@apiParam (Body) {String} newPassword The new password.
+@apiParam (Body) {String} confirmPassword Password confirmation.
+@apiSuccess {String} data An empty object
+@apiSuccess {String} data Success message
 @api {delete} /api/v3/user/auth/social/:network Delete social authentication method
+@apiDescription Remove a social authentication method (only facebook supported) from a user profile. The user must have local authentication enabled
+@apiName UserDeleteSocial
+@apiGroup User
 @apiSuccess {Object} data Empty object
+@apiDefine ChallengeLeader Challenge Leader
+@apiDefine ChallengeNotFound
+@apiError (404) {NotFound} ChallengeNotFound The specified challenge could not be found.
+@apiDefine SuccessfulChallengeRequest
 @apiSuccess {UUID} challenge.group._id The group id.
 @apiSuccess {String} challenge.group.type Group type: `guild` or `party`.
 @apiSuccess {String} challenge.group.privacy Group privacy: `public` or `private`.
@@ -53,58 +90,150 @@
 @apiSuccess {Array} challenge.tasksOrder.dailys Array of `daily` task IDs.
 @apiSuccess {Array} challenge.tasksOrder.habits Array of `habit` task IDs.
 @apiSuccess {Boolean} challenge.official Boolean indicating if this is an official Habitica challenge.
+@apiDefine ChallengeSuccessExample
+@apiSuccessExample {json} Sucessfull response with single challenge
+@apiDefine ChallengeArrayExample
+@apiSuccessExample {json} Sucessful response with array of challenges
 @api {post} /api/v3/challenges Create a new challenge
+@apiName CreateChallenge
+@apiGroup Challenge
+@apiDescription Creates a challenge. Cannot create associated tasks with this route. See <a href="#api-Task-CreateChallengeTasks">CreateChallengeTasks</a>.
 @apiParam (Body) {Object} challenge An object representing the challenge to be created
 @apiParam (Body) {UUID} challenge.groupId The id of the group to which the challenge belongs
 @apiParam (Body) {String} challenge.name The full name of the challenge
 @apiParam (Body) {String} challenge.shortName A shortened name for the challenge, to be used as a tag
-@apiParam (Body) {String} [challenge.description] A description of the challenge
+@apiParam (Body) {String} [challenge.summary] A short summary advertising the main purpose of the challenge; maximum 250 characters; if not supplied, challenge.name will be used
+@apiParam (Body) {String} [challenge.description] A detailed description of the challenge
 @apiParam (Body) {Boolean} [official=false] Whether or not a challenge is an official Habitica challenge (requires admin)
 @apiParam (Body) {Number} [challenge.prize=0] Number of gems offered as a prize to challenge winner
 @apiSuccess (201) {Object} challenge The newly created challenge.
+@apiUse SuccessfulChallengeRequest
+@apiUse ChallengeSuccessExample
+@apiError (401) {NotAuthorized} CantAffordPrize User does not have enough gems to offer this prize.
+@apiError (400) {BadRequest} ChallengeValidationFailed Invalid or missing parameter in challenge body.
+@apiUse GroupNotFound
+@apiUse UserNotFound
 @api {post} /api/v3/challenges/:challengeId/join Join a challenge
+@apiName JoinChallenge
+@apiGroup Challenge
 @apiParam (Path) {UUID} challengeId The challenge _id
 @apiSuccess {Object} challenge The challenge the user joined
+@apiUse SuccessfulChallengeRequest
+@apiUse ChallengeNotFound
+@apiUse UserNotFound
+@apiUse ChallengeSuccessExample
 @api {post} /api/v3/challenges/:challengeId/leave Leave a challenge
+@apiName LeaveChallenge
+@apiGroup Challenge
 @apiParam (Path) {UUID} challengeId The challenge _id
 @apiParam (Body) {String="remove-all","keep-all"} [keep="keep-all"] Whether or not to keep or remove the challenge's tasks
 @apiSuccess {Object} data An empty object
+@apiUse ChallengeNotFound
+@apiUse UserNotFound
 @api {get} /api/v3/challenges/user Get challenges for a user.
+@apiName GetUserChallenges
+@apiGroup Challenge
+@apiDescription Get challenges the user has access to. Includes public challenges, challenges belonging to the user's group, and challenges the user has already joined.
 @apiSuccess {Object[]} challenges An array of challenges sorted with official challenges first, followed by the challenges in order from newest to oldest
+@apiUse SuccessfulChallengeRequest
+@apiUse ChallengeArrayExample
+@apiUse UserNotFound
 @api {get} /api/v3/challenges/groups/:groupId Get challenges for a group
+@apiDescription Get challenges that the user is a member, public challenges and the ones from the user's groups.
+@apiName GetGroupChallenges
+@apiGroup Challenge
 @apiParam (Path) {UUID} groupId The group _id
 @apiSuccess {Array} data An array of challenges sorted with official challenges first, followed by the challenges in order from newest to oldest
+@apiUse SuccessfulChallengeRequest
+@apiUse ChallengeArrayExample
+@apiUse UserNotFound
+@apiUse GroupNotFound
 @api {get} /api/v3/challenges/:challengeId Get a challenge given its id
+@apiName GetChallenge
+@apiGroup Challenge
 @apiParam (Path) {UUID} challengeId The challenge _id
 @apiSuccess {Object} data The challenge object
+@apiUse SuccessfulChallengeRequest
+@apiUse ChallengeSuccessExample
+@apiUse ChallengeNotFound
 @api {get} /api/v3/challenges/:challengeId/export/csv Export a challenge in CSV
+@apiName ExportChallengeCsv
+@apiGroup Challenge
 @apiParam (Path) {UUID} challengeId The challenge _id
 @apiSuccess {String} challenge A csv file
+@apiUse ChallengeNotFound
 @api {put} /api/v3/challenges/:challengeId Update the name, description, or leader of a challenge.
+@apiName UpdateChallenge
+@apiGroup Challenge
 @apiParam (Path) {UUID} challengeId The challenge _id
 @apiParam (Body) {String} [challenge.name] The new full name of the challenge.
+@apiParam (Body) {String} [challenge.summary] The new challenge summary.
 @apiParam (Body) {String} [challenge.description] The new challenge description.
 @apiParam (Body) {String} [challenge.leader] The UUID of the new challenge leader.
 @apiSuccess {Object} data The updated challenge
+@apiPermission ChallengeLeader
+@apiUse ChallengeSuccessExample
+@apiUse ChallengeNotFound
+@apiError (401) {NotAuthorized} MustBeChallengeLeader Only challenge leader
 @api {delete} /api/v3/challenges/:challengeId Delete a challenge
+@apiName DeleteChallenge
+@apiGroup Challenge
 @apiParam (Path) {UUID} challengeId The _id for the challenge to delete
 @apiSuccess {Object} data An empty object
+@apiUse ChallengeNotFound
 @api {post} /api/v3/challenges/:challengeId/selectWinner/:winnerId Select winner for challenge
+@apiName SelectChallengeWinner
+@apiGroup Challenge
 @apiParam (Path) {UUID} challengeId The _id for the challenge to close with a winner
 @apiParam (Path) {UUID} winnerId The _id of the winning user
 @apiSuccess {Object} data An empty object
+@apiUse ChallengeNotFound
+@api {post} /api/v3/challenges/:challengeId/clone Clone a challenge
+@apiName CloneChallenge
+@apiGroup Challenge
+@apiParam (Path) {UUID} challengeId The _id for the challenge to clone
+@apiSuccess {Object} challenge The cloned challenge
+@apiUse ChallengeNotFound
+@apiDefine MessageNotFound
+@apiError (404) {NotFound} MessageNotFound The specified message could not be found.
+@apiDefine GroupIdRequired
+@apiError (404) {badRequest} groupIdRequired A group ID is required
+@apiDefine ChatIdRequired
+@apiError (404) {badRequest} chatIdRequired A chat ID is required
 @api {get} /api/v3/groups/:groupId/chat Get chat messages from a group
+@apiName GetChat
+@apiGroup Chat
+@apiDescription Fetches an array of messages from a group
 @apiParam (Path) {String} groupId The group _id ('party' for the user party and 'habitrpg' for tavern are accepted)
 @apiSuccess {Array} data An array of <a href='https://github.com/HabitRPG/habitica/blob/develop/website/server/models/group.js#L51' target='_blank'>chat messages</a>
+@apiUse GroupNotFound
+@apiUse GroupIdRequired
 @api {post} /api/v3/groups/:groupId/chat Post chat message to a group
+@apiName PostChat
+@apiGroup Chat
+@apiDescription Posts a chat message to a group
 @apiParam (Path) {UUID} groupId The group _id ('party' for the user party and 'habitrpg' for tavern are accepted)
 @apiParam (Body) {String} message Message The message to post
 @apiParam (Query) {UUID} previousMsg The previous chat message's UUID which will force a return of the full group chat
+@apiUse GroupNotFound
+@apiUse GroupIdRequired
+@apiError (400) {NotFound} ChatPriviledgesRevoked Your chat privileges have been revoked
 @api {post} /api/v3/groups/:groupId/chat/:chatId/like Like a group chat message
+@apiName LikeChat
+@apiGroup Chat
+@apiDescription Likes a chat message from a group
 @apiParam (Path) {UUID} groupId The group _id ('party' for the user party and 'habitrpg' for tavern are accepted)
 @apiParam (Path) {UUID} chatId The chat message _id
 @apiSuccess {Object} data The liked <a href='https://github.com/HabitRPG/habitica/blob/develop/website/server/models/group.js#L51' target='_blank'>chat message</a>
+@apiUse GroupNotFound
+@apiUse MessageNotFound
+@apiUse GroupIdRequired
+@apiUse ChatIdRequired
+@apiError (400) {NotFound} messageGroupChatLikeOwnMessage A user can't like their own message
 @api {post} /api/v3/groups/:groupId/chat/:chatId/flag Flag a group chat message
+@apiDescription A message will be hidden from chat if two or more users flag a message. It will be hidden immediately if a moderator flags the message. An email is sent to the moderators about every flagged message.
+@apiName FlagChat
+@apiGroup Chat
 @apiParam (Path) {UUID} groupId The group id ('party' for the user party and 'habitrpg' for tavern are accepted)
 @apiParam (Path) {UUID} chatId The chat message id
 @apiSuccess {Object} data The flagged chat message
@@ -116,20 +245,49 @@
 @apiSuccess {Number} data.flagCount The number of flags the message has
 @apiSuccess {UUID} data.uuid The user id of the author of the message
 @apiSuccess {String} data.user The username of the author of the message
+@apiUse GroupNotFound
+@apiUse MessageNotFound
+@apiUse GroupIdRequired
+@apiUse ChatIdRequired
+@apiError (404) {NotFound} AlreadyFlagged Chat messages cannot be flagged more than once by a user
+@apiError (404) {NotFound} messageGroupChatFlagAlreadyReported The message has already been flagged
 @api {post} /api/v3/groups/:groupId/chat/:chatId/clearflags Clear flags
+@apiDescription Resets the flag count on a chat message. Retains the id of the user's that have flagged the message. (Only visible to moderators)
+@apiPermission Admin
+@apiName ClearFlags
+@apiGroup Chat
 @apiParam (Path) {UUID} groupId The group id ('party' for the user party and 'habitrpg' for tavern are accepted)
 @apiParam (Path) {UUID} chatId The chat message id
 @apiSuccess {Object} data An empty object
+@apiUse GroupNotFound
+@apiUse MessageNotFound
+@apiUse GroupIdRequired
+@apiUse ChatIdRequired
+@apiError (404) {NotAuthorized} MustBeAdmin Must be a moderator to use this route
 @api {post} /api/v3/groups/:groupId/chat/seen Mark all messages as read for a group
+@apiName SeenChat
+@apiGroup Chat
 @apiParam (Path) {UUID} groupId The group _id ('party' for the user party and 'habitrpg' for tavern are accepted)
 @apiSuccess {Object} data An empty object
+@apiUse GroupIdRequired
 @api {delete} /api/v3/groups/:groupId/chat/:chatId Delete chat message from a group
+@apiName DeleteChat
+@apiGroup Chat
+@apiDescription Delete's a chat message from a group
 @apiParam (Query) {UUID} previousMsg The last message's ID fetched by the client so that the whole chat will be returned only if new messages have been posted in the meantime
 @apiParam (Path) {UUID} groupId The group _id ('party' for the user party and 'habitrpg' for tavern are accepted)
 @apiParam (Path) {UUID} chatId The chat message id
 @apiSuccess data The updated chat array or an empty object if no message was posted after previousMsg
 @apiSuccess {Object} data An empty object when the previous message was deleted
+@apiUse GroupNotFound
+@apiUse MessageNotFound
+@apiUse GroupIdRequired
+@apiUse ChatIdRequired
+@apiError (400) onlyCreatorOrAdminCanDeleteChat Only the creator of the message and admins can delete a chat message
 @api {get} /api/v3/content Get all available content objects
+@apiDescription Does not require authentication.
+@apiName ContentGet
+@apiGroup Content
 @apiParam (Query) {String="bg","cs","da","de","en","en@pirate","en_GB","es","es_419","fr","he","hu","id","it","ja","nl","pl","pt","pt_BR","ro","ru","sk","sr","sv","uk","zh","zh_TW"} [language=en] Language code used for the items' strings. If the authenticated user makes the request, the content will return with the user's configured language.
 @apiSuccess {Object} data Various data about the content of Habitica. The content route
 @apiSuccess {Object} data.mystery The mystery sets awarded to paying subscribers.
@@ -157,29 +315,61 @@
 @apiSuccess {Object} data.appearances.background Data about available background options.
 @apiSuccess {Object} data.backgrounds Data about the background sets.
 @apiSuccess {Object} data.subscriptionBlocks Data about the various subscirption blocks.
+@apiDefine Sudo Sudo Users
 @api {get} /api/v3/coupons Get coupons
+@apiName GetCoupons
+@apiGroup Coupon
+@apiPermission sudo
 @apiSuccess {String} Coupons in CSV format
+@apiSuccessExample {String}
 @api {post} /api/v3/coupons/generate/:event Generate coupons for an event
+@apiName GenerateCoupons
+@apiGroup Coupon
+@apiPermission sudo
 @apiParam (Path) {String=wondercon,google_6mo} event The event for which the coupon should be generated
 @apiParam (Query) {Number} count The number of coupon codes to generate
 @apiSuccess {Array} data Generated coupons
+@apiError (400) {BadRequest} CouponValidationError The request was missing the count query parameter or used an invalid event.
 @api {post} /api/v3/coupons/enter/:code Redeem a coupon code
+@apiName RedeemCouponCode
+@apiGroup Coupon
 @apiParam (Path) {String} code The coupon code to apply
 @apiSuccess {Object} data User object
 @api {post} /api/v3/coupons/validate/:code Validate a coupon code
+@apiName ValidateCoupon
+@apiGroup Coupon
 @apiParam (Path) {String} code The coupon code to validate
 @apiSuccess {Boolean} data.valid True or False
 @api {post} /api/v3/cron Runs cron
+@apiName Cron
+@apiGroup Cron
 @apiSuccess {Object} data An empty Object
+@apiDefine Development Development
+@apiDefine Developers Local Development
 @api {post} /api/v3/debug/add-ten-gems Add ten gems to the current user
+@apiName AddTenGems
+@apiGroup Development
+@apiPermission Developers
 @apiSuccess {Object} data An empty Object
 @api {post} /api/v3/debug/add-hourglass Add Hourglass to the current user
+@apiName AddHourglass
+@apiGroup Development
+@apiPermission Developers
 @apiSuccess {Object} data An empty Object
 @api {post} /api/v3/debug/set-cron Set lastCron for user
+@apiName setCron
+@apiGroup Development
+@apiPermission Developers
 @apiSuccess {Object} data An empty Object
 @api {post} /api/v3/debug/make-admin Sets contributor.admin to true
+@apiName setCron
+@apiGroup Development
+@apiPermission Developers
 @apiSuccess {Object} data An empty Object
 @api {post} /api/v3/debug/modify-inventory Manipulate user's inventory
+@apiName modifyInventory
+@apiGroup Development
+@apiPermission Developers
 @apiParam (Body) {Object} gear Object to replace user's <code><a href="https://github.com/HabitRPG/habitica/blob/develop/website/server/models/user/schema.js#L243">gear.owned</a></code> object.
 @apiParam (Body) {Object} special Object to replace user's <code><a href="https://github.com/HabitRPG/habitica/blob/develop/website/server/models/user/schema.js#272">special</a></code> object.
 @apiParam (Body) {Object} pets Object to replace user's <code><a href="https://github.com/HabitRPG/habitica/blob/develop/website/server/models/user/schema.js#296">pets</a></code> object.
@@ -190,71 +380,223 @@
 @apiParam (Body) {Object} quests Object to replace user's <code><a href="https://github.com/HabitRPG/habitica/blob/develop/website/server/models/user/schema.js#344">quests</a></code> object.
 @apiSuccess {Object} data An empty Object
 @api {post} /api/v3/debug/quest-progress Artificially accelerate quest progress
+@apiName questProgress
+@apiGroup Development
+@apiPermission Developers
 @apiSuccess {Object} data An empty Object
+@apiDefine GroupBodyInvalid
+@apiError (400) {BadRequest} GroupBodyInvalid A parameter in the group body was invalid.
+@apiDefine GroupNotFound
+@apiError (404) {NotFound} GroupNotFound The specified group could not be found.
+@apiDefine PartyNotFound
+@apiError (404) {NotFound} PartyNotFound The user's party could not be found.
+@apiDefine groupIdRequired
+@apiError (400) {BadRequest} groupIdRequired A groupId is required
+@apiDefine messageGroupRequiresInvite
+@apiError (400) {NotAuthorized} messageGroupRequiresInvite Group requires an invitation to join (e.g. private group, party)
+@apiDefine GroupLeader Group Leader
 @api {post} /api/v3/groups Create group
+@apiName CreateGroup
+@apiGroup Group
 @apiParam (Body) {String} name
 @apiParam (Body) {String="guild","party"} type Type of group (guild or party)
 @apiParam (Body) {String="private","public"} privacy Privacy of group (party MUST be private)
+@apiParamExample {json} Private Guild:
+@apiError (400) {NotAuthorized} messageInsufficientGems User does not have enough gems (4)
+@apiError (400) {NotAuthorized} partyMustbePrivate Party must have privacy set to private
+@apiError (400) {NotAuthorized} messageGroupAlreadyInParty
 @apiSuccess (201) {Object} data The created group (See <a href="https://github.com/HabitRPG/habitica/blob/develop/website/server/models/group.js" target="_blank">/website/server/models/group.js</a>)
+@apiSuccessExample {json} Private Guild:
 @api {post} /api/v3/groups/create-plan Create a Group and then redirect to the correct payment
+@apiName CreateGroupPlan
+@apiGroup Group
 @apiSuccess (201) {Object} data The created group
 @api {get} /api/v3/groups Get groups for a user
+@apiName GetGroups
+@apiGroup Group
 @apiParam (Query) {String} type The type of groups to retrieve. Must be a query string representing a list of values like 'tavern,party'. Possible values are party, guilds, privateGuilds, publicGuilds, tavern
 @apiParam (Query) {String="true","false"} [paginate] Public guilds support pagination. When true guilds are returned in groups of 30
 @apiParam (Query) {Number} [page] When pagination is enabled for public guilds this parameter can be used to specify the page number (the initial page is number 0 and not required)
+@apiParamExample {json} Private Guilds, Tavern:
+@apiError (400) {BadRequest} groupTypesRequired Group types are required
+@apiError (400) {BadRequest} guildsPaginateBooleanString Paginate query parameter must be a boolean (true or false)
+@apiError (400) {BadRequest} guildsPageInteger Page query parameter must be a positive integer
+@apiError (400) {BadRequest} guildsOnlyPaginate Only public guilds support pagination
 @apiSuccess {Object[]} data An array of the requested groups (See <a href="https://github.com/HabitRPG/habitica/blob/develop/website/server/models/group.js" target="_blank">/website/server/models/group.js</a>)
+@apiSuccessExample {json} Private Guilds, Tavern:
 @api {get} /api/v3/groups/:groupId Get group
+@apiName GetGroup
+@apiGroup Group
 @apiParam (Path) {String} groupId The group _id ('party' for the user party and 'habitrpg' for tavern are accepted)
+@apiParamExample {String} Tavern:
 @apiSuccess {Object} data The group object (See <a href="https://github.com/HabitRPG/habitica/blob/develop/website/server/models/group.js" target="_blank">/website/server/models/group.js</a>)
+@apiSuccessExample {json} Tavern:
+@apiUse groupIdRequired
+@apiUse GroupNotFound
 @api {put} /api/v3/groups/:groupId Update group
+@apiName UpdateGroup
+@apiGroup Group
 @apiParam (Path) {String} groupId The group _id ('party' for the user party and 'habitrpg' for tavern are accepted)
+@apiParamExample {String} Tavern:
+@apiError (400) {NotAuthorized} messageGroupOnlyLeaderCanUpdate Only the group's leader can update the party
 @apiSuccess {Object} data The updated group (See <a href="https://github.com/HabitRPG/habitica/blob/develop/website/server/models/group.js" target="_blank">/website/server/models/group.js</a>)
+@apiSuccessExample {json} Tavern:
+@apiUse groupIdRequired
+@apiUse GroupNotFound
+@apiPermission GroupLeader, Admin
 @api {post} /api/v3/groups/:groupId/join Join a group
+@apiName JoinGroup
+@apiGroup Group
 @apiParam (Path) {UUID} groupId The group _id ('party' for the user party and 'habitrpg' for tavern are accepted)
+@apiParamExample {String} Tavern:
 @apiSuccess {Object} data The joined group (See <a href="https://github.com/HabitRPG/habitica/blob/develop/website/server/models/group.js" target="_blank">/website/server/models/group.js</a>)
+@apiSuccessExample {json} Tavern:
+@apiUse groupIdRequired
+@apiUse GroupNotFound
+@apiUse messageGroupRequiresInvite
 @api {post} /api/v3/groups/:groupId/reject Reject a group invitation
+@apiName RejectGroupInvite
+@apiGroup Group
 @apiParam (Path) {UUID} groupId The group _id ('party' for the user party and 'habitrpg' for tavern are accepted)
+@apiParamExample {String} party:
 @apiSuccess {Object} data An empty object
+@apiUse groupIdRequired
+@apiUse messageGroupRequiresInvite
 @api {post} /api/v3/groups/:groupId/leave Leave a group
+@apiName LeaveGroup
+@apiGroup Group
 @apiParam (Path) {String} groupId The group _id ('party' for the user party and 'habitrpg' for tavern are accepted)
 @apiParam (Query) {String="remove-all","keep-all"} keep=keep-all Whether or not to keep challenge tasks belonging to the group being left.
 @apiParam (Body) {String="remain-in-challenges","leave-challenges"} [keepChallenges=leave-challenges] Whether or not to remain in the challenges of the group being left.
+@apiParamExample {json} Leave Party:
+@apiError (400) {BadRequest} keepOrRemoveAll "keep" parameter is not "remove-all" or "keep-all"
+@apiError (400) {NotAuthorized} questLeaderCannotLeaveGroup User could not leave party because they are the owner of a quest currently running
+@apiError (400) {NotAuthorized} cannotLeaveWhileActiveQuest User could not leave party due to being in a quest
 @apiSuccess {Object} data An empty object
+@apiUse groupIdRequired
+@apiUse GroupNotFound
 @api {post} /api/v3/groups/:groupId/removeMember/:memberId Remove a member from a group
+@apiName RemoveGroupMember
+@apiGroup Group
 @apiParam (Path) {String} groupId The group _id ('party' for the user party and 'habitrpg' for tavern are accepted)
 @apiParam (Path) {UUID} memberId The _id of the member to remove
 @apiParam (Query) {String} message Query parameter - The message to send to the removed members
+@apiParamExample {URL} Remove member from party:
+@apiError (400) {BadRequest} userIdrequired "memberId" cannot be empty or not a UUID
+@apiError (400) {NotAuthorized} onlyLeaderCanRemoveMember Only the group leader can remove members
+@apiError (400) {NotAuthorized} memberCannotRemoveYourself Group leader cannot remove themselves
+@apiError (404) {NotFound} groupMemberNotFound Group member was not found
 @apiSuccess {Object} data An empty object
+@apiPermission GroupLeader, Admin
+@apiUse groupIdRequired
+@apiUse GroupNotFound
 @api {post} /api/v3/groups/:groupId/invite Invite users to a group
+@apiName InviteToGroup
+@apiGroup Group
+@apiDescription You can provide both `emails` and `uuids`, or just one. You must provide at least one.
 @apiParam (Path) {String} groupId The group _id ('party' for the user party and 'habitrpg' for tavern are accepted)
 @apiParam (Body) {Object[]} [emails] An array of objects, each representing one email address to invite
 @apiParam (Body) {String} emails.email The email address of the user being invited.
 @apiParam (Body) {String} [emails.name] The name of the user being invited.
 @apiParam (Body) {Array} [uuids] An array of uuids to invite
+@apiParamExample {json} Emails
+@apiParamExample {json} User Ids
+@apiParamExample {json} User Ids and Emails
 @apiSuccess {Array} data The invites
-@apiSuccess {Object} data[0] If the invitation was a user id, you'll receive back an object. You'll recieve one Object for each succesful user id invite.
-@apiSuccess {String} data[1] If the invitation was an email, you'll receive back the email. You'll recieve one String for each successful email invite.
+@apiSuccess {Object} data[0] If the invitation was a user id, you'll receive back an object. You'll receive one Object for each succesful user id invite.
+@apiSuccess {String} data[1] If the invitation was an email, you'll receive back the email. You'll receive one String for each successful email invite.
+@apiSuccessExample {json} Successful Response with Emails
+@apiSuccessExample {json} Successful Response with User Id
+@apiSuccessExample {json} Successful Response with User Ids and Emails
+@apiUse GroupBodyInvalid
+@apiError (400) {BadRequest} NoEmailProvided An email address was not provided in the `emails` body
+@apiError (400) {BadRequest} UuidOrEmailOnly The `emails` and `uuids` params were both missing and/or a
+@apiError (400) {BadRequest} CannotInviteSelf User id or email of invitee matches that of the inviter.
+@apiError (400) {BadRequest} MustBeArray The `uuids` or `emails` body param was not an array.
+@apiError (400) {BadRequest} TooManyInvites A max of 100 invites (combined emails and user ids) can
+@apiError (400) {BadRequest} ExceedsMembersLimit A max of 30 members can join a party.
+@apiError (401) {NotAuthorized} UserAlreadyInvited The user has already been invited to the group.
+@apiError (401) {NotAuthorized} UserAlreadyInGroup The user is already a member of the group.
+@apiUse GroupNotFound
+@apiUse UserNotFound
+@apiUse PartyNotFound
 @api {post} /api/v3/groups/:groupId/add-manager Add a manager to a group
+@apiName AddGroupManager
+@apiGroup Group
 @apiParam (Path) {UUID} groupId The group _id ('party' for the user party and 'habitrpg' for tavern are accepted)
+@apiParamExample {String} party:
+@apiBody (Body) {UUID} managerId The user _id of the member to promote to manager
 @apiSuccess {Object} data An empty object
+@apiError (400) {NotAuthorized} managerId req.body.managerId is required
+@apiUse groupIdRequired
 @api {post} /api/v3/groups/:groupId/remove-manager Remove a manager from a group
+@apiName RemoveGroupManager
+@apiGroup Group
 @apiParam (Path) {UUID} groupId The group _id ('party' for the user party and 'habitrpg' for tavern are accepted)
+@apiParamExample {String} party:
+@apiBody (Body) {UUID} managerId The user _id of the member to remove
 @apiSuccess {Object} group The group
+@apiError (400) {NotAuthorized} managerId req.body.managerId is required
+@apiUse groupIdRequired
+@api {get} /api/v3/group-plans Get group plans for a user
+@apiName GetGroupPlans
+@apiGroup Group
+@apiSuccess {Object[]} data An array of the requested groups with a group plan (See <a href="https://github.com/HabitRPG/habitica/blob/develop/website/server/models/group.js" target="_blank">/website/server/models/group.js</a>)
+@apiSuccessExample {json} Groups the user is in with a group plan:
 @api {get} /api/v3/hall/patrons Get all patrons
+@apiDescription Returns an array of objects containing the patrons who backed Habitica's
+@apiName GetPatrons
+@apiGroup Hall
 @apiParam (Query) {Number} [page=0] The result page.
 @apiSuccess {Array} data An array of patrons
+@apiSuccessExample {json} Example response
+@apiUse NoAuthHeaders
+@apiUse NoAccount
 @api {get} /api/v3/hall/heroes Get all Heroes
+@apiName GetHeroes
+@apiGroup Hall
+@apiDescription Returns an array of objects containing the heroes who have
 @apiSuccess {Array} heroes An array of heroes
+@apiSuccessExample {json} Example response:
+@apiUse NoAuthHeaders
+@apiUse NoAccount
 @api {get} /api/v3/hall/heroes/:heroId Get any user ("hero") given the UUID
 @apiParam (Path) {UUID} heroId user ID
+@apiName GetHero
+@apiGroup Hall
+@apiPermission Admin
+@apiDescription Returns the profile of the given user
 @apiSuccess {Object} data The user object
+@apiUse NoAuthHeaders
+@apiUse NoAccount
+@apiUse NoUser
+@apiUse NotAdmin
 @api {put} /api/v3/hall/heroes/:heroId Update any user ("hero")
 @apiParam (Path) {UUID} heroId user ID
+@apiName UpdateHero
+@apiGroup Hall
+@apiPermission Admin
+@apiDescription Update user's gem balance, contributions & contribution tier and admin status. Grant items, block / unblock user's account and revoke / unrevoke chat privileges.
+@apiExample Example Body:
 @apiSuccess {Object} data The updated user object
+@apiUse NoAuthHeaders
+@apiUse NoAccount
+@apiUse NoUser
+@apiUse NotAdmin
+@api {get} /api/v3/i18n/browser-script Returns a JS script to make all the i18n strings available in the browser
+@apiDescription Does not require authentication.
+@apiName i18nBrowserScriptGet
+@apiGroup i18n
 @api {get} /api/v3/members/:memberId Get a member profile
+@apiName GetMember
+@apiGroup Member
 @apiParam (Path) {UUID} memberId The member's id
 @apiSuccess {Object} data The member object
+@apiUse UserNotFound
 @api {get} /api/v3/members/:memberId/achievements Get member achievements object
+@apiName GetMemberAchievements
+@apiGroup Member
+@apiDescription Get a list of achievements of the requested member, grouped by basic / seasonal / special.
 @apiParam (Path) {UUID} memberId The member's id
 @apiSuccess {Object} data The achievements object
 @apiSuccess {Object} data.basic The basic achievements object
@@ -268,113 +610,279 @@
 @apiSuccess {Number} data.*.achievements.index The unique index assigned to the achievement (only for sorting purposes)
 @apiSuccess {Anything} data.*.achievements.value The value related to the achievement (if applicable)
 @apiSuccess {Number} data.*.achievements.optionalCount The count related to the achievement (if applicable)
+@apiSuccessExample {json} Successful Response
+@apiError (400) {BadRequest} MemberIdRequired The `id` param is required and must be a valid `UUID`
+@apiError (404) {NotFound} UserWithIdNotFound The `id` param did not belong to an existing member
 @api {get} /api/v3/groups/:groupId/members Get members for a group
+@apiDescription With a limit of 30 member per request. To get all members run requests against this routes (updating the lastId query parameter) until you get less than 30 results.
+@apiName GetMembersForGroup
+@apiGroup Member
 @apiParam (Path) {UUID} groupId The group id
 @apiParam (Query) {UUID} lastId Query parameter to specify the last member returned in a previous request to this route and get the next batch of results
 @apiParam (Query) {Boolean} includeAllPublicFields Query parameter available only when fetching a party. If === `true` then all public fields for members will be returned (like when making a request for a single member)
 @apiSuccess {Array} data An array of members, sorted by _id
+@apiUse ChallengeNotFound
+@apiUse GroupNotFound
 @api {get} /api/v3/groups/:groupId/invites Get invites for a group
+@apiDescription With a limit of 30 member per request. To get all invites run requests against this routes (updating the lastId query parameter) until you get less than 30 results.
+@apiName GetInvitesForGroup
+@apiGroup Member
 @apiParam (Path) {UUID} groupId The group id
 @apiParam (Query) {UUID} lastId Query parameter to specify the last invite returned in a previous request to this route and get the next batch of results
 @apiSuccess {array} data An array of invites, sorted by _id
+@apiUse ChallengeNotFound
+@apiUse GroupNotFound
 @api {get} /api/v3/challenges/:challengeId/members Get members for a challenge
+@apiDescription With a limit of 30 member per request.
+@apiName GetMembersForChallenge
+@apiGroup Member
 @apiParam (Path) {UUID} challengeId The challenge id
 @apiParam (Query) {UUID} lastId Query parameter to specify the last member returned in a previous request to this route and get the next batch of results
 @apiParam (Query) {String} includeAllMembers BETA Query parameter - If 'true' all challenge members are returned
 @apiSuccess {Array} data An array of members, sorted by _id
+@apiUse ChallengeNotFound
+@apiUse GroupNotFound
 @api {get} /api/v3/challenges/:challengeId/members/:memberId Get a challenge member progress
+@apiName GetChallengeMemberProgress
+@apiGroup Member
 @apiParam (Path) {UUID} challengeId The challenge _id
 @apiParam (Path) {UUID} memberId The member _id
 @apiSuccess {Object} data Return an object with member _id, profile.name and a tasks object with the challenge tasks for the member
+@apiUse ChallengeNotFound
+@apiUse UserNotFound
 @api {get} /api/v3/members/:toUserId/objections/:interaction Get any objections that would occur if the given interaction was attempted - BETA
+@apiVersion 3.0.0
+@apiName GetObjectionsToInteraction
+@apiGroup Member
 @apiParam (Path) {UUID} toUserId The user to interact with
 @apiParam (Path) {String="send-private-message","transfer-gems"} interaction Name of the interaction to query
 @apiSuccess {Array} data Return an array of objections, if the interaction would be blocked; otherwise an empty array
 @api {post} /api/v3/members/send-private-message Send a private message to a member
+@apiName SendPrivateMessage
+@apiGroup Member
 @apiParam (Body) {String} message Body parameter - The message
 @apiParam (Body) {UUID} toUserId Body parameter - The user to contact
 @apiSuccess {Object} data An empty Object
+@apiUse UserNotFound
 @api {post} /api/v3/members/transfer-gems Send a gem gift to a member
+@apiName TransferGems
+@apiGroup Member
 @apiParam (Body) {String} message The message
 @apiParam (Body) {UUID} toUserId The toUser _id
 @apiParam (Body) {Integer} gemAmount The number of gems to send
 @apiSuccess {Object} data An empty Object
+@apiUse UserNotFound
 @api {get} /api/v3/models/:model/paths Get all paths for the specified model
+@apiDescription Doesn't require authentication
+@apiName GetUserModelPaths
+@apiGroup Meta
 @apiParam (Path) {String="user","group","challenge","tag","habit","daily","todo","reward"} model The name of the model
+@apiExample {curl} Tag
 @apiSuccess {Object} data A key-value object made of fieldPath: fieldType (like {'field.nested': Boolean})
+@apiSuccessExample {json} Tag
+@apiError (400) {badRequest} modelNotFound The model specified was not found
+@api {get} /api/v3/news Get latest Bailey announcement
+@apiName GetNews
+@apiGroup News
+@apiSuccess {Object} html Latest Bailey html
+@api {post} /api/v3/news/tell-me-later Get latest Bailey announcement in a second moment
+@apiName TellMeLaterNews
+@apiGroup News
+@apiSuccess {Object} data An empty Object
 @api {post} /api/v3/notifications/:notificationId/read Mark one notification as read
+@apiName ReadNotification
+@apiGroup Notification
 @apiParam (Path) {UUID} notificationId
 @apiSuccess {Object} data user.notifications
-@api {post} /api/v3/notifications Mark notifications as read
+@api {post} /api/v3/notifications/read Mark multiple notifications as read
+@apiName ReadNotifications
+@apiGroup Notification
 @apiSuccess {Object} data user.notifications
+@api {post} /api/v3/notifications/:notificationId/see Mark one notification as seen
+@apiDescription Mark a notification as seen. Different from marking them as read in that the notification isn't removed but the `seen` field is set to `true`
+@apiName SeeNotification
+@apiGroup Notification
+@apiParam (Path) {UUID} notificationId
+@apiSuccess {Object} data The modified notification
+@api {post} /api/v3/notifications/see Mark multiple notifications as seen
+@apiName SeeNotifications
+@apiGroup Notification
+@apiSuccess {Object} data user.notifications
+@apiIgnore
 @api {post} /api/v3/user/push-devices Add a push device to a user
+@apiName UserAddPushDevice
+@apiGroup User
 @apiParam (Body) {String} regId The id of the push device
 @apiParam (Body) {String} type The type of push device
 @apiSuccess {Object} data List of push devices
 @apiSuccess {String} message Success message
+@apiIgnore
 @api {delete} /api/v3/user/push-devices/:regId remove a push device from a user
+@apiName UserRemovePushDevice
+@apiGroup User
 @apiParam (Path) {String} regId The id of the push device
 @apiSuccess {Object} data List of push devices
 @apiSuccess {String} message Success message
+@apiDefine QuestNotFound
+@apiError (404) {NotFound} QuestNotFound The specified quest could not be found.
+@apiDefine QuestLeader Quest Leader
 @api {post} /api/v3/groups/:groupId/quests/invite/:questKey Invite users to a quest
+@apiName InviteToQuest
+@apiGroup Quest
 @apiParam (Path) {String} groupId The group _id (or 'party')
 @apiParam (Path) {String} questKey
 @apiSuccess {Object} data Quest object
+@apiUse GroupNotFound
+@apiUse QuestNotFound
 @api {post} /api/v3/groups/:groupId/quests/accept Accept a pending quest
+@apiName AcceptQuest
+@apiGroup Quest
 @apiParam (Path) {String} groupId The group _id (or 'party')
 @apiSuccess {Object} data Quest Object
+@apiUse GroupNotFound
+@apiUse QuestNotFound
 @api {post} /api/v3/groups/:groupId/quests/reject Reject a quest
+@apiName RejectQuest
+@apiGroup Quest
 @apiParam (Path) {String} groupId The group _id (or 'party')
 @apiSuccess {Object} data Quest Object
+@apiUse GroupNotFound
+@apiUse QuestNotFound
 @api {post} /api/v3/groups/:groupId/quests/force-start Force-start a pending quest
+@apiName ForceQuestStart
+@apiGroup Quest
 @apiParam (Path) {String} groupId The group _id (or 'party')
 @apiSuccess {Object} data Quest Object
+@apiPermission QuestLeader
+@apiPermission GroupLeader
+@apiUse GroupNotFound
+@apiUse QuestNotFound
 @api {post} /api/v3/groups/:groupId/quests/cancel Cancel a quest that is not active
+@apiName CancelQuest
+@apiGroup Quest
 @apiParam (Path) {String} groupId The group _id (or 'party')
 @apiSuccess {Object} data Quest Object
+@apiPermission QuestLeader
+@apiPermission GroupLeader
+@apiUse GroupNotFound
+@apiUse QuestNotFound
 @api {post} /api/v3/groups/:groupId/quests/abort Abort the current quest
+@apiName AbortQuest
+@apiGroup Quest
 @apiParam (Path) {String} groupId The group _id (or 'party')
 @apiSuccess {Object} data Quest Object
+@apiPermission QuestLeader
+@apiPermission GroupLeader
+@apiUse GroupNotFound
+@apiUse QuestNotFound
 @api {post} /api/v3/groups/:groupId/quests/leave Leave the active quest
+@apiName LeaveQuest
+@apiGroup Quest
 @apiParam (Path) {String} groupId The group _id (or 'party')
 @apiSuccess {Object} data Quest Object
+@apiUse GroupNotFound
+@apiUse QuestNotFound
+@apiIgnore
 @api {get} /api/v3/shops/market get the available items for the market
+@apiName GetMarketItems
+@apiGroup Shops
 @apiSuccess {Object} data List of available items
 @apiSuccess {string} message Success message
+@apiIgnore
+@api {get} /api/v3/shops/market-gear get the available gear for the market
+@apiName GetMarketGear
+@apiGroup Shops
+@apiSuccess {Object} data List of available gear
+@apiIgnore
 @api {get} /api/v3/shops/quests get the available items for the quests shop
+@apiName GetQuestShopItems
+@apiGroup Shops
 @apiSuccess {Object} data List of available quests
 @apiSuccess {string} message Success message
+@apiIgnore
 @api {get} /api/v3/shops/time-travelers get the available items for the time travelers shop
+@apiName GetTimeTravelersShopItems
+@apiGroup Shops
 @apiSuccess {Object} data List of available items
 @apiSuccess {string} message Success message
+@apiIgnore
 @api {get} /api/v3/shops/seasonal get the available items for the seasonal shop
+@apiName GetSeasonalShopItems
+@apiGroup Shops
 @apiSuccess {Object} data List of available items
 @apiSuccess {string} message Success message
+@apiIgnore
 @api {get} /api/v3/shops/backgrounds get the available items for the backgrounds shop
+@apiName GetBackgroundsShopItems
+@apiGroup Shops
 @apiSuccess {Object} data List of available backgrounds
 @apiSuccess {string} message Success message
 @api {get} /api/v3/status Get Habitica's API status
+@apiName GetStatus
+@apiGroup Status
 @apiSuccess {String} data.status 'up' if everything is ok
+@apiSuccessExample {JSON} Server is Up
+@apiDefine TagNotFound
+@apiError (404) {NotFound} TagNotFound The specified tag could not be found.
+@apiDefine InvalidUUID
+@apiError (400) {BadRequest} InvalidRequestParameters "tagId" must be a valid UUID corresponding to a tag belonging to the user.
 @api {post} /api/v3/tags Create a new tag
+@apiName CreateTag
+@apiGroup Tag
 @apiParam (Body) {string} name The name of the tag to be added.
+@apiParamExample {json} Example body:
 @apiSuccess (201) {Object} data The newly created tag
+@apiSuccessExample {json} Example return:
 @api {get} /api/v3/tags Get a user's tags
+@apiName GetTags
+@apiGroup Tag
 @apiSuccess {Array} data An array of tags
+@apiSuccessExample {json} Example return:
 @api {get} /api/v3/tags/:tagId Get a tag given its id
+@apiName GetTag
+@apiGroup Tag
 @apiParam (Path) {UUID} tagId The tag _id
 @apiSuccess {Object} data The tag object
+@apiSuccessExample {json} Example return:
+@apiUse TagNotFound
+@apiUSe InvalidUUID
 @api {put} /api/v3/tags/:tagId Update a tag
+@apiName UpdateTag
+@apiGroup Tag
 @apiParam (Path) {UUID} tagId The tag _id
 @apiParam (Body) {string} name The new name of the tag.
+@apiParamExample {json} Example body:
 @apiSuccess {Object} data The updated tag
+@apiSuccessExample {json} Example result:
+@apiUse TagNotFound
+@apiUSe InvalidUUID
 @api {post} /api/v3/reorder-tags Reorder a tag
+@apiName ReorderTags
+@apiGroup Tag
 @apiParam (Body) {UUID} tagId Id of the tag to move
 @apiParam (Body) {Number} to Position the tag is moving to
+@apiParamExample {json} Example request:
 @apiSuccess {Object} data An empty object
+@apiSuccessExample {json} Example return:
+@apiUse TagNotFound
 @api {delete} /api/v3/tags/:tagId Delete a user tag given its id
+@apiName DeleteTag
+@apiGroup Tag
 @apiParam (Path) {UUID} tagId The tag _id
 @apiSuccess {Object} data An empty object
+@apiSuccessExample {jsom} Example return:
+@apiUse TagNotFound
+@apiUSe InvalidUUID
+@apiDefine TaskNotFound
+@apiError (404) {NotFound} TaskNotFound The specified task could not be found.
+@apiDefine ChecklistNotFound
+@apiError (404) {NotFound} ChecklistNotFound The specified checklist item could not be found.
+@apiDefine NotAuthorized
+@apiError (401) {NotAuthorized} There is no account that uses those credentials.
 @api {post} /api/v3/tasks/user Create a new task belonging to the user
+@apiDescription Can be passed an object to create a single task or an array of objects to create multiple tasks.
+@apiName CreateUserTasks
+@apiGroup Task
 @apiParam (Body) {String} text The text to be displayed for the task
 @apiParam (Body) {String="habit","daily","todo","reward"} type Task type, options are: "habit", "daily", "todo", "reward".
 @apiParam (Body) {String[]} [tags] Array of UUIDs of tags
@@ -393,8 +901,20 @@
 @apiParam (Body) {Boolean} [up=true] Only valid for type "habit" If true, enables the "+" under "Directions/Action" for "Good habits"
 @apiParam (Body) {Boolean} [down=true] Only valid for type "habit" If true, enables the "-" under "Directions/Action" for "Bad habits"
 @apiParam (Body) {Number} [value=0] Only valid for type "reward." The cost in gold of the reward
+@apiParamExample {json} Request-Example:
 @apiSuccess (201) data An object if a single task was created, otherwise an array of tasks
+@apiSuccessExample {json} Success-Response:
+@apiError (404) {NotFound} ChecklistNotFound The specified checklist item could not be found.
+@apiError (400) {BadRequest} MustBeType Task type must be one of "habit", "daily", "todo", "reward".
+@apiError (400) {BadRequest} Text-ValidationFailed Path 'text' is required.
+@apiError (400) {BadRequest} Alias-ValidationFailed Task short names can only contain alphanumeric characters, underscores and dashes.
+@apiError (400) {BadRequest} Value-ValidationFailed `x` is not a valid enum value for path `(body param)`.
+@apiError (401) {NotAuthorized} There is no account that uses those credentials.
+@apiErrorExample {json} Error-Response:
 @api {post} /api/v3/tasks/challenge/:challengeId Create a new task belonging to a challenge
+@apiDescription Can be passed an object to create a single task or an array of objects to create multiple tasks.
+@apiName CreateChallengeTasks
+@apiGroup Task
 @apiParam (Path) {UUID} challengeId The id of the challenge the new task(s) will belong to
 @apiParam (Body) {String} text The text to be displayed for the task
 @apiParam (Body) {String="habit","daily","todo","reward"} type Task type, options are: "habit", "daily", "todo", "reward".
@@ -413,18 +933,44 @@
 @apiParam (Body) {Boolean} [up=true] Only valid for type "habit" If true, enables the "+" under "Directions/Action" for "Good habits"
 @apiParam (Body) {Boolean} [down=true] Only valid for type "habit" If true, enables the "-" under "Directions/Action" for "Bad habits"
 @apiParam (Body) {Number} [value=0] Only valid for type "reward." The cost in gold of the reward
+@apiParamExample {json} Request-Example:
 @apiSuccess (201) data An object if a single task was created, otherwise an array of tasks
+@apiSuccessExample {json} Example return:
+@apiError (404) {NotFound} ChecklistNotFound The specified checklist item could not be found.
+@apiUse ChallengeNotFound
+@apiError (400) {BadRequest} MustBeType Task type must be one of "habit", "daily", "todo", "reward".
+@apiError (400) {BadRequest} Text-ValidationFailed Path 'text' is required.
+@apiError (400) {BadRequest} Alias-ValidationFailed Task short names can only contain alphanumeric characters, underscores and dashes.
+@apiError (400) {BadRequest} Value-ValidationFailed `x` is not a valid enum value for path `(body param)`.
+@apiError (401) {NotAuthorized} There is no account that uses those credentials.
 @api {get} /api/v3/tasks/user Get a user's tasks
+@apiName GetUserTasks
+@apiGroup Task
 @apiParam (Query) {String="habits","dailys","todos","rewards","completedTodos"} type Optional query parameter to return just a type of tasks. By default all types will be returned except completed todos that must be requested separately. The "completedTodos" type returns only the 30 most recently completed.
 @apiSuccess {Array} data An array of tasks
+@apiSuccessExample
+@apiError (BadRequest) Invalid_request_parameters Error returned if the type URL param was not correct.
+@apiError (401) {NotAuthorized} There is no account that uses those credentials.
 @api {get} /api/v3/tasks/challenge/:challengeId Get a challenge's tasks
+@apiName GetChallengeTasks
+@apiGroup Task
 @apiParam (Path) {UUID} challengeId The id of the challenge from which to retrieve the tasks
 @apiParam (Query) {String="habits","dailys","todos","rewards"} [type] Query parameter to return just a type of tasks
+@apiExample {curl} Example use:
 @apiSuccess {Array} data An array of tasks
+@apiSuccessExample
+@apiUse ChallengeNotFound
 @api {get} /api/v3/tasks/:taskId Get a task
+@apiName GetTask
+@apiGroup Task
 @apiParam (Path) {String} taskId The task _id or alias
+@apiExample {curl} Example use:
 @apiSuccess {Object} data The task object
+@apiSuccessExample {json} Example returned object
+@apiUse TaskNotFound
 @api {put} /api/v3/tasks/:taskId Update a task
+@apiName UpdateTask
+@apiGroup Task
 @apiParam (Path) {String} taskId The task _id or alias
 @apiParam (Body) {String} [text] The text to be displayed for the task
 @apiParam (Body) {String="str","int","per","con"} [attribute] User's attribute to use, options are: "str", "int", "per", "con"
@@ -441,216 +987,580 @@
 @apiParam (Body) {Boolean} [up=true] Only valid for type "habit" If true, enables the "+" under "Directions/Action" for "Good habits"
 @apiParam (Body) {Boolean} [down=true] Only valid for type "habit" If true, enables the "-" under "Directions/Action" for "Bad habits"
 @apiParam (Body) {Number} [value=0] Only valid for type "reward." The cost in gold of the reward
+@apiParamExample {json} Request-Example:
 @apiSuccess {Object} data The updated task
+@apiUse TaskNotFound
 @api {post} /api/v3/tasks/:taskId/score/:direction Score a task
+@apiName ScoreTask
+@apiGroup Task
 @apiParam (Path) {String} taskId The task _id or alias
 @apiParam (Path) {String="up","down"} direction The direction for scoring the task
 @apiParam (Body) {String} scoreNotes Notes explaining the scoring
+@apiExample {json} Example call:
 @apiSuccess {Object} data The user stats
 @apiSuccess {Object} data._tmp If an item was dropped it'll be returned in te _tmp object
 @apiSuccess {Number} data.delta The delta
+@apiSuccessExample {json} Example result:
+@apiSuccessExample {json} Example result with item drop:
+@apiUse TaskNotFound
 @api {post} /api/v3/tasks/:taskId/move/to/:position Move a task to a new position
+@apiDescription Note: completed To-Dos are not sortable, do not appear in user.tasksOrder.todos, and are ordered by date of completion.
+@apiName MoveTask
+@apiGroup Task
 @apiParam (Path) {String} taskId The task _id or alias
 @apiParam (Path) {Number} position Where to move the task. 0 = top of the list. -1 = bottom of the list. (-1 means push to bottom). First position is 0
 @apiSuccess {Array} data The new tasks order for the specific type that the taskID belongs to.
+@apiSuccessExample {json}
+@apiUse TaskNotFound
 @api {post} /api/v3/tasks/:taskId/checklist Add an item to the task's checklist
+@apiName AddChecklistItem
+@apiGroup Task
 @apiParam (Path) {String} taskId The task _id or alias
 @apiParam (Body) {String} text The text of the checklist item
+@apiParamExample {json} Example body data:
 @apiSuccess {Object} data The updated task
+@apiSuccessExample {json} Example return:
+@apiUse TaskNotFound
 @api {post} /api/v3/tasks/:taskId/checklist/:itemId/score Score a checklist item
+@apiName ScoreChecklistItem
+@apiGroup Task
 @apiParam (Path) {String} taskId The task _id or alias
 @apiParam (Path) {UUID} itemId The checklist item _id
 @apiSuccess {Object} data The updated task
+@apiUse TaskNotFound
+@apiUse ChecklistNotFound
 @api {put} /api/v3/tasks/:taskId/checklist/:itemId Update a checklist item
+@apiName UpdateChecklistItem
+@apiGroup Task
 @apiParam (Path) {String} taskId The task _id or alias
 @apiParam (Path) {UUID} itemId The checklist item _id
 @apiParam (body) {String} text The text that will replace the current checkitem text.
+@apiParamExample {json} Example body:
 @apiSuccess {Object} data The updated task
+@apiUse TaskNotFound
+@apiUse ChecklistNotFound
+@apiUse ChallengeNotFound
 @api {delete} /api/v3/tasks/:taskId/checklist/:itemId Delete a checklist item from a task
+@apiName RemoveChecklistItem
+@apiGroup Task
 @apiParam (Path) {String} taskId The task _id or alias
 @apiParam (Path) {UUID} itemId The checklist item _id
 @apiSuccess {Object} data The updated task
+@apiSuccessExample {json} Example return:
+@apiUse TaskNotFound
+@apiUse ChallengeNotFound
+@apiUse ChecklistNotFound
 @api {post} /api/v3/tasks/:taskId/tags/:tagId Add a tag to a task
+@apiName AddTagToTask
+@apiGroup Task
 @apiParam (Path) {String} taskId The task _id or alias
 @apiParam (Path) {UUID} tagId The tag id
 @apiSuccess {Object} data The updated task
+@apiSuccessExample {json} Example return:
+@apiUse TaskNotFound
+@apiError (400) {BadRequest} Invalid-request-parameters "tagId" must be a valid UUID corresponding to a tag belonging to the user.
+@apiError (400) {BadRequest} TagExists The task is already tagged with given tag.
 @api {delete} /api/v3/tasks/:taskId/tags/:tagId Delete a tag from a task
+@apiName RemoveTagFromTask
+@apiGroup Task
 @apiParam (Path) {String} taskId The task _id or alias
 @apiParam (Path) {UUID} tagId The tag id
+@apiExample {curl} Example use:
 @apiSuccess {Object} data The updated task
+@apiSuccessExample {json} Example return:
+@apiUse TaskNotFound
+@apiUse TagNotFound
 @api {post} /api/v3/tasks/unlink-all/:challengeId Unlink all tasks from a challenge
+@apiName UnlinkAllTasks
+@apiGroup Task
 @apiParam (Path) {UUID} challengeId The challenge _id
 @apiParam (Query) {String='keep-all','remove-all'} keep Specifies if tasks should be kept(keep-all) or removed(remove-all) after the unlink
+@apiExample {curl}
 @apiSuccess {Object} data An empty object
+@apiSuccessExample {json} Example return:
+@apiError (400) {BadRequest} Broken Only broken challenges tasks can be unlinked.
 @api {post} /api/v3/tasks/unlink-one/:taskId Unlink a challenge task
+@apiName UnlinkOneTask
+@apiGroup Task
 @apiParam (Path) {String} taskId The task _id or alias
 @apiParam (Query) {String='keep','remove'} keep Specifies if the task should be kept(keep) or removed(remove)
+@apiExample {curl} Example call:
 @apiSuccess {Object} data An empty object
+@apiUse TaskNotFound
+@apiError (400) {BadRequest} Broken Only broken challenges tasks can be unlinked.
 @api {post} /api/v3/tasks/clearCompletedTodos Delete user's completed todos
+@apiName ClearCompletedTodos
+@apiGroup Task
+@apiExample {curl} Example call:
 @apiSuccess {Object} data An empty object
+@apiSuccessExample {json} Example return:
 @api {delete} /api/v3/tasks/:taskId Delete a task given its id
+@apiName DeleteTask
+@apiGroup Task
 @apiParam (Path) {String} taskId The task _id or alias
+@apiExample {json} Example call:
 @apiSuccess {Object} data An empty object
+@apiUse TaskNotFound
+@apiError (401) {NotAuthorized} Challenge A task belonging to a challenge can't be deleted.
+@apiError (401) {NotAuthorized} Group Can't delete group tasks that are assigned to you
+@apiError (401) {NotAuthorized} ChallengeLeader Tasks belonging to a challenge can only be edited by the leader.
+@apiError (401) {NotAuthorized} GroupLeader Not authorized to manage tasks!
+@api {post} /api/v3/tasks/group/:groupId Create a new task belonging to a group
+@apiDescription Can be passed an object to create a single task or an array of objects to create multiple tasks.
+@apiName CreateGroupTasks
+@apiGroup Task
+@apiParam (Path) {UUID} groupId The id of the group the new task(s) will belong to
+@apiSuccess data An object if a single task was created, otherwise an array of tasks
+@api {get} /api/v3/tasks/group/:groupId Get a group's tasks
+@apiName GetGroupTasks
+@apiGroup Task
+@apiParam (Path) {UUID} groupId The id of the group from which to retrieve the tasks
+@apiParam (Query) {string="habits","dailys","todos","rewards"} [type] Query parameter to return just a type of tasks
+@apiSuccess {Array} data An array of tasks
+@api {post} /api/v3/group/:groupId/tasks/:taskId/move/to/:position Move a group task to a specified position
+@apiDescription Moves a group task to a specified position
+@apiVersion 3.0.0
+@apiName GroupMoveTask
+@apiGroup Task
+@apiParam (Path) {String} taskId The task _id
+@apiParam (Path) {Number} position Where to move the task (-1 means push to bottom). First position is 0
+@apiSuccess {Array} data The new tasks order (group.tasksOrder.{task.type}s)
+@api {post} /api/v3/tasks/:taskId/assign/:assignedUserId Assign a group task to a user
+@apiDescription Assigns a user to a group task
+@apiName AssignTask
+@apiGroup Task
+@apiParam (Path) {UUID} taskId The id of the task that will be assigned
+@apiParam (Path) {UUID} assignedUserId The id of the user that will be assigned to the task
+@apiSuccess data An object if a single task was created, otherwise an array of tasks
+@api {post} /api/v3/tasks/:taskId/unassign/:assignedUserId Unassign a user from a task
+@apiDescription Unassigns a user to from a group task
+@apiName UnassignTask
+@apiGroup Task
+@apiParam (Path) {UUID} taskId The id of the task that will be assigned
+@apiParam (Path) {UUID} assignedUserId The id of the user that will be unassigned from the task
+@apiSuccess data An object if a single task was created, otherwise an array of tasks
+@api {post} /api/v3/tasks/:taskId/approve/:userId Approve a user's task
+@apiDescription Approves a user assigned to a group task
+@apiVersion 3.0.0
+@apiName ApproveTask
+@apiGroup Task
+@apiParam (Path) {UUID} taskId The id of the task that is the original group task
+@apiParam (Path) {UUID} userId The id of the user that will be approved
+@apiSuccess task The approved task
+@api {post} /api/v3/tasks/:taskId/needs-work/:userId Group task needs more work
+@apiDescription Mark an assigned group task as needeing more work before it can be approved
+@apiVersion 3.0.0
+@apiName TaskNeedsWork
+@apiGroup Task
+@apiParam (Path) {UUID} taskId The id of the task that is the original group task
+@apiParam (Path) {UUID} userId The id of the assigned user
+@apiSuccess task The task that needs more work
+@api {get} /api/v3/approvals/group/:groupId Get a group's approvals
+@apiVersion 3.0.0
+@apiName GetGroupApprovals
+@apiGroup Task
+@apiParam (Path) {UUID} groupId The id of the group from which to retrieve the approvals
+@apiSuccess {Array} data An array of tasks
+@apiDefine UserNotFound
+@apiError (404) {NotFound} UserNotFound The specified user could not be found.
 @api {get} /api/v3/user Get the authenticated user's profile
+@apiName UserGet
+@apiGroup User
+@apiDescription The user profile contains data related to the authenticated user including (but not limited to);
 @apiSuccess {Object} data The user object
+@apiSuccessExample {json} Result:
 @api {get} /api/v3/user/inventory/buy Get the gear items available for purchase for the authenticated user
+@apiName UserGetBuyList
+@apiGroup User
+@apiSuccessExample {json} Success-Response:
+@api {get} /api/v3/user/in-app-rewards Get the in app items appaearing in the user's reward column
+@apiName UserGetInAppRewards
+@apiGroup User
+@apiSuccessExample {json} Success-Response:
 @api {put} /api/v3/user Update the user
+@apiName UserUpdate
+@apiGroup User
+@apiDescription Some of the user items can be updated, such as preferences, flags and stats.
+@apiParamExample {json} Request-Example:
 @apiSuccess {Object} data The updated user object, the result is identical to the get user call
+@apiError (401) {NotAuthorized} messageUserOperationProtected Returned if the change is not allowed.
+@apiErrorExample {json} Error-Response:
 @api {delete} /api/v3/user Delete an authenticated user's account
+@apiName UserDelete
+@apiGroup User
 @apiParam (Body) {String} password The user's password if the account uses local authentication
 @apiParam (Body) {String} feedback User's optional feedback explaining reasons for deletion
 @apiSuccess {Object} data An empty Object
+@apiSuccessExample {json} Result:
+@apiError {BadRequest} MissingPassword The password was not included in the request
+@apiError {BadRequest} LengthExceeded The feedback provided is longer than 10K
+@apiError {BadRequest} NotAuthorized There is no account that uses those credentials.
+@apiErrorExample {json}
 @api {get} /api/v3/user/anonymized Get anonymized user data
+@apiName UserGetAnonymized
+@apiGroup User
+@apiDescription Returns the user's data without:
 @apiSuccess {Object} data.user
 @apiSuccess {Object} data.tasks
 @api {post} /api/v3/user/class/cast/:spellId Cast a skill (spell) on a target
-@apiParam (Path) {String=fireball, mpHeal, earth, frost, smash, defensiveStance, valorousPresence, intimidate, pickPocket, backStab, toolsOfTrade, stealth, heal, protectAura, brightness, healAll} spellId The skill to cast.
+@apiName UserCast
+@apiGroup User
+@apiParam (Path) {String=fireball, mpheal, earth, frost, smash, defensiveStance, valorousPresence, intimidate, pickPocket, backStab, toolsOfTrade, stealth, heal, protectAura, brightness, healAll} spellId The skill to cast.
 @apiParam (Query) {UUID} targetId Query parameter, necessary if the spell is cast on a party member or task. Not used if the spell is case on the user or the user's current party.
+@apiParamExample {json} Query example:
 @apiSuccess data Will return the modified targets. For party members only the necessary fields will be populated. The user is always returned.
+@apiDescription Skill Key to Name Mapping
+@apiError (400) {NotAuthorized} Not enough mana.
+@apiUse TaskNotFound
+@apiUse PartyNotFound
+@apiUse UserNotFound
 @api {post} /api/v3/user/sleep Make the user start / stop sleeping (resting in the Inn)
+@apiName UserSleep
+@apiGroup User
+@apiDescription Toggles the sleep key under user preference true and false.
 @apiSuccess {boolean} data user.preferences.sleep
-@api {post} /api/v3/user/allocate Allocate a single attribute point
-@apiParam (Body) {String="str","con","int","per"} stat Query parameter - Default ='str'
-@apiSuccess {Object} data Returns stats from the user profile
-@api {post} /api/v3/user/allocate-now Allocate all attribute points
-@apiSuccess {Object} data user.stats
+@apiSuccessExample {json} Return-example
 @api {post} /api/v3/user/buy/:key Buy gear, armoire or potion
+@apiDescription Under the hood uses UserBuyGear, UserBuyPotion and UserBuyArmoire
+@apiName UserBuy
+@apiGroup User
 @apiParam (Path) {String} key The item to buy
 @apiSuccess data User's data profile
 @apiSuccess message Item purchased
+@apiSuccessExample {json} Purchased a rogue short sword for example:
+@apiError (400) {NotAuthorized} messageAlreadyOwnGear Already own equipment
+@apiError (400) {NotAuthorized} messageNotEnoughGold Not enough gold for the purchase
+@apiErrorExample {json} NotAuthorized Already own
+@apiErrorExample {json} NotAuthorized Not enough gold
 @api {post} /api/v3/user/buy-gear/:key Buy a piece of gear
+@apiName UserBuyGear
+@apiGroup User
 @apiParam (Path) {String} key The item to buy
 @apiSuccess {Object} data.items User's item inventory
 @apiSuccess {Object} data.flags User's flags
 @apiSuccess {Object} data.achievements User's achievements
 @apiSuccess {Object} data.stats User's current stats
 @apiSuccess {String} message Success message, item purchased
+@apiSuccessExample {json} Purchased a warrior's wooden shield for example:
+@apiError (400) {NotAuthorized} messageNotEnoughGold Not enough gold for the purchase
+@apiError (400) {NotAuthorized} messageAlreadyOwnGear Already own equipment
+@apiError (404) {NotFound} messageNotFound Item does not exist.
+@apiErrorExample {json} NotAuthorized Already own
+@apiErrorExample {json} NotAuthorized Not enough gold
+@apiErrorExample {json} NotFound Item not found
 @api {post} /api/v3/user/buy-armoire Buy an armoire item
+@apiName UserBuyArmoire
+@apiGroup User
 @apiSuccess {Object} data.items User's item inventory
 @apiSuccess {Object} data.flags User's flags
 @apiSuccess {Object} data.armoire Item given by the armoire
 @apiSuccess {String} message Success message
+@apiSuccessExample {json} Received a fish:
+@apiError (400) {NotAuthorized} messageNotEnoughGold Not enough gold for the purchase
+@apiErrorExample {json} NotAuthorized Not enough gold
 @api {post} /api/v3/user/buy-health-potion Buy a health potion
+@apiName UserBuyPotion
+@apiGroup User
 @apiSuccess {Object} data User's current stats
 @apiSuccess {String} message Success message
+@apiSuccessExample
+@apiError (400) {NotAuthorized} messageNotEnoughGold Not enough gold for the purchase
+@apiError (400) {NotAuthorized} messageHealthAlreadyMax Health is already full.
+@apiErrorExample {json} NotAuthorized Not enough gold
+@apiErrorExample {json} NotAuthorized Already at max health
 @api {post} /api/v3/user/buy-mystery-set/:key Buy a mystery set
+@apiName UserBuyMysterySet
+@apiGroup User
 @apiParam (Path) {String} key The mystery set to buy
 @apiSuccess {Object} data.items user.items
 @apiSuccess {Object} data.purchasedPlanConsecutive user.purchased.plan.consecutive
 @apiSuccess {String} message Success message
+@apiSuccessExample{json} Successful purchase
+@apiError (400) {NotAuthorized} notEnoughHourglasses Not enough Mystic Hourglasses.
+@apiError (400) {NotFound} mysterySetNotFound Specified item does not exist or already owned.
+@apiErrorExample {json} Not enough hourglasses
+@apiErrorExample {json} Already own, or doesn't exist
 @api {post} /api/v3/user/buy-quest/:key Buy a quest with gold
+@apiName UserBuyQuest
+@apiGroup User
 @apiParam (Path) {String} key The quest scroll to buy
 @apiSuccess {Object} data.quests User's quest list
 @apiSuccess {String} message Success message
+@apiSuccessExample {json}
+@apiError (400) {NotFound} questNotFound Specified quest does not exist
+@apiError (400) {NotAuthorized} messageNotEnoughGold Not enough gold for the purchase
+@apiErrorExample {json} Quest chosen does not exist
+@apiErrorExample {json} NotAuthorized Not enough gold
 @api {post} /api/v3/user/buy-special-spell/:key Buy special "spell" item
+@apiDescription Includes gift cards (e.g., birthday card), and avatar Transformation Items and their antidotes (e.g., Snowball item and Salt reward).
+@apiName UserBuySpecialSpell
+@apiGroup User
 @apiParam (Path) {String} key The special item to buy. Must be one of the keys from "content.special", such as birthday, snowball, salt.
 @apiSuccess {Object} data.stats User's current stats
 @apiSuccess {Object} data.items User's current inventory
 @apiSuccess {String} message Success message
+@apiSuccessExample {json} Purchased a greeting card:
+@apiError (400) {NotAuthorized} messageNotEnoughGold Not enough gold for the purchase
+@apiErrorExample {json} Not enough gold
+@apiErrorExample {json} Item name not found
 @api {post} /api/v3/user/hatch/:egg/:hatchingPotion Hatch a pet
+@apiName UserHatch
+@apiGroup User
 @apiParam (Path) {String} egg The egg to use
 @apiParam (Path) {String} hatchingPotion The hatching potion to use
+@apiParamExample {URL} Example-URL
 @apiSuccess {Object} data user.items
 @apiSuccess {String} message
+@apiSuccessExample {json} Successfully hatched
+@apiError {NotAuthorized} messageAlreadyPet Already have the specific pet combination
+@apiError {NotFound} messageMissingEggPotion One or both of the ingrediants are missing.
+@apiError {NotFound} messageInvalidEggPotionCombo Cannot use that combination of egg and potion.
+@apiErrorExample {json} Already have that pet.
+@apiErrorExample {json} Either potion or egg (or both) not in inventory
+@apiErrorExample {json} Cannot use that combination
 @api {post} /api/v3/user/equip/:type/:key Equip an item
+@apiName UserEquip
+@apiGroup User
 @apiParam (Path) {String="mount","pet","costume","equipped"} type The type of item to equip
 @apiParam (Path) {String} key The item to equip
+@apiParamExample {URL} Example-URL
 @apiSuccess {Object} data user.items
 @apiSuccess {String} message Optional success message for unequipping an items
+@apiSuccessExample {json}
+@apiError {NotFound} notOwned Item is not in inventory, item doesn't exist, or item is of the wrong type.
+@apiErrorExample {json} Item not owned or doesn't exist.
 @api {post} /api/v3/user/feed/:pet/:food Feed a pet
+@apiName UserFeed
+@apiGroup User
 @apiParam (Path) {String} pet
 @apiParam (Path) {String} food
+@apiParamExample {url} Example-URL
 @apiSuccess {Number} data The pet value
 @apiSuccess {String} message Success message
+@apiSuccessExample {json}
+@apiError {NotFound} PetNotOwned :pet not found in user.items.pets
+@apiError {BedRequest} InvalidPet Invalid pet name supplied.
+@apiError {NotFound} FoodNotOwned :food not found in user.items.food Note: also sent if food name is invalid.
 @api {post} /api/v3/user/change-class Change class
+@apiDescription User must be at least level 10. If ?class is defined and user.flags.classSelected is false it'll change the class. If user.preferences.disableClasses it'll enable classes, otherwise it sets user.flags.classSelected to false (costs 3 gems)
+@apiName UserChangeClass
+@apiGroup User
 @apiParam (Query) {String} class Query parameter - ?class={warrior|rogue|wizard|healer}
 @apiSuccess {Object} data.flags user.flags
 @apiSuccess {Object} data.stats user.stats
 @apiSuccess {Object} data.preferences user.preferences
 @apiSuccess {Object} data.items user.items
+@apiError {NotAuthorized} Gems Not enough gems, if class was already selected and gems needed to be paid.
+@apiError {NotAuthorized} Level To change class you must be at least level 10.
+@apiErrorExample {json}
 @api {post} /api/v3/user/disable-classes Disable classes
+@apiName UserDisableClasses
+@apiGroup User
 @apiSuccess {Object} data.flags user.flags
 @apiSuccess {Object} data.stats user.stats
 @apiSuccess {Object} data.preferences user.preferences
 @api {post} /api/v3/user/purchase/:type/:key Purchase Gem or Gem-purchasable item
+@apiName UserPurchase
+@apiGroup User
 @apiParam (Path) {String="gems","eggs","hatchingPotions","premiumHatchingPotions",food","quests","gear"} type Type of item to purchase.
 @apiParam (Path) {String} key Item's key (use "gem" for purchasing gems)
 @apiSuccess {Object} data.items user.items
 @apiSuccess {Number} data.balance user.balance
 @apiSuccess {String} message Success message
+@apiError {NotAuthorized} NotAvailable Item is not available to be purchased (not unlocked for the user).
+@apiError {NotAuthorized} Gems Not enough gems
+@apiError {NotFound} Key Key not found for Content type.
+@apiError {NotFound} Type Type invalid.
+@apiErrorExample {json}
 @api {post} /api/v3/user/purchase-hourglass/:type/:key Purchase Hourglass-purchasable item
+@apiName UserPurchaseHourglass
+@apiGroup User
 @apiParam (Path) {String="pets","mounts"} type The type of item to purchase
 @apiParam (Path) {String} key Ex: {Phoenix-Base}. The key for the mount/pet
 @apiSuccess {Object} data.items user.items
 @apiSuccess {Object} data.purchasedPlanConsecutive user.purchased.plan.consecutive
 @apiSuccess {String} message Success message
+@apiError {NotAuthorized} NotAvailable Item is not available to be purchased or is not valid.
+@apiError {NotAuthorized} Hourglasses User does not have enough Mystic Hourglasses.
+@apiError {NotFound} Type Type invalid.
+@apiErrorExample {json}
 @api {post} /api/v3/user/read-card/:cardType Read a card
+@apiName UserReadCard
+@apiGroup User
 @apiParam (Path) {String} cardType Type of card to read (e.g. - birthday, greeting, nye, thankyou, valentine)
 @apiSuccess {Object} data.specialItems user.items.special
 @apiSuccess {Boolean} data.cardReceived user.flags.cardReceived
 @apiSuccess {String} message Success message
+@apiSuccessExample {json}
+@apiError {NotAuthorized} CardType Unknown card type.
 @api {post} /api/v3/user/open-mystery-item Open the Mystery Item box
+@apiName UserOpenMysteryItem
+@apiGroup User
 @apiSuccess {Object} data The item obtained
 @apiSuccess {String} message Success message
+@apiSuccessExample {json}
+@apiError {BadRequest} Empty No mystery items to open.
+@apiErrorExample {json}
 @api {post} /api/v3/user/release-pets Release pets
+@apiName UserReleasePets
+@apiGroup User
 @apiSuccess {Object} data.items `user.items.pets`
 @apiSuccess {String} message Success message
+@apiSuccessExample {json}
+@apiError {NotAuthorized} Not enough gems
+@apiErrorExample {json}
 @api {post} /api/v3/user/release-both Release pets and mounts and grants Triad Bingo
+@apiName UserReleaseBoth
+@apiGroup User
 @apiSuccess {Object} data.achievements
 @apiSuccess {Object} data.items
 @apiSuccess {Number} data.balance
 @apiSuccess {String} message Success message
+@apiSuccessExample {json}
+@apiError {NotAuthorized} Not enough gems
+@apiErrorExample {json}
 @api {post} /api/v3/user/release-mounts Release mounts
+@apiName UserReleaseMounts
+@apiGroup User
 @apiSuccess {Object} data user.items.mounts
 @apiSuccess {String} message Success message
+@apiSuccessExample {json}
+@apiError {NotAuthorized} Not enough gems
+@apiErrorExample {json}
 @api {post} /api/v3/user/sell/:type/:key Sell a gold-sellable item owned by the user
+@apiName UserSell
+@apiGroup User
 @apiParam (Path) {String="eggs","hatchingPotions","food"} type The type of item to sell.
 @apiParam (Path) {String} key The key of the item
 @apiParam (Query) {Number} (optional) amount The amount to sell
 @apiSuccess {Object} data.stats
 @apiSuccess {Object} data.items
+@apiError {NotFound} InvalidKey Key not found for user.items eggs (either the key does not exist or the user has none in inventory)
+@apiError {NotAuthorized} InvalidType Type is not a valid type.
+@apiErrorExample {json}
 @api {post} /api/v3/user/unlock Unlock item or set of items by purchase
+@apiName UserUnlock
+@apiGroup User
 @apiParam (Query) {String} path Full path to unlock. See "content" API call for list of items.
+@apiParamExample {curl}
 @apiSuccess {Object} data.purchased
 @apiSuccess {Object} data.items
 @apiSuccess {Object} data.preferences
 @apiSuccess {String} message "Items have been unlocked"
+@apiSuccessExample {json}
+@apiError {BadRequest} Path Path to unlock not specified
+@apiError {NotAuthorized} Gems Not enough gems available.
+@apiError {NotAuthorized} Unlocked Full set already unlocked.
+@apiErrorExample {json}
 @api {post} /api/v3/user/revive Revive user from death
+@apiName UserRevive
+@apiGroup User
 @apiSuccess {Object} data user.items
 @apiSuccess {String} message Success message
+@apiError {NotAuthorized} NotDead Cannot revive player if player is not dead yet
+@apiErrorExample {json}
 @api {post} /api/v3/user/rebirth Use Orb of Rebirth on user
+@apiName UserRebirth
+@apiGroup User
 @apiSuccess {Object} data.user
 @apiSuccess {Array} data.tasks User's modified tasks (no rewards)
 @apiSuccess {String} message Success message
+@apiSuccessExample {json}
+@apiError {NotAuthorized} Not enough gems
+@apiErrorExample {json}
 @api {post} /api/v3/user/block/:uuid Block / unblock a user from sending you a PM
+@apiName BlockUser
+@apiGroup User
 @apiParam (Path) {UUID} uuid The uuid of the user to block / unblock
 @apiSuccess {Array} data user.inbox.blocks
+@apiSuccessExample {json}
+@apiError {BadRequest} InvalidUUID UUID is incorrect.
 @api {delete} /api/v3/user/messages/:id Delete a message
+@apiName deleteMessage
+@apiGroup User
 @apiParam (Path) {UUID} id The id of the message to delete
 @apiSuccess {Object} data user.inbox.messages
+@apiSuccessExample {json}
 @api {delete} /api/v3/user/messages Delete all messages
+@apiName clearMessages
+@apiGroup User
 @apiSuccess {Object} data user.inbox.messages which should be empty
+@apiSuccessExample {json}
 @api {post} /api/v3/user/mark-pms-read Marks Private Messages as read
+@apiName markPmsRead
+@apiGroup User
 @apiSuccess {Object} data user.inbox.messages
+@apiSuccessExample {json}
 @api {post} /api/v3/user/reroll Reroll a user using the Fortify Potion
+@apiName UserReroll
+@apiGroup User
 @apiSuccess {Object} data.user
 @apiSuccess {Object} data.tasks User's modified tasks (no rewards)
 @apiSuccess {Object} message Success message
+@apiSuccessExample {json}
+@apiError {NotAuthorized} Not enough gems
+@apiErrorExample {json}
 @api {post} /api/v3/user/reset Reset user
+@apiName UserReset
+@apiGroup User
 @apiSuccess {Object} data.user
 @apiSuccess {Array} data.tasksToRemove IDs of removed tasks
 @apiSuccess {String} message Success message
+@apiSuccessExample {json}
 @api {post} /api/v3/user/custom-day-start Set preferences.dayStart for user
+@apiName setCustomDayStart
+@apiGroup User
 @apiParam (Body) {number} [dayStart=0] The hour number 0-23 for day to begin. If body is not included, will default to 0.
+@apiParamExample {json} Request-Example:
 @apiSuccess {Object} data An empty Object
 @apiSuccess {String} message Success message
+@apiSuccessExample {json}
+@apiError {BadRequest} Validation Value provided is not a number, or is outside the range of 0-23
+@apiErrorExample {json}
+@api {get} /user/toggle-pinned-item/:key Toggle an item to be pinned
+@apiName togglePinnedItem
+@apiGroup User
+@apiSuccess {Object} data Pinned items array
+@apiSuccessExample {json} Result:
+@api {post} /api/v3/user/allocate Allocate a single attribute point
+@apiName UserAllocate
+@apiGroup User
+@apiParam (Body) {String="str","con","int","per"} stat Query parameter - Default ='str'
+@apiParamExample {json} Example request
+@apiSuccess {Object} data Returns stats from the user profile
+@apiError {NotAuthorized} NoPoints Not enough attribute points to increment a stat.
+@apiErrorExample {json}
+@api {post} /api/v3/user/allocate-bulk Allocate multiple attribute points
+@apiName UserAllocateBulk
+@apiGroup User
+@apiParam (Body) { Object } stats Body parameter
+@apiParamExample {json} Example request
+@apiSuccess {Object} data Returns stats from the user profile
+@apiError {NotAuthorized} NoPoints Not enough attribute points to increment a stat.
+@apiErrorExample {json}
+@api {post} /api/v3/user/allocate-now Allocate all attribute points
+@apiDescription Uses the user's chosen automatic allocation method, or if none, assigns all to STR. Note: will return success, even if there are 0 points to allocate.
+@apiName UserAllocateNow
+@apiGroup User
+@apiSuccessExample {json} Success-Response:
+@apiSuccess {Object} data user.stats
+@apiDefine Webhook Webhook
+@apiDefine WebhookNotFound
+@apiError (404) {NotFound} WebhookNotFound The specified webhook could not be found.
+@apiDefine WebhookBodyInvalid
+@apiError (400) {BadRequest} WebhookBodyInvalid A body parameter passed in the request did not pass validation.
 @api {post} /api/v3/user/webhook Create a new webhook - BETA
+@apiName AddWebhook
+@apiGroup Webhook
 @apiParam (Body) {UUID} [id="Randomly Generated UUID"] The webhook's id
 @apiParam (Body) {String} url The webhook's URL
 @apiParam (Body) {String} [label] A label to remind you what this webhook does
 @apiParam (Body) {Boolean} [enabled=true] If the webhook should be enabled
 @apiParam (Body) {Sring="taskActivity","groupChatReceived"} [type="taskActivity"] The webhook's type.
 @apiParam (Body) {Object} [options] The webhook's options. Wil differ depending on type. Required for `groupChatReceived` type. If a webhook supports options, the default values are displayed in the examples below
+@apiParamExample {json} Task Activity Example
+@apiParamExample {json} Group Chat Received Example
+@apiParamExample {json} Minimal Example
 @apiSuccess (201) {Object} data The created webhook
 @apiSuccess (201) {UUID} data.id The uuid of the webhook
 @apiSuccess (201) {String} data.url The url of the webhook
@@ -658,13 +1568,19 @@
 @apiSuccess (201) {Boolean} data.enabled Whether the webhook should be sent
 @apiSuccess (201) {String} data.type The type of the webhook
 @apiSuccess (201) {Object} data.options The options for the webhook (See examples)
+@apiUse WebhookBodyInvalid
 @api {put} /api/v3/user/webhook/:id Edit a webhook - BETA
+@apiName UserUpdateWebhook
+@apiGroup Webhook
+@apiDescription Can change `url`, `enabled`, `type`, and `options` properties. Cannot change `id`.
 @apiParam (Path) {UUID} id URL parameter - The id of the webhook to update
 @apiParam (Body) {String} [url] The webhook's URL
 @apiParam (Body) {String} [label] A label to remind you what this webhook does
 @apiParam (Body) {Boolean} [enabled] If the webhook should be enabled
 @apiParam (Body) {Sring="taskActivity","groupChatReceived"} [type] The webhook's type.
 @apiParam (Body) {Object} [options] The webhook's options. Wil differ depending on type. The options are enumerated in the [add webhook examples](#api-Webhook-UserAddWebhook).
+@apiParamExample {json} Update Enabled and Type Properties
+@apiParamExample {json} Update Group Id for Group Chat Receieved Webhook
 @apiSuccess {Object} data The updated webhook
 @apiSuccess {UUID} data.id The uuid of the webhook
 @apiSuccess {String} data.url The url of the webhook
@@ -672,32 +1588,11 @@
 @apiSuccess {Boolean} data.enabled Whether the webhook should be sent
 @apiSuccess {String} data.type The type of the webhook
 @apiSuccess {Object} data.options The options for the webhook (See webhook add examples)
+@apiUse WebhookNotFound
+@apiUse WebhookBodyInvalid
 @api {delete} /api/v3/user/webhook/:id Delete a webhook - BETA
+@apiName UserDeleteWebhook
+@apiGroup Webhook
 @apiParam (Path) {UUID} id The id of the webhook to delete
 @apiSuccess {Array} data The remaining webhooks for the user
-@api {post} /api/v3/tasks/group/:groupId Create a new task belonging to a group
-@apiParam (Path) {UUID} groupId The id of the group the new task(s) will belong to
-@apiSuccess data An object if a single task was created, otherwise an array of tasks
-@api {get} /api/v3/tasks/group/:groupId Get a group's tasks
-@apiParam (Path) {UUID} groupId The id of the group from which to retrieve the tasks
-@apiParam (Query) {string="habits","dailys","todos","rewards"} [type] Query parameter to return just a type of tasks
-@apiSuccess {Array} data An array of tasks
-@api {post} /api/v3/group/:groupId/tasks/:taskId/move/to/:position Move a group task to a specified position
-@apiParam (Path) {String} taskId The task _id
-@apiParam (Path) {Number} position Where to move the task (-1 means push to bottom). First position is 0
-@apiSuccess {Array} data The new tasks order (group.tasksOrder.{task.type}s)
-@api {post} /api/v3/tasks/:taskId/assign/:assignedUserId Assign a group task to a user
-@apiParam (Path) {UUID} taskId The id of the task that will be assigned
-@apiParam (Path) {UUID} assignedUserId The id of the user that will be assigned to the task
-@apiSuccess data An object if a single task was created, otherwise an array of tasks
-@api {post} /api/v3/tasks/:taskId/unassign/:assignedUserId Unassign a user from a task
-@apiParam (Path) {UUID} taskId The id of the task that will be assigned
-@apiParam (Path) {UUID} assignedUserId The id of the user that will be unassigned from the task
-@apiSuccess data An object if a single task was created, otherwise an array of tasks
-@api {post} /api/v3/tasks/:taskId/approve/:userId Approve a user's task
-@apiParam (Path) {UUID} taskId The id of the task that is the original group task
-@apiParam (Path) {UUID} userId The id of the user that will be approved
-@apiSuccess task The approved task
-@api {get} /api/v3/approvals/group/:groupId Get a group's approvals
-@apiParam (Path) {UUID} groupId The id of the group from which to retrieve the approvals
-@apiSuccess {Array} data An array of tasks
+@apiUse WebhookNotFound
