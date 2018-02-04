@@ -182,7 +182,7 @@ class Status(ApplicationWithApi):
         user['pet'] = user['items']['currentPet']
         user['pet'] = content['petInfo'][user['pet']]['text'] if user['pet'] else ''
         user['pet'] = _("Pet: ") + user['pet'] if user['pet'] else _("No pet")  # noqa: Q000
-        user['mount'] = user['items']['currentMount']
+        user['mount'] = user['items'].get('currentMount', None)
         user['mount'] = content['mountInfo'][user['mount']]['text'] if user['mount'] else ''
         if user['mount']:
             user['mount'] = _("Mount: ") + user['mount']  # noqa: Q000
@@ -207,7 +207,7 @@ class Status(ApplicationWithApi):
 
     def quest_info(self, user):
         'Get current quest info or return None'
-        key = user['party']['quest']['key']
+        key = user['party']['quest'].get('key', None)
         if '_id' not in user['party'] or key is None:
             return
         for refresh in False, True:
