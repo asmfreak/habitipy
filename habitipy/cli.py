@@ -164,7 +164,7 @@ class HabiticaCli(ConfiguredApplication):  # pylint: disable=missing-docstring
         if self.nested_command:
             return
         super().main()
-        self.log.error(_("No subcommand given, exiting"))
+        self.log.error(_("No subcommand given, exiting"))  # noqa: Q000
 
 
 @HabiticaCli.subcommand('status')  # pylint: disable=missing-docstring
@@ -629,13 +629,27 @@ class Server(ApplicationWithApi):
         print(msg.format(self.config['url']))
         return -1
 
-@HabiticaCli.subcommand('spells')
+
+@HabiticaCli.subcommand('spells')  # pylint: disable=missing-docstring
 class Spells(ApplicationWithApi):
+    DESCRIPTION = _("Prints all available spells")  # noqa: Q000
     def main(self):
         if self.nested_command:
             return
         user = self.api.user.get()
         content = get_content(self.api)
+        user_level = user['stats']['lvl']
+        if user_level < 10:
+            print(_("Your level is too low. Come back on level 10 or higher"))  # noqa: Q000
+        user_class = user['stats']['class']
+        user_spells = [
+            v for k, v in content['spells'][user_class].items()
+            if user_level > v['lvl']
+        ]
+        print(_("You are a {} of level {}").format(_(user_class), user_level))  # noqa: Q000
+        for spell in sorted(user_spells, key=lambda x: x['lvl']):
+            msg = _("[{key}] {text} ({mana}:droplet:) - {notes}").format(**spell)  # noqa: Q000
+            print(msg)
 
 
 subcommands_file = local.path(SUBCOMMANDS_JSON)

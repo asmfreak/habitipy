@@ -92,7 +92,7 @@ def prettify(string):
 
     # Example
     ```python
-    from habitipy.util import progressed
+    from habitipy.util import prettify
     print(prettify('Write thesis :book: ![progress](http://progressed.io/bar/0 "progress")'))
     ```
     ```

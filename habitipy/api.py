@@ -301,11 +301,19 @@ def download_api(branch=None) -> str:
     return (curl | tar | grep | sed)()
 
 
+def save_apidoc(text: str) -> None:
+    'save `text` to apidoc cache'
+    apidoc_local = local.path(APIDOC_LOCAL_FILE)
+    if not apidoc_local.dirname.exists():
+        apidoc_local.dirname.mkdir()
+    with open(apidoc_local, 'w') as f:
+        f.write(text)
+
+
 def parse_apidoc(
     file_or_branch,
     from_github=False,
-    save_github_version=True,
-    strict=True
+    save_github_version=True
 ) -> List['ApiEndpoint']:
     'read file and parse apiDoc lines'
     apis = []  # type: List[ApiEndpoint]
@@ -316,11 +324,7 @@ def parse_apidoc(
     if from_github:
         text = download_api(file_or_branch)
         if save_github_version:
-            apidoc_local = local.path(APIDOC_LOCAL_FILE)
-            if not apidoc_local.dirname.exists():
-                apidoc_local.dirname.mkdir()
-            with open(apidoc_local, 'w') as f:
-                f.write(text)
+            save_apidoc(text)
     else:
         with open(file_or_branch) as f:
             text = f.read()
@@ -338,7 +342,7 @@ def parse_apidoc(
             assert method[-1] == '}'
             method = method[1:-1]
             if not uri.startswith(API_URI_BASE):
-                warnings.warn("Wrong api url: {}".format(uri))
+                warnings.warn(_("Wrong api url: {}").format(uri))  # noqa: Q000
             title = ' '.join(split_line[3:])
             apis.append(ApiEndpoint(method, uri, title))
         elif line.startswith('@apiParam '):
