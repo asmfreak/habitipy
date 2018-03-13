@@ -179,7 +179,7 @@ class Status(ApplicationWithApi):
         user['stats']['class'] = _(user['stats']['class']).capitalize()
         user['food'] = sum(user['items']['food'].values())
         content = get_content(self.api)
-        user['pet'] = user['items']['currentPet']
+        user['pet'] = user['items']['currentPet'] if 'currentPet' in user['items'] else None
         user['pet'] = content['petInfo'][user['pet']]['text'] if user['pet'] else ''
         user['pet'] = _("Pet: ") + user['pet'] if user['pet'] else _("No pet")  # noqa: Q000
         user['mount'] = user['items'].get('currentMount', None)
