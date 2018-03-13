@@ -10,7 +10,7 @@ A set of scripts to interact with [Habitica](http://habitica.com):
 | Version | CI | Coverage |
 | ---- | ---- | ----- |
 | Master |  [![Build Status](https://api.travis-ci.org/ASMfreaK/habitipy.svg?branch=master)](https://travis-ci.org/ASMfreaK/habitipy) | [![Codecov](https://img.shields.io/codecov/c/github/ASMfreaK/habitipy.svg)](https://codecov.io/gh/ASMfreaK/habitipy)  |
-| Stable (v0.1.17) | [![Build Status](https://api.travis-ci.org/ASMfreaK/habitipy.svg?branch=v0.1.17)](https://travis-ci.org/ASMfreaK/habitipy)|  |
+| Stable (v0.1.18) | [![Build Status](https://api.travis-ci.org/ASMfreaK/habitipy.svg?branch=v0.1.18)](https://travis-ci.org/ASMfreaK/habitipy)|  |
 
 Features
 --------
