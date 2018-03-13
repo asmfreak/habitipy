@@ -209,7 +209,7 @@ class Status(ApplicationWithApi):
         'Get current quest info or return None'
         key = user['party']['quest'].get('key', None)
         if '_id' not in user['party'] or key is None:
-            return
+            return None
         for refresh in False, True:
             content = get_content(self.api, refresh)
             quest = content['quests'].get(key, None)
@@ -220,7 +220,7 @@ class Status(ApplicationWithApi):
                 """Quest {} not found in Habitica's content.
                 Please file an issue to https://github.com/ASMfreaK/habitipy/issues
                 """)).format(key))
-            return
+            return None
         for quest_type, quest_template in (
                 ('collect', _("""
                 Quest: {quest[text]} (collect-type)
@@ -238,7 +238,7 @@ class Status(ApplicationWithApi):
                         """Something went wrong when formatting quest {}.
                         Please file an issue to https://github.com/ASMfreaK/habitipy/issues
                         """)).format(key))
-                    return
+                    return None
         self.log.warning(dedent(_(
             """Quest {} isn't neither a collect-type or a boss-type.
             Please file an issue to https://github.com/ASMfreaK/habitipy/issues
