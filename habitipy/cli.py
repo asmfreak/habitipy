@@ -452,6 +452,7 @@ class HabitsChange(TasksChange):  # pylint: disable=missing-docstring,abstract-m
     def domain_print(self):
         Habits.invoke(config_filename=self.config_filename)
 
+
 @Habits.subcommand('add')  # pylint: disable=missing-docstring
 class HabitsAdd(ApplicationWithApi):
     DESCRIPTION = _("Add a habit <habit>")  # noqa: Q000
@@ -470,12 +471,17 @@ class HabitsAdd(ApplicationWithApi):
             self.log.error(_("Empty habit text!"))  # noqa: Q000
             return 1
         super().main()
-        self.api.tasks.user.post(type='habit', text=habit_str,
-                priority=self.priority, up=(self.direction != 'negative'),
-                down=(self.direction != 'positive'))
-        res = _("Added habit '{}' with priority {} and direction {}").format(habit_str, self.priority, self.direction)  # noqa: Q000
+        self.api.tasks.user.post(
+            type='habit', text=habit_str,
+            priority=self.priority, up=(self.direction != 'negative'),
+            down=(self.direction != 'positive'))
+
+        res = _("Added habit '{}' with priority {} and direction {}").format(  # noqa: Q000
+            habit_str, self.priority, self.direction)
         print(prettify(res))
         Habits.invoke(config_filename=self.config_filename)
+        return None
+
 
 @Habits.subcommand('delete')  # pylint: disable=missing-docstring
 class HabitsDelete(HabitsChange):
@@ -485,6 +491,7 @@ class HabitsDelete(HabitsChange):
 
     def log_op(self, tid):
         return _("Deleted habit {text}").format(**self.changing_tasks[tid])  # noqa: Q000
+
 
 @Habits.subcommand('up')  # pylint: disable=missing-docstring
 class HabitsUp(HabitsChange):
@@ -583,6 +590,7 @@ class TodosAdd(ApplicationWithApi):
         res = _("Added todo '{}' with priority {}").format(todo_str, self.priority)  # noqa: Q000
         print(prettify(res))
         ToDos.invoke(config_filename=self.config_filename)
+        return 0
 
 
 RewardId = TaskId
@@ -632,6 +640,7 @@ class RewardsAdd(ApplicationWithApi):
         res = _("Added reward '{}' with cost {}").format(todo_str, self.cost)  # noqa: Q000
         print(prettify(res))
         Rewards.invoke(config_filename=self.config_filename)
+        return 0
 
 
 @HabiticaCli.subcommand('home')  # pylint: disable=missing-docstring
@@ -655,7 +664,7 @@ class Server(ApplicationWithApi):
             ret = self.api.status.get()
             if isinstance(ret, dict) and ret['status'] == 'up':
                 print(_("Habitica server {} online").format(self.config['url']))  # noqa: Q000
-                return
+                return 0
         except (KeyError, requests.exceptions.ConnectionError):
             pass
         msg = _("Habitica server {} offline or there is some issue with it")  # noqa: Q000
