@@ -34,7 +34,7 @@ CLASSES = [_("warrior"), _("rogue"), _("wizard"), _("healer")]  # noqa: Q000
 
 
 def is_uuid(u):
-    'validator for plumbum prompt'
+    """validator for plumbum prompt"""
     if isinstance(u, str) and u.replace('-', '') == uuid.UUID(u).hex:
         return u
     return False
@@ -81,7 +81,7 @@ def load_conf(configfile, config=None):
 
 
 class ConfiguredApplication(cli.Application):
-    'Application with config'
+    """Application with config"""
     config_filename = cli.SwitchAttr(
         ['-c', '--config'], argtype=local.path, default=DEFAULT_CONF,
         argname='CONFIG',
@@ -107,7 +107,7 @@ class ConfiguredApplication(cli.Application):
 
 
 def get_content(api, rebuild_cache=False):
-    'get content from server or cache'
+    """get content from server or cache"""
     if hasattr(get_content, 'cache') and not rebuild_cache:
         return get_content.cache
     if not os.path.exists(CONTENT_JSON) or rebuild_cache:
@@ -149,7 +149,7 @@ def get_content(api, rebuild_cache=False):
 
 
 class ApplicationWithApi(ConfiguredApplication):
-    'Application with configured Habitica API'
+    """Application with configured Habitica API"""
     api = None  # type: Habitipy
 
     def main(self):
@@ -206,7 +206,7 @@ class Status(ApplicationWithApi):
         print('\n'.join(result).format(**user))
 
     def quest_info(self, user):
-        'Get current quest info or return None'
+        """Get current quest info or return None"""
         key = user['party']['quest'].get('key', None)
         if '_id' not in user['party'] or key is None:
             return None
@@ -246,7 +246,7 @@ class Status(ApplicationWithApi):
 
 
 class ScoreInfo(object):
-    'task value/score info: http://habitica.wikia.com/wiki/Task_Value'
+    """task value/score info: http://habitica.wikia.com/wiki/Task_Value"""
     scores = ['*', '**', '***', '****', '*****', '******', '*******']
     max_scores_len = max(map(len, scores))
     colors_ = ['Red3', 'Red1', 'DarkOrange', 'Gold3A', 'Green', 'LightCyan3', 'Cyan1']
@@ -261,17 +261,17 @@ class ScoreInfo(object):
 
     @classmethod
     def color(cls, value):
-        'task value/score color'
+        """task value/score color"""
         index = bisect(cls.breakpoints, value)
         return colors.fg(cls.colors_[index])
 
 
 class TasksPrint(ApplicationWithApi):
-    'Put all tasks from `domain` to print'
+    """Put all tasks from `domain` to print"""
     domain = ''  # type: str
     more_tasks = []  # type: List[Dict[str, Any]]
     def domain_format(self, task):
-        'format task for domain'
+        """format task for domain"""
         raise NotImplementedError()
 
     def main(self):
@@ -323,7 +323,7 @@ class ToDos(TasksPrint):
 
 
 def get_additional_rewards(api):
-    'returns list of non-user rewards (potion, armoire, gear)'
+    """returns list of non-user rewards (potion, armoire, gear)"""
     c = get_content(api)
     tasks = [c[i] for i in ['potion', 'armoire']]
     tasks.extend(api.user.inventory.buy.get())
@@ -372,7 +372,7 @@ class TaskId(List[Union[str, int]]):
 
 
 class TasksChange(ApplicationWithApi):
-    'find all tasks specified by user and do self.op on them'
+    """find all tasks specified by user and do self.op on them"""
     domain = ''  # type: str
     noop = cli.Flag(
         ['--dry-run', '--noop'],
@@ -430,19 +430,19 @@ class TasksChange(ApplicationWithApi):
         self.domain_print()
 
     def validate(self, task):  # pylint: disable=no-self-use,unused-argument
-        'check if task is valid for the operation'
+        """check if task is valid for the operation"""
         return True
 
     def op(self, tid):
-        'operation to be done on task with `tid`'
+        """operation to be done on task with `tid`"""
         raise NotImplementedError
 
     def log_op(self, tid):
-        'return a message to show user on successful change of `tid`'
+        """return a message to show user on successful change of `tid`"""
         raise NotImplementedError
 
     def domain_print(self):
-        'show domain to user again'
+        """show domain to user again"""
         raise NotImplementedError
 
 
@@ -516,7 +516,7 @@ class HabitsDown(HabitsChange):
         return task['down']
 
     def log_op(self, tid):
-        'show a message to user on successful change of `tid`'
+        """show a message to user on successful change of `tid`"""
         return _("Decremented habit {text}").format(**self.changing_tasks[tid])  # noqa: Q000
 
 

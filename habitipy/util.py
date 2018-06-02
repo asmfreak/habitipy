@@ -20,7 +20,7 @@ except ImportError:
 
 
 def progressed_bar(count, total=100, status=None, suffix=None, bar_len=10):
-    'render a progressed.io like progress bar'
+    """render a progressed.io like progress bar"""
     status = status or ''
     suffix = suffix or '%'
     assert isinstance(count, int)
@@ -132,18 +132,18 @@ secure_filestore = partial(umask, 0o077)
 
 
 def is_secure_file(fn):
-    'checks if a file can be accessed only by the owner'
+    """checks if a file can be accessed only by the owner"""
     st = os.stat(fn)
     return (st.st_mode & 0o777) == 0o600
 
 
 class SecurityError(ValueError):
-    'Error fired when a secure file is stored in an insecure manner'
+    """Error fired when a secure file is stored in an insecure manner"""
     pass
 
 
 def assert_secure_file(file):
-    'checks if a file is stored securely'
+    """checks if a file is stored securely"""
     if not is_secure_file(file):
         msg = """
         File {0} can be read by other users.
@@ -153,7 +153,7 @@ def assert_secure_file(file):
 
 
 def get_translation_for(package_name: str) -> gettext.NullTranslations:
-    'find and return gettext translation for package'
+    """find and return gettext translation for package"""
     localedir = None
     for localedir in pkg_resources.resource_filename(package_name, 'i18n'), None:
         localefile = gettext.find(package_name, localedir)
@@ -165,6 +165,6 @@ def get_translation_for(package_name: str) -> gettext.NullTranslations:
 
 
 def get_translation_functions(package_name: str, names: Tuple[str, ...]=('gettext',)):
-    'finds and installs translation functions for package'
+    """finds and installs translation functions for package"""
     translation = get_translation_for(package_name)
     return [getattr(translation, x) for x in names]

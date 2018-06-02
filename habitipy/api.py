@@ -27,34 +27,34 @@ _, ngettext = get_translation_functions('habitipy', names=('gettext', 'ngettext'
 
 
 class ParamAlreadyExist(ValueError):
-    'Custom error type'
+    """Custom error type"""
     pass
 
 
 class WrongReturnCode(ValueError):
-    'Custom error type'
+    """Custom error type"""
     pass
 
 
 class WrongData(ValueError):
-    'Custom error type'
+    """Custom error type"""
     pass
 
 
 class WrongPath(ValueError):
-    'Custom error type'
+    """Custom error type"""
     pass
 
 
 class ApiNode(object):
-    'Represents a middle point in API'
+    """Represents a middle point in API"""
     def __init__(self, param_name=None, param=None, paths=None):
         self.param = param
         self.param_name = param_name
         self.paths = paths or {}  # type: Dict[str, Union[ApiNode,ApiEndpoint]]
 
     def into(self, val: str) -> Union['ApiNode', 'ApiEndpoint']:
-        'Get another leaf node with name `val` if possible'
+        """Get another leaf node with name `val` if possible"""
         if val in self.paths:
             return self.paths[val]
         if self.param:
@@ -62,11 +62,11 @@ class ApiNode(object):
         raise IndexError(_("Value {} is missing from api").format(val))  # NOQA: Q000
 
     def can_into(self, val: str) -> bool:
-        'Determine if there is a leaf node with name `val`'
+        """Determine if there is a leaf node with name `val`"""
         return val in self.paths or (self.param and self.param_name == val)
 
     def place(self, part: str, val: Union['ApiNode', 'ApiEndpoint']):
-        'place a leaf node '
+        """place a leaf node"""
         if part.startswith(':'):
             if self.param and self.param != part:
                 err = """Cannot place param '{}' as '{self.param_name}' exist on node already!"""
@@ -78,7 +78,7 @@ class ApiNode(object):
         return val
 
     def keys(self) -> Iterator[str]:
-        'return all possible paths one can take from this ApiNode'
+        """return all possible paths one can take from this ApiNode"""
         if self.param:
             yield self.param_name
         yield from self.paths.keys()
@@ -93,7 +93,7 @@ class ApiNode(object):
 
 
 def escape_keywords(arr):
-    'append _ to all python keywords'
+    """append _ to all python keywords"""
     for i in arr:
         i = i if i not in kwlist else i + '_'
         i = i if '-' not in i else i.replace('-', '_')
@@ -289,7 +289,7 @@ class Habitipy(object):
 
 
 def download_api(branch=None) -> str:
-    'download API documentation from _branch_ of Habitica\'s repo on Github'
+    """download API documentation from _branch_ of Habitica\'s repo on Github"""
     habitica_github_api = 'https://api.github.com/repos/HabitRPG/habitica'
     if not branch:
         branch = requests.get(habitica_github_api + '/releases/latest').json()['tag_name']
@@ -302,7 +302,7 @@ def download_api(branch=None) -> str:
 
 
 def save_apidoc(text: str) -> None:
-    'save `text` to apidoc cache'
+    """save `text` to apidoc cache"""
     apidoc_local = local.path(APIDOC_LOCAL_FILE)
     if not apidoc_local.dirname.exists():
         apidoc_local.dirname.mkdir()
@@ -315,7 +315,7 @@ def parse_apidoc(
     from_github=False,
     save_github_version=True
 ) -> List['ApiEndpoint']:
-    'read file and parse apiDoc lines'
+    """read file and parse apiDoc lines"""
     apis = []  # type: List[ApiEndpoint]
     regex = r'(?P<group>\([^)]*\)){0,1} *(?P<type_>{[^}]*}){0,1} *'
     regex += r'(?P<field>[^ ]*) *(?P<description>.*)$'
@@ -370,14 +370,14 @@ class ApiEndpoint(object):
         self.retcode = None
 
     def add_param(self, group=None, type_='', field='', description=''):
-        'parse and append a param'
+        """parse and append a param"""
         group = group or '(Parameter)'
         group = group.lower()[1:-1]
         p = Param(type_, field, description)
         self.params[group][p.field] = p
 
     def add_success(self, group=None, type_='', field='', description=''):
-        'parse and append a success data param'
+        """parse and append a success data param"""
         group = group or '(200)'
         group = int(group.lower()[1:-1])
         self.retcode = self.retcode or group
@@ -391,7 +391,7 @@ class ApiEndpoint(object):
         return '<@api {{{self.method}}} {self.uri} {self.title}>'.format(self=self)
 
     def render_docstring(self):
-        'make a nice docstring for ipython'
+        """make a nice docstring for ipython"""
         res = '{{{self.method}}} {self.uri} {self.title}\n'.format(self=self)
         if self.params:
             for group, params in self.params.items():
@@ -411,7 +411,7 @@ _valid_types = {
 
 
 class Param(object):
-    'represents param of request or responce'
+    """represents param of request or responce"""
     def __init__(self, type_, field, description):
         self.is_optional = field[0] == '[' and field[-1] == ']'
         self.field = field[1:-1] if self.is_optional else field
@@ -437,7 +437,7 @@ class Param(object):
         self.description = description
 
     def validate(self, obj):
-        'check if obj has this api param'
+        """check if obj has this api param"""
         if self.path:
             for i in self.path:
                 obj = obj[i]
@@ -446,7 +446,7 @@ class Param(object):
         raise NotImplementedError('Validation is not implemented yet')
 
     def render_docstring(self):
-        'make a nice docstring for ipython'
+        """make a nice docstring for ipython"""
         default = (' = ' + str(self.default)) if self.default else ''
         opt = 'optional' if self.is_optional else ''
         can_be = ' '.join(self.possible_values) if self.possible_values else ''
