@@ -68,8 +68,8 @@ def test_data(draw):
         one_of(
             index_id_alias(len(all_tasks)),
             integer_range(0, len(all_tasks) - 1)),
-        min_size=1, average_size=5)
-    arguments = draw(lists(index_lists, min_size=1, average_size=5))
+        min_size=1)
+    arguments = draw(lists(index_lists, min_size=1))
     arguments_strings = []
     task_ids = []
     for indexes in arguments:
