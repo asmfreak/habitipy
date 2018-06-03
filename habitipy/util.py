@@ -16,7 +16,7 @@ from plumbum import colors
 try:
     from emoji import emojize
 except ImportError:
-    emojize = None
+    emojize = None  # type: ignore
 
 
 def progressed_bar(count, total=100, status=None, suffix=None, bar_len=10):
@@ -156,12 +156,12 @@ def get_translation_for(package_name: str) -> gettext.NullTranslations:
     """find and return gettext translation for package"""
     localedir = None
     for localedir in pkg_resources.resource_filename(package_name, 'i18n'), None:
-        localefile = gettext.find(package_name, localedir)
+        localefile = gettext.find(package_name, localedir)  # type: ignore
         if localefile:
             break
     else:
         pass
-    return gettext.translation(package_name, localedir=localedir, fallback=True)
+    return gettext.translation(package_name, localedir=localedir, fallback=True)  # type: ignore
 
 
 def get_translation_functions(package_name: str, names: Tuple[str, ...]=('gettext',)):
