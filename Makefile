@@ -43,8 +43,8 @@ push:
 	git push --tags
 
 pypi:
-	python3 setup.py sdist upload --sign
-#	python3 setup.py bdist_wheel upload --sign
+	python3 setup.py sdist upload bdist_wheel
+	twine upload dist/*
 
 .pydocenv: SHELL:=/bin/bash
 .pydocenv:
