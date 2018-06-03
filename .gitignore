@@ -15,3 +15,4 @@ dist/
 mkdocs.yml
 pydocmd.yml
 .hypothesis
+.py34
