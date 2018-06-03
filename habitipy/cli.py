@@ -678,6 +678,7 @@ class Spells(ApplicationWithApi):
     def main(self):
         if self.nested_command:
             return
+        super().main()
         user = self.api.user.get()
         content = get_content(self.api)
         user_level = user['stats']['lvl']
