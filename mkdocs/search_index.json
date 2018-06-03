@@ -2,12 +2,12 @@
     "docs": [
         {
             "location": "/",
-            "text": "Welcome to habitipy documentation!\n\u00b6\n\n\n \n\n\n \n \n \n\n\nhabitipy is a set of scripts to interact with \nHabitica\n:\n\n\n\n\nPython wrapper for the RESTful Habitica API (\nhabitica.api.Habitipy\n class)\n\n\nCommand-line interface with subcommands (e.g. \n> habitipy todos\n)\n\n\n\n\n\n\n\n\n\n\nVersion\n\n\nCI\n\n\nCoverage\n\n\n\n\n\n\n\n\n\n\nMaster\n\n\n\n\n\n\n\n\n\n\nStable (v0.1.18)\n\n\n\n\n\n\n\n\n\n\n\n\nFeatures\n\u00b6\n\n\n\n\nAccess to your Habitica account from command line\n\n\nEasy and intuitive subcommands syntax\n\n\nColourful output\n\n\nPluggable and extendable architecture\n\n\nAPI with built-in help \nread more on API",
+            "text": "Welcome to habitipy documentation!\n\u00b6\n\n\n \n\n\n \n \n \n\n\nhabitipy is a set of scripts to interact with \nHabitica\n:\n\n\n\n\nPython wrapper for the RESTful Habitica API (\nhabitica.api.Habitipy\n class)\n\n\nCommand-line interface with subcommands (e.g. \n> habitipy todos\n)\n\n\n\n\n\n\n\n\n\n\nVersion\n\n\nCI\n\n\nCoverage\n\n\n\n\n\n\n\n\n\n\nMaster\n\n\n\n\n\n\n\n\n\n\nStable (v0.1.21)\n\n\n\n\n\n\n\n\n\n\n\n\nFeatures\n\u00b6\n\n\n\n\nAccess to your Habitica account from command line\n\n\nEasy and intuitive subcommands syntax\n\n\nColourful output\n\n\nPluggable and extendable architecture\n\n\nAPI with built-in help \nread more on API",
             "title": "habitipy"
         },
         {
             "location": "/#welcome-to-habitipy-documentation",
-            "text": "habitipy is a set of scripts to interact with  Habitica :   Python wrapper for the RESTful Habitica API ( habitica.api.Habitipy  class)  Command-line interface with subcommands (e.g.  > habitipy todos )      Version  CI  Coverage      Master      Stable (v0.1.18)",
+            "text": "habitipy is a set of scripts to interact with  Habitica :   Python wrapper for the RESTful Habitica API ( habitica.api.Habitipy  class)  Command-line interface with subcommands (e.g.  > habitipy todos )      Version  CI  Coverage      Master      Stable (v0.1.21)",
             "title": "Welcome to habitipy documentation!"
         },
         {
