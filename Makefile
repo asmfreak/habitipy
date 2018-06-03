@@ -44,7 +44,7 @@ push:
 
 pypi:
 	python3 setup.py sdist upload bdist_wheel
-	twine upload dist/*
+	twine upload -s dist/*
 
 .pydocenv: SHELL:=/bin/bash
 .pydocenv:
