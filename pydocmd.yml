@@ -6,7 +6,7 @@ generate:
   - util.md:
     - habitipy.util++
   - async.md:
-      - habitipy.async.HabitipyAsync+
+      - habitipy.aio.HabitipyAsync+
 pages:
   - 'habitipy': 'index.md'
   - API Documentation:
