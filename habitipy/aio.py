@@ -33,7 +33,7 @@ class HabitipyAsync(Habitipy):
     import asyncio
     from aiohttp import ClientSession
     from habitipy import Habitipy, load_conf,DEFAULT_CONF
-    from habitipy.async import HabitipyAsync
+    from habitipy.aio import HabitipyAsync
 
 
     loop = asyncio.new_event_loop()

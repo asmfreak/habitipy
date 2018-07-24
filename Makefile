@@ -1,3 +1,4 @@
+RELEASE_TYPE?=patch
 all: habitipy/i18n/*/LC_MESSAGES/habitipy.mo
 .PRECIOUS: habitipy/i18n/%.po.new
 # scrape sources for messages
@@ -31,7 +32,7 @@ tox:
 	tox
 
 bump:
-	bumpversion patch
+	bumpversion $(RELEASE_TYPE)
 
 tag:
 	$(eval VERSION:=v$(shell bumpversion --dry-run --list patch | grep curr | sed -e 's/^.*=//g'))
