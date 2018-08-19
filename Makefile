@@ -52,7 +52,7 @@ pypi:
 	(\
 		python3 -m venv .pydocenv &&\
 		source .pydocenv/bin/activate &&\
-		pip install pydoc-markdown mkdocs-material fontawesome_markdown&&\
+		pip install pydoc-markdown mkdocs-material fontawesome_markdown aiohttp&&\
 		pip install -e .[emoji,async] \
 	)
 
