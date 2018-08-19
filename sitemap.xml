@@ -1,40 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-
-    
     <url>
      <loc>https://asmfreak.github.io/habitipy/</loc>
-     <lastmod>2018-06-03</lastmod>
+     <lastmod>2018-08-19</lastmod>
      <changefreq>daily</changefreq>
     </url>
-    
-
-    
-        
     <url>
      <loc>https://asmfreak.github.io/habitipy/api/</loc>
-     <lastmod>2018-06-03</lastmod>
+     <lastmod>2018-08-19</lastmod>
      <changefreq>daily</changefreq>
     </url>
-        
     <url>
      <loc>https://asmfreak.github.io/habitipy/cli/</loc>
-     <lastmod>2018-06-03</lastmod>
+     <lastmod>2018-08-19</lastmod>
      <changefreq>daily</changefreq>
     </url>
-        
     <url>
      <loc>https://asmfreak.github.io/habitipy/util/</loc>
-     <lastmod>2018-06-03</lastmod>
+     <lastmod>2018-08-19</lastmod>
      <changefreq>daily</changefreq>
     </url>
-        
     <url>
      <loc>https://asmfreak.github.io/habitipy/async/</loc>
-     <lastmod>2018-06-03</lastmod>
+     <lastmod>2018-08-19</lastmod>
      <changefreq>daily</changefreq>
     </url>
-        
-    
-
 </urlset>
