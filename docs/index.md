@@ -11,7 +11,7 @@ habitipy is a set of scripts to interact with [Habitica](http://habitica.com):
 | Version | CI | Coverage |
 | ---- | ---- | ----- |
 | Master |  [![Build Status](https://api.travis-ci.org/ASMfreaK/habitipy.svg?branch=master)](https://travis-ci.org/ASMfreaK/habitipy) | [![Codecov](https://img.shields.io/codecov/c/github/ASMfreaK/habitipy.svg)](https://codecov.io/gh/ASMfreaK/habitipy)  |
-| Stable (v0.2.0) | [![Build Status](https://api.travis-ci.org/ASMfreaK/habitipy.svg?branch=v0.2.0)](https://travis-ci.org/ASMfreaK/habitipy)|  |
+| Stable (v0.2.1) | [![Build Status](https://api.travis-ci.org/ASMfreaK/habitipy.svg?branch=v0.2.1)](https://travis-ci.org/ASMfreaK/habitipy)|  |
 
 Features
 --------
