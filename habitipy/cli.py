@@ -139,13 +139,12 @@ def get_content(api, rebuild_cache=False):
         with open(CONTENT_JSON, 'w') as f:
             json.dump(content, f)
         return content
-    else:
-        try:
-            with open(CONTENT_JSON) as f:
-                get_content.cache = content = json.load(f)
-            return content
-        except JSONDecodeError:
-            return get_content(api, rebuild_cache=True)
+    try:
+        with open(CONTENT_JSON) as f:
+            get_content.cache = content = json.load(f)
+        return content
+    except JSONDecodeError:
+        return get_content(api, rebuild_cache=True)
 
 
 class ApplicationWithApi(ConfiguredApplication):
@@ -245,7 +244,7 @@ class Status(ApplicationWithApi):
             """)).format(key))
 
 
-class ScoreInfo(object):
+class ScoreInfo:
     """task value/score info: http://habitica.wikia.com/wiki/Task_Value"""
     scores = ['*', '**', '***', '****', '*****', '******', '*******']
     max_scores_len = max(map(len, scores))
@@ -401,7 +400,7 @@ class TasksChange(ApplicationWithApi):
         changing_tasks_ids = []  # type: List[str]
         for tid in task_id:
             if isinstance(tid, int):
-                if tid >= 0 and tid <= num_tasks:
+                if 0 <= tid <= num_tasks:
                     changing_tasks_ids.append(task_uuids[tid])
                     self.changing_tasks[task_uuids[tid]] = tasks[tid]
                     continue

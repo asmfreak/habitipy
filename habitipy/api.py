@@ -46,7 +46,7 @@ class WrongPath(ValueError):
     pass
 
 
-class ApiNode(object):
+class ApiNode:
     """Represents a middle point in API"""
     def __init__(self, param_name=None, param=None, paths=None):
         self.param = param
@@ -100,7 +100,7 @@ def escape_keywords(arr):
         yield i
 
 
-class Habitipy(object):
+class Habitipy:
     """
     Represents Habitica API
     # Arguments
@@ -243,7 +243,7 @@ class Habitipy(object):
     def __getitem__(self, val: Union[str, List[str], Tuple[str, ...]]) -> 'Habitipy':
         if isinstance(val, str):
             return self.__class__(self._conf, apis=self._apis, current=self._current + [val])
-        elif isinstance(val, (list, tuple)):
+        if isinstance(val, (list, tuple)):
             current = self._current + list(val)
             return self.__class__(self._conf, apis=self._apis, current=current)
         raise IndexError('{} not found in this API!'.format(val))
@@ -357,7 +357,7 @@ def parse_apidoc(
     return apis
 
 
-class ApiEndpoint(object):
+class ApiEndpoint:
     """
     Represents a single api endpoint.
     """
@@ -410,7 +410,7 @@ _valid_types = {
 }
 
 
-class Param(object):
+class Param:
     """represents param of request or responce"""
     def __init__(self, type_, field, description):
         self.is_optional = field[0] == '[' and field[-1] == ']'
