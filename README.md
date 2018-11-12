@@ -16,7 +16,7 @@ Features
 --------
 
 * Access to your Habitica account from command line
-* Colourful output
+* Colorful output
 * Easy and intuitive subcommands syntax
 * Pluggable and extendable architecture
 * API with built-in help
@@ -25,7 +25,7 @@ Features
 Install
 -------
 
-Habitipy cones in two main versions: basic an emoji. If don't ant emoji on your terminal you are free to to with just only:
+Habitipy comes in two main versions: basic an emoji. If don't want emoji on your terminal you are free to to with just only:
 `$ pip install habitipy`
 
 If you want something like `:thumbsup:` to be converted to actual emoji unicode symbols before it will be printed to terminal, you should use this command:
@@ -34,7 +34,7 @@ If you want something like `:thumbsup:` to be converted to actual emoji unicode 
 In both cases you should put `sudo` in front of command, if you are installing `habitipy` package to system directory. To install `habitipy` just for you, use
 `$ pip install --user habitipy`
 
-And the last, but not the least thing abount installation - if you want bleeding edge development version (potentially unstable!), you should clone the repository and install `habitipy`
+And the last, but not the least thing about installation - if you want bleeding edge development version (potentially unstable!), you should clone the repository and install `habitipy`
 ```
     $ git clone https://github.com/ASMfreaK/habitipy
     $ pip install -e habitipy
@@ -135,4 +135,4 @@ Many thanks to the following excellent projects:
 - [plumbum]()
 - [requests](https://github.com/kennethreitz/requests)
 
-And to the original author of [habitica]().
+And to the original author of [habitica]https://github.com/philadams/habitica).
