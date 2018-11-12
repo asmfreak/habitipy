@@ -166,7 +166,7 @@ class Habitipy:
     ```
     """
     def __init__(self, conf: Dict[str, str], *,
-                 apis=None, current: Optional[List[str]]=None,
+                 apis=None, current: Optional[List[str]] = None,
                  from_github=False, branch=None,
                  strict=False) -> None:
         self._conf = conf
@@ -425,15 +425,19 @@ class Param:
         else:
             self.field = self.field[0]
             self.path = []
-        self.type = type_[1:-1] if len(type_) > 2 else type_
-        if '=' in self.type:
-            self.type, self.possible_values = self.type.split('=')
-            self.possible_values = list(map(
-                lambda s: s if s[0] != '"' else s[1:-1],
-                self.possible_values.split(',')))
+        if type_:
+            self.type = type_[1:-1] if len(type_) > 2 else type_
+            if '=' in self.type:
+                self.type, self.possible_values = self.type.split('=')
+                self.possible_values = list(map(
+                    lambda s: s if s[0] != '"' else s[1:-1],
+                    self.possible_values.split(',')))
+            else:
+                self.possible_values = []
+            self.type = self.type.lower()
         else:
+            self.type = None
             self.possible_values = []
-        self.type = self.type.lower()
         self.description = description
 
     def validate(self, obj):
@@ -451,6 +455,6 @@ class Param:
         opt = 'optional' if self.is_optional else ''
         can_be = ' '.join(self.possible_values) if self.possible_values else ''
         can_be = 'one of [{}]'.format(can_be) if can_be else ''
-        type_ = 'of type "' + self.type + '"'
+        type_ = 'of type "' + str(self.type) + '"'
         res = ' '.join([opt, '"' + self.field + '"', default, type_, can_be, '\n'])
         return res.replace('  ', ' ').lstrip()

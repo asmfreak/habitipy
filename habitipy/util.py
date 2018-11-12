@@ -164,7 +164,7 @@ def get_translation_for(package_name: str) -> gettext.NullTranslations:
     return gettext.translation(package_name, localedir=localedir, fallback=True)  # type: ignore
 
 
-def get_translation_functions(package_name: str, names: Tuple[str, ...]=('gettext',)):
+def get_translation_functions(package_name: str, names: Tuple[str, ...] = ('gettext',)):
     """finds and installs translation functions for package"""
     translation = get_translation_for(package_name)
     return [getattr(translation, x) for x in names]
