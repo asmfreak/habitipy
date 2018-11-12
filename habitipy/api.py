@@ -166,7 +166,7 @@ class Habitipy:
     ```
     """
     def __init__(self, conf: Dict[str, str], *,
-                 apis=None, current: Optional[List[str]]=None,
+                 apis=None, current: Optional[List[str]] = None,
                  from_github=False, branch=None,
                  strict=False) -> None:
         self._conf = conf

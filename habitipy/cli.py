@@ -196,8 +196,10 @@ class Status(ApplicationWithApi):
             colors.yellow | _("XP: {stats[exp]}/{stats[toNextLevel]}"),  # noqa: Q000
             colors.blue | _("Mana: {stats[mp]}/{stats[maxMP]}"),  # noqa: Q000
             colors.light_yellow | _("GP: {stats[gp]:.2f}"),  # noqa: Q000
-            '{pet} ' +
-            ngettext("({food} food item)", "({food} food items)", user['food']),  # noqa: Q000
+            '{pet} ' + ngettext(
+                "({food} food item)",   # noqa: Q000
+                "({food} food items)",  # noqa: Q000
+                user['food']),
             '{mount}']
         quest = self.quest_info(user)
         if quest:

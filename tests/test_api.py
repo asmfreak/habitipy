@@ -34,6 +34,7 @@ test_data = """
 @apiSuccess {Object} data.options The options for the webhook (See webhook add examples)
 @api {delete} /api/v3/user/webhook/:id Delete a webhook - BETA
 @apiParam (Path) {UUID} id The id of the webhook to delete
+@apiParam (Query) [dueDate] type Optional date to use for computing the nextDue field for each returned task.
 """
 wrong_apidoc_data = [
 """@api {delete} /api/v3/user/webhook/:id Delete a webhook - BETA
