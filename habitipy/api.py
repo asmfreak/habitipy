@@ -28,22 +28,18 @@ _, ngettext = get_translation_functions('habitipy', names=('gettext', 'ngettext'
 
 class ParamAlreadyExist(ValueError):
     """Custom error type"""
-    pass
 
 
 class WrongReturnCode(ValueError):
     """Custom error type"""
-    pass
 
 
 class WrongData(ValueError):
     """Custom error type"""
-    pass
 
 
 class WrongPath(ValueError):
     """Custom error type"""
-    pass
 
 
 class ApiNode:

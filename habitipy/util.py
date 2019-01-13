@@ -139,7 +139,6 @@ def is_secure_file(fn):
 
 class SecurityError(ValueError):
     """Error fired when a secure file is stored in an insecure manner"""
-    pass
 
 
 def assert_secure_file(file):
