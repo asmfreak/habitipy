@@ -31,6 +31,18 @@ SUBCOMMANDS_JSON = '~/.config/habitipy/subcommands.json'
 CONTENT_JSON = local.path('~/.config/habitipy/content.json')
 _, ngettext = get_translation_functions('habitipy', names=('gettext', 'ngettext'))
 CLASSES = [_("warrior"), _("rogue"), _("wizard"), _("healer")]  # noqa: Q000
+YES_ANSWERS = ('yes', 'y', 'true', 'True', '1')
+CHECK_MARK_STYLES = ('wide', 'narrow', 'ascii')
+CHECK = {
+    'wide': colors.green | '✔ ',
+    'narrow': colors.green | '✔',
+    'ascii': '[X]'
+}
+UNCHECK = {
+    'wide': colors.red | '✖ ',
+    'narrow': colors.red | '✖',
+    'ascii': '[ ]'
+}
 
 
 def is_uuid(u):
@@ -38,6 +50,7 @@ def is_uuid(u):
     if isinstance(u, str) and u.replace('-', '') == uuid.UUID(u).hex:
         return u
     return False
+
 
 def load_conf(configfile, config=None):
     """Get authentication data from the AUTH_CONF file."""
@@ -76,6 +89,11 @@ def load_conf(configfile, config=None):
                 {configfile}
                 You can edit that file later if you need.
                 """)).format(configfile=configfile))
+        config['show_numbers'] = conf.get('habitipy.show_numbers', 'y')
+        config['show_numbers'] = config['show_numbers'] in YES_ANSWERS
+        config['show_style'] = conf.get('habitipy.show_style', 'wide')
+        if config['show_style'] not in CHECK_MARK_STYLES:
+            config['show_style'] = 'wide'
     return config
 
 
@@ -247,19 +265,24 @@ class Status(ApplicationWithApi):
 
 class ScoreInfo:
     """task value/score info: http://habitica.wikia.com/wiki/Task_Value"""
-    # scores = ['*', '**', '***', '****', '*****', '******', '*******']
-    scores = ['▁', '▂', '▃', '▄', '▅', '▆', '▇']
 
-    max_scores_len = max(map(len, scores))
+    scores = {
+        'wide': ['▁', '▂', '▃', '▄', '▅', '▆', '▇'],
+        'narrow': ['▁', '▂', '▃', '▄', '▅', '▆', '▇'],
+        'ascii': ['*', '**', '***', '****', '*****', '******', '*******']
+    }
+
     colors_ = ['Red3', 'Red1', 'DarkOrange', 'Gold3A', 'Green', 'LightCyan3', 'Cyan1']
     breakpoints = [-20, -10, -1, 1, 5, 10]
 
-    def __new__(cls, value):
+    def __new__(cls, style, value):
         index = bisect(cls.breakpoints, value)
-        score = cls.scores[index]
+        score = cls.scores[style][index]
         score_col = colors.fg(cls.colors_[index])
-        # score = '[' + score.center(cls.max_scores_len) + ']'
-        # score = '⎡' + score.center(cls.max_scores_len) + '⎤'
+        if style == 'ascii':
+            max_scores_len = max(map(len, cls.scores[style]))
+            score = '[' + score.center(max_scores_len) + ']'
+            # score = '⎡' + score.center(cls.max_scores_len) + '⎤'
         return score_col | score
 
     @classmethod
@@ -287,8 +310,8 @@ class TasksPrint(ApplicationWithApi):
         ident_size = len(str(habits_len)) + 2
         number_format = '{{:{}d}}. '.format(ident_size - 2)
         for i, task in enumerate(tasks):
-            i = number_format.format(i + 1)
-            res = prettify(self.domain_format(task))
+            i = number_format.format(i + 1) if self.config['show_numbers'] else ''
+            res = i + prettify(self.domain_format(task))
             print(res)
 
 
@@ -297,8 +320,8 @@ class Habits(TasksPrint):
     DESCRIPTION = _("List, up and down habit tasks")  # noqa: Q000
     domain = 'habits'
     def domain_format(self, habit):
-        score = ScoreInfo(habit['value'])
-        return _("{} {text}").format(score, **habit)  # noqa: Q000
+        score = ScoreInfo(self.config['show_style'], habit['value'])
+        return _("{0} {text}").format(score, **habit)  # noqa: Q000
 
 
 @HabiticaCli.subcommand('dailies')  # pylint: disable=missing-docstring
@@ -306,11 +329,16 @@ class Dailys(TasksPrint):
     DESCRIPTION = _("List, check, uncheck daily tasks")  # noqa: Q000
     domain = 'dailys'
     def domain_format(self, daily):
-        score = ScoreInfo(daily['value'])
-        check = '✔' if daily['completed'] else ' '
+        score = ScoreInfo(self.config['show_style'], daily['value'])
+        check = CHECK if daily['completed'] else UNCHECK
+        check = check[self.config['show_style']]
         checklist_done = len(list(filter(lambda x: x['completed'], daily['checklist'])))
-        checklist = " {}/{}".format(checklist_done, len(daily['checklist'])) if daily['checklist'] else ""
-        res = _("{1}{0}{text}{2}").format(check, score, checklist, **daily)  # noqa: Q000
+        checklist = \
+            ' {}/{}'.format(
+                checklist_done,
+                len(daily['checklist'])
+            ) if daily['checklist'] else ''
+        res = _("{0}{1}{text}{2}").format(check, score, checklist, **daily)  # noqa: Q000
         if not daily['isDue']:
             res = colors.strikeout + colors.dark_gray | res
         return res
@@ -321,10 +349,15 @@ class ToDos(TasksPrint):
     DESCRIPTION = _("List, comlete, add or delete todo tasks")  # noqa: Q000
     domain = 'todos'
     def domain_format(self, todo):
-        score = ScoreInfo(todo['value'])
-        check = '✔' if todo['completed'] else ' '
+        score = ScoreInfo(self.config['show_style'], todo['value'])
+        check = CHECK if todo['completed'] else UNCHECK
+        check = check[self.config['show_style']]
         checklist_done = len(list(filter(lambda x: x['completed'], todo['checklist'])))
-        checklist = " {}/{}".format(checklist_done, len(todo['checklist'])) if todo['checklist'] else ""
+        checklist = \
+            ' {}/{}'.format(
+                checklist_done,
+                len(todo['checklist'])
+            ) if todo['checklist'] else ''
         res = _("{1}{0}{text}{2}").format(check, score, checklist, **todo)  # noqa: Q000
         return res
 

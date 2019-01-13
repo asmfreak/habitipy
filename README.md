@@ -50,6 +50,10 @@ You can replace `url` as needed, for example if you're self-hosting a Habitica s
 
 Lastly, you should not change access rights of the config to anything other then `600` - this ensures that  your credentials are kept secret from other users of your system. This is enforced by `habitipy` cli command.
 
+There is also configuration options:
+* `show_numbers` - enables printing task numbers in commands like `habitipy dailies` or `habitipy todo`. Valid 'true' values are `True`, `y`, `1`, anything else is considered 'false' .
+* `show_style` - controls the output of a task score and it's completeness. Valid values are: `wide`, `narrow` and `ascii`. Do try each for yourself.
+
 It you have other tools using plumbum's `Application` class you want to integrate under `habitipy` cli command you can state them in `~/.config/habitipy/subcommands.json` like this:
 ```json
 {"subcommand_name":"package.module.SubcommandClass"}
