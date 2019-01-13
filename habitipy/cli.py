@@ -39,7 +39,6 @@ def is_uuid(u):
         return u
     return False
 
-
 def load_conf(configfile, config=None):
     """Get authentication data from the AUTH_CONF file."""
     default_login = 'your-login-for-api-here'
@@ -248,7 +247,9 @@ class Status(ApplicationWithApi):
 
 class ScoreInfo:
     """task value/score info: http://habitica.wikia.com/wiki/Task_Value"""
-    scores = ['*', '**', '***', '****', '*****', '******', '*******']
+    # scores = ['*', '**', '***', '****', '*****', '******', '*******']
+    scores = ['▁', '▂', '▃', '▄', '▅', '▆', '▇']
+
     max_scores_len = max(map(len, scores))
     colors_ = ['Red3', 'Red1', 'DarkOrange', 'Gold3A', 'Green', 'LightCyan3', 'Cyan1']
     breakpoints = [-20, -10, -1, 1, 5, 10]
@@ -257,7 +258,8 @@ class ScoreInfo:
         index = bisect(cls.breakpoints, value)
         score = cls.scores[index]
         score_col = colors.fg(cls.colors_[index])
-        score = '[' + score.center(cls.max_scores_len) + ']'
+        # score = '[' + score.center(cls.max_scores_len) + ']'
+        # score = '⎡' + score.center(cls.max_scores_len) + '⎤'
         return score_col | score
 
     @classmethod
@@ -286,7 +288,7 @@ class TasksPrint(ApplicationWithApi):
         number_format = '{{:{}d}}. '.format(ident_size - 2)
         for i, task in enumerate(tasks):
             i = number_format.format(i + 1)
-            res = i + prettify(self.domain_format(task))
+            res = prettify(self.domain_format(task))
             print(res)
 
 
@@ -305,8 +307,10 @@ class Dailys(TasksPrint):
     domain = 'dailys'
     def domain_format(self, daily):
         score = ScoreInfo(daily['value'])
-        check = 'X' if daily['completed'] else ' '
-        res = _("[{}] {} {text}").format(check, score, **daily)  # noqa: Q000
+        check = '✔' if daily['completed'] else ' '
+        checklist_done = len(list(filter(lambda x: x['completed'], daily['checklist'])))
+        checklist = " {}/{}".format(checklist_done, len(daily['checklist'])) if daily['checklist'] else ""
+        res = _("{1}{0}{text}{2}").format(check, score, checklist, **daily)  # noqa: Q000
         if not daily['isDue']:
             res = colors.strikeout + colors.dark_gray | res
         return res
@@ -318,8 +322,10 @@ class ToDos(TasksPrint):
     domain = 'todos'
     def domain_format(self, todo):
         score = ScoreInfo(todo['value'])
-        check = 'X' if todo['completed'] else ' '
-        res = _("[{}] {} {text}").format(check, score, **todo)  # noqa: Q000
+        check = '✔' if todo['completed'] else ' '
+        checklist_done = len(list(filter(lambda x: x['completed'], todo['checklist'])))
+        checklist = " {}/{}".format(checklist_done, len(todo['checklist'])) if todo['checklist'] else ""
+        res = _("{1}{0}{text}{2}").format(check, score, checklist, **todo)  # noqa: Q000
         return res
 
 
