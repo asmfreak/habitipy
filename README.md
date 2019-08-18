@@ -119,24 +119,12 @@ I18N
 ----
 `habitipy` command is meant to be internationalized. It is done using Python's standard library's `gettext` module. If you want `habitipy` to be translated to your language please read [contributing guidelines](./CONTRIBUTING.md).
 
-Shell completion
-----------------
-
-Thanks to [mohsend](https://github.com/mohsend), habitica now has shell completion! Basically, you'll want to add the following to your `~/.profile`:
-
-    if [ -f PATH_TO_SITE_PACKAGES/habitica/shell_completion.sh ]; then
-        . PATH_TO_SITE_PACKAGES/habitica/shell_completion.sh
-    fi
-
-You can find your site-packages path with `python -c 'import habitica; print
-habitica.__path__[0]'`.
-
 Thanks
 ------
 
 Many thanks to the following excellent projects:
 
-- [plumbum]()
+- [plumbum](https://plumbum.readthedocs.io/en/latest/)
 - [requests](https://github.com/kennethreitz/requests)
 
 And to the original author of [habitica]https://github.com/philadams/habitica).

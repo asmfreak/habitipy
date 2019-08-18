@@ -13,6 +13,7 @@ habitipy/i18n/%.po.new: habitipy/i18n/messages.pot habitipy/i18n/%.po
 habitipy/i18n/%/LC_MESSAGES/habitipy.mo: habitipy/i18n/%.po.new
 	$(foreach f,$^,mkdir -p $(f:.po.new=)/LC_MESSAGES;)
 	$(foreach f,$^,msgfmt -o $(f:.po.new=)/LC_MESSAGES/habitipy.mo $(f);)
+	$(foreach f,$^,@tx push -t -l$(f:habitipy/i18n/%.po.new=%);)
 
 # fetch new version of docs
 habitipy/apidoc.txt:
