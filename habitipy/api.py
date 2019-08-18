@@ -210,7 +210,9 @@ class Habitipy:
                     try:
                         _node = cur_node.place(part, ApiNode())
                     except ParamAlreadyExist:
-                        warnings.warn('Ignoring conflicting param. Don\'t use {}'.format(api.uri))
+                        warnings.warn(
+                            'Ignoring conflicting param. Don\'t use {}'.format(  # noqa: Q00
+                                api.uri))
                         _node = cur_node.param
                 cur_node = _node  # type: ignore
                 prev_part += '/' + part
@@ -276,8 +278,7 @@ class Habitipy:
             msg = msg.replace('\n', ' ').format(res=res, node=self._node)
             if self._strict:
                 raise WrongReturnCode(msg)
-            else:
-                warnings.warn(msg)
+            warnings.warn(msg)
         return res.json()['data']
 
     def __call__(self, **kwargs) -> Union[Dict, List]:

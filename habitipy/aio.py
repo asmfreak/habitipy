@@ -64,6 +64,5 @@ class HabitipyAsync(Habitipy):
                 msg = msg.replace('\n', ' ').format(res=resp, node=self._node)
                 if self._strict:
                     raise WrongReturnCode(msg)
-                else:
-                    warnings.warn(msg)
+                warnings.warn(msg)
             return (await resp.json())['data']

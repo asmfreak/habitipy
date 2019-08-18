@@ -10,6 +10,8 @@ import os
 import json
 import uuid
 from bisect import bisect
+from collections.abc import Mapping
+from itertools import chain
 from textwrap import dedent
 from typing import List, Union, Dict, Any  # pylint: disable=unused-import
 import pkg_resources
@@ -123,45 +125,91 @@ class ConfiguredApplication(cli.Application):
             self.log.setLevel(base_level + 10 * self.silence_level)
 
 
-def get_content(api, rebuild_cache=False):
-    """get content from server or cache"""
-    if hasattr(get_content, 'cache') and not rebuild_cache:
-        return get_content.cache
-    if not os.path.exists(CONTENT_JSON) or rebuild_cache:
-        import locale
-        content_endpoint = api.content.get
-        # pylint: disable=protected-access
-        try_langs = []
+class Content(Mapping):
+    """Caching class for Habitica content data"""
+    _cache = None
+
+    def __init__(self, api, rebuild_cache=False, path=None):
+        self._api = api
+        self._path = []
+        self._rebuild_cache = rebuild_cache
+        self._path = path
+        self._obj = None
+        self._resolve_path()
+
+    def __getitem__(self, i):
         try:
-            lang = get_translation_for('habitipy').info()['language']
-            try_langs.append(lang)
+            ret = self._obj[i]
+            if isinstance(ret, (list, dict)):
+                return Content(self._api, self._rebuild_cache, [*self._path, i])
+            return ret
+        except (KeyError, IndexError):
+            if self._rebuild_cache:
+                raise
+            self._rebuild_cache = True
+            self._resolve_path()
+            return self.__getitem__(i)
+
+    def __iter__(self):
+        if self._obj:
+            yield from iter(self._obj)
+
+    def __len__(self):
+        if self._obj:
+            return len(self._obj)
+        return 0
+
+    def _resolve_path(self):
+        if self._path is None:
+            self._path = []
+        self._obj = self._get()
+        for e in self._path:
+            self._obj = self._obj[e]
+
+    def _get(self):
+        """get content from server or cache"""
+        if Content._cache and not self._rebuild_cache:
+            return Content._cache
+        if not os.path.exists(CONTENT_JSON) or self._rebuild_cache:
+            content_endpoint = self._api.content.get
+            # pylint: disable=protected-access
+            server_lang = content_endpoint._node.params['query']['language']
+            Content._cache = content_endpoint(**next((
+                {'language': lang}
+                for lang in chain(
+                    Content._lang_from_translation(),
+                    Content._lang_from_locale())
+                if lang in server_lang.possible_values
+            ), {}))  # default
+            with open(CONTENT_JSON, 'w') as f:
+                json.dump(Content._cache, f)
+            return Content._cache
+        try:
+            with open(CONTENT_JSON) as f:
+                Content._cache = json.load(f)
+            return Content._cache
+        except JSONDecodeError:
+            self._rebuild_cache = True
+            return self._get()
+
+    @staticmethod
+    def _lang_from_translation():
+        try:
+            yield get_translation_for('habitipy').info()['language']
         except KeyError:
             pass
+
+    @staticmethod
+    def _lang_from_locale():
+        import locale
         try:
             loc = locale.getdefaultlocale()[0]
             if loc:
-                try_langs.append(loc)
-                try_langs.append(loc[:2])
+                # handle something like 'ru_RU' not available - only 'ru'
+                yield loc
+                yield loc[:2]
         except IndexError:
             pass
-        server_lang = content_endpoint._node.params['query']['language']
-        # handle something like 'ru_RU' not available - only 'ru'
-        for lang in try_langs:
-            if lang in server_lang.possible_values:
-                loc = {'language': lang}
-                break
-        else:
-            loc = {}
-        get_content.cache = content = content_endpoint(**loc)
-        with open(CONTENT_JSON, 'w') as f:
-            json.dump(content, f)
-        return content
-    try:
-        with open(CONTENT_JSON) as f:
-            get_content.cache = content = json.load(f)
-        return content
-    except JSONDecodeError:
-        return get_content(api, rebuild_cache=True)
 
 
 class ApplicationWithApi(ConfiguredApplication):
@@ -194,7 +242,7 @@ class Status(ApplicationWithApi):
             user['stats'][key] = round(user['stats'][key])
         user['stats']['class'] = _(user['stats']['class']).capitalize()
         user['food'] = sum(user['items']['food'].values())
-        content = get_content(self.api)
+        content = Content(self.api)
         user['pet'] = user['items']['currentPet'] if 'currentPet' in user['items'] else None
         user['pet'] = content['petInfo'][user['pet']]['text'] if user['pet'] else ''
         user['pet'] = _("Pet: ") + user['pet'] if user['pet'] else _("No pet")  # noqa: Q000
@@ -229,7 +277,7 @@ class Status(ApplicationWithApi):
         if '_id' not in user['party'] or key is None:
             return None
         for refresh in False, True:
-            content = get_content(self.api, refresh)
+            content = Content(self.api, refresh)
             quest = content['quests'].get(key, None)
             if quest:
                 break
@@ -364,7 +412,7 @@ class ToDos(TasksPrint):
 
 def get_additional_rewards(api):
     """returns list of non-user rewards (potion, armoire, gear)"""
-    c = get_content(api)
+    c = Content(api)
     tasks = [c[i] for i in ['potion', 'armoire']]
     tasks.extend(api.user.inventory.buy.get())
     for task in tasks:
@@ -720,7 +768,7 @@ class Spells(ApplicationWithApi):
             return
         super().main()
         user = self.api.user.get()
-        content = get_content(self.api)
+        content = Content(self.api)
         user_level = user['stats']['lvl']
         if user_level < 10:
             print(_("Your level is too low. Come back on level 10 or higher"))  # noqa: Q000

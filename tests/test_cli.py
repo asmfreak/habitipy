@@ -2,6 +2,8 @@ import unittest
 from unittest import mock
 from unittest.mock import patch, call
 import os
+import re
+import json
 from contextlib import contextmanager, ExitStack
 import tempfile
 from textwrap import dedent
@@ -10,7 +12,7 @@ from hypothesis import given, assume, settings, HealthCheck
 from hypothesis.strategies import uuids, integers, text, lists, booleans
 from hypothesis.strategies import one_of, sampled_from, composite
 
-from habitipy import cli
+from habitipy import cli, Habitipy, load_conf, DEFAULT_CONF
 
 
 def crange(m,mx):
@@ -124,6 +126,19 @@ def cfg_main(self):
     self.config = cli.load_conf(self.config_filename)
     self.log = DevNullLog()
 
+
+@contextmanager
+def patch_file_name(var):
+    temp = tempfile.NamedTemporaryFile()
+    with temp:
+        pass
+    try:
+        with patch(var, temp.name):
+            yield
+    finally:
+        if os.path.exists(temp.name):
+            os.remove(temp.name)
+
 class TestCli(unittest.TestCase):
     def setUp(self):
         self.file = tempfile.NamedTemporaryFile(delete=False)
@@ -136,7 +151,52 @@ class TestCli(unittest.TestCase):
             """).encode('utf-8'))
 
     def tearDown(self):
-        os.remove(self.file.name)
+        if os.path.exists(self.file.name):
+            os.remove(self.file.name)
+
+
+    def test_content_cache(self):
+        rsps = responses.RequestsMock()
+        context = [
+            patch_file_name('habitipy.cli.CONTENT_JSON'),
+            rsps,
+            to_devnull()
+        ]
+        data = {}
+        def content_callback(req):
+            return (200, {}, json.dumps({'data':data}))
+        with ExitStack() as stack:
+            for cm in context:
+                stack.enter_context(cm)
+            rsps.add_callback(
+                responses.GET,
+                url=re.compile(
+                    r'https://habitica.com/api/v3/content\?language=.{2,5}'),
+                content_type='application/json',
+                match_querystring=True,
+                callback=content_callback)
+            api = Habitipy(load_conf(self.file.name))
+            content = cli.Content(api)
+            self.assertTrue(
+                rsps.calls[0].request.url.startswith(
+                'https://habitica.com/api/v3/content'))
+            data = {'this_key_do_not_exist_on_first_run': {
+                'dict': {'a':'b'},
+                'empty_list': [],
+                'objs': [{'name': 'data'}]
+            }}
+            content['this_key_do_not_exist_on_first_run']
+            self.assertTrue(
+                rsps.calls[1].request.url.startswith(
+                'https://habitica.com/api/v3/content'))
+            with self.assertRaises(KeyError):
+                content['this_key_do_not_exist_on_first_run']['dict']['tionary']
+            with self.assertRaises(IndexError):
+                content['this_key_do_not_exist_on_first_run']['empty_list'][0]
+            self.assertEqual(
+                content['this_key_do_not_exist_on_first_run']['dict']['a'],
+                'b'
+            )
 
     def test_task_print(self):
         data = [{'first':1}, {'second':2}]
