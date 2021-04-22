@@ -5,6 +5,7 @@ from setuptools import setup
 INSTALL_REQUIRES = [
     'plumbum',
     'requests',
+    'setuptools',
 ]
 if sys.version_info < (3, 5):
     INSTALL_REQUIRES.append('typing')
