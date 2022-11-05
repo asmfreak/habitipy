@@ -6,15 +6,16 @@ Work gets a bit crazy at times, so there might be a short wait, but I'll get to
 your PR as soon as possible! Thank you for your interest in the project and for
 contributing your time.
 
-# Releases
+## Releases
 
 Remember to update the [Habitica command line
 tool](http://habitica.wikia.com/wiki/Habitica_Command_Line_Tool) page on the
 Habitica wikia with the latest release number and date.
 
 ## Internalization (I18N)
-Habitipy use Python's builtin `gettext` module to translate messages. If you want to create a new translation for your language, please follow the following instruction.
-Messages for translation are scraped from code using `xgettext` utility. It generates a template file with extension `pot`, which is then used to generate and update actual translation file with extansion `po`. This is done using `msginit` and `msgmerge` cli utilities to generate and update translation files respectively.
+
+Habitipy uses Python's builtin `gettext` module to translate messages. If you want to create a new translation for your language, please follow the following instruction.
+Messages for translation are scraped from code using `xgettext` utility. It generates a template file with extension `pot`, which is then used to generate and update actual translation file with extension `po`. This is done using `msginit` and `msgmerge` cli utilities to generate and update translation files respectively.
 Translation files are kept under `habitipy/i18n` folder with two-letter language code they have translation for.
 
 Any language have a two-letter code. If unsure what code corresponds to your language, please read [this wikipedia article](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes). **From here onward any use of word `yourlang` MUST be replaced with your language's two-letter code.** So a file containing translation for your language will be named `habitipy/i18n/yourlang.po`. For example, russian translation file will be named `habitipy/i18n/ru.po`
@@ -26,12 +27,15 @@ Except for initial `po` file generation other operations should run automaticall
 ### Create a new translation
 
 Run these commands to get yourself a new translation file:
+
 ```
 make
 msginit -i habitipy/i18n/messages.pot -o habitipy/i18n/yourlang.po
 ```
+
 Then edit `habitica_planner/i18n/yourlang.po` with translations. After that you can rerun `make` and get a binary `mo` file with your translation.
 Please commit both `po` and `mo` files. Then you can install the package to test your localization. If you've done the procedure right, you'll get `habitipy` cli tool with every message (except python standard) translated.d
 
 ### Localization update
-If there is a change in localization strings, you should run `make` again to get merged `habitica_planner/i18n/new_yourlang.po` then copy that over your `habitica_planner/i18n/yourlang.po`.  
+
+If there is a change in localization strings, you should run `make` again to get merged `habitica_planner/i18n/new_yourlang.po` then copy that over your `habitica_planner/i18n/yourlang.po`.

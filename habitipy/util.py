@@ -88,7 +88,7 @@ def progressed(string):
 
 def prettify(string):
     """
-    replace markup emoji and progressbars with actual things
+    replace markup emoji and progress bars with actual things
 
     # Example
     ```python
@@ -110,7 +110,7 @@ def umask(mask):
     temporarily change umask
 
     # Arguments
-    mask : a umask (invese of chmod argument)
+    mask : a umask (inverse of chmod argument)
 
     # Example
     ```python

@@ -1,5 +1,6 @@
 # Welcome to habitipy documentation!
-![logo](assets/images/logo.svg) 
+
+![logo](assets/images/logo.svg)
 
 [![PyPI](https://img.shields.io/pypi/v/habitipy.svg)](https://pypi.python.org/pypi/habitipy) [![PyPI](https://img.shields.io/pypi/pyversions/habitipy.svg)](https://pypi.python.org/pypi/habitipy) [![PyPI](https://img.shields.io/pypi/l/habitipy.svg)](https://pypi.python.org/pypi/habitipy) [![Say Thanks!](https://img.shields.io/badge/Say%20Thanks-!-1EAEDB.svg)](https://saythanks.io/to/ASMfreaK)
 
@@ -13,8 +14,7 @@ habitipy is a set of scripts to interact with [Habitica](http://habitica.com):
 | Master |  [![Build Status](https://api.travis-ci.org/ASMfreaK/habitipy.svg?branch=master)](https://travis-ci.org/ASMfreaK/habitipy) | [![Codecov](https://img.shields.io/codecov/c/github/ASMfreaK/habitipy.svg)](https://codecov.io/gh/ASMfreaK/habitipy)  |
 | Stable (v0.3.0) | [![Build Status](https://api.travis-ci.org/ASMfreaK/habitipy.svg?branch=v0.3.0)](https://travis-ci.org/ASMfreaK/habitipy)|  |
 
-Features
---------
+## Features
 
 * Access to your Habitica account from command line
 * Easy and intuitive subcommands syntax
