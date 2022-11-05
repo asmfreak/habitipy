@@ -136,7 +136,7 @@ class Habitipy:
      Docstring:
      {get} /api/v3/user Get the authenticated user's profile
 
-     responce params:
+     response params:
      "data" of type "object"
     ```
 
@@ -156,7 +156,7 @@ class Habitipy:
     >>> print(api.user.get.__doc__)
     {get} /api/v3/user Get the authenticated user's profile
 
-    responce params:
+    response params:
     "data" of type "object"
 
     ```
@@ -382,7 +382,7 @@ class ApiEndpoint:
             raise ValueError('Two or more retcodes!')
         type_ = type_ or '{String}'
         p = Param(type_, field, description)
-        self.params['responce'][p.field] = p
+        self.params['response'][p.field] = p
 
     def __repr__(self):
         return '<@api {{{self.method}}} {self.uri} {self.title}>'.format(self=self)
@@ -408,7 +408,7 @@ _valid_types = {
 
 
 class Param:
-    """represents param of request or responce"""
+    """represents param of request or response"""
     def __init__(self, type_, field, description):
         self.is_optional = field[0] == '[' and field[-1] == ']'
         self.field = field[1:-1] if self.is_optional else field

@@ -54,7 +54,7 @@ msgid "healer"
 msgstr "лекарь"
 
 #: habitipy/cli.py:73
-msgid "Your creditentials are invalid. Do you want to enter them now?"
+msgid "Your credentials are invalid. Do you want to enter them now?"
 msgstr "Персональные данные доступа не настроены. Хотите настроить сейчас?"
 
 #: habitipy/cli.py:75
@@ -88,7 +88,7 @@ msgstr "Пожалуйта, введите ваш пароль (токен API)"
 #, python-brace-format
 msgid ""
 "\n"
-"                Your creditentials are securely stored in\n"
+"                Your credentials are securely stored in\n"
 "                {configfile}\n"
 "                You can edit that file later if you need.\n"
 "                "
@@ -498,7 +498,7 @@ msgstr ""
 msgid "Wrong api url: {}"
 msgstr "Неправильная ссылка для API: {}"
 
-#~ msgid "Your creditentials may be unconfigured."
+#~ msgid "Your credentials may be unconfigured."
 #~ msgstr "Возможно ваши настройки доступа не настроены."
 
 #~ msgid "{mount}"

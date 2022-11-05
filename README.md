@@ -1,5 +1,6 @@
 Habitipy
 ========
+
 [![PyPI](https://img.shields.io/pypi/v/habitipy.svg)](https://pypi.python.org/pypi/habitipy) [![PyPI](https://img.shields.io/pypi/pyversions/habitipy.svg)](https://pypi.python.org/pypi/habitipy) [![PyPI](https://img.shields.io/pypi/l/habitipy.svg)](https://pypi.python.org/pypi/habitipy) [![Say Thanks!](https://img.shields.io/badge/Say%20Thanks-!-1EAEDB.svg)](https://saythanks.io/to/ASMfreaK)
 
 A set of scripts to interact with [Habitica](http://habitica.com):
@@ -21,7 +22,6 @@ Features
 * Pluggable and extendable architecture
 * API with built-in help
 
-
 Install
 -------
 
@@ -35,6 +35,7 @@ In both cases you should put `sudo` in front of command, if you are installing `
 `$ pip install --user habitipy`
 
 And the last, but not the least thing about installation - if you want bleeding edge development version (potentially unstable!), you should clone the repository and install `habitipy`
+
 ```
     $ git clone https://github.com/ASMfreaK/habitipy
     $ pip install -e habitipy
@@ -51,13 +52,16 @@ You can replace `url` as needed, for example if you're self-hosting a Habitica s
 Lastly, you should not change access rights of the config to anything other then `600` - this ensures that  your credentials are kept secret from other users of your system. This is enforced by `habitipy` cli command.
 
 There is also configuration options:
+
 * `show_numbers` - enables printing task numbers in commands like `habitipy dailies` or `habitipy todo`. Valid 'true' values are `True`, `y`, `1`, anything else is considered 'false' .
 * `show_style` - controls the output of a task score and it's completeness. Valid values are: `wide`, `narrow` and `ascii`. Do try each for yourself.
 
 It you have other tools using plumbum's `Application` class you want to integrate under `habitipy` cli command you can state them in `~/.config/habitipy/subcommands.json` like this:
+
 ```json
 {"subcommand_name":"package.module.SubcommandClass"}
 ```
+
 Using the above configuration, on startup `habitipy` will import `SubcommandClass` `package.module` and add a new subcommand with `subcommand_name` to `habitipy`.
 
 API
@@ -112,11 +116,13 @@ class MyCliTool(ApplicationWithApi):
         print(self.api.user.get())
 
 ```
+
 The `super().main()` line is critical - all initialization takes place here.
 
 
 I18N
 ----
+
 `habitipy` command is meant to be internationalized. It is done using Python's standard library's `gettext` module. If you want `habitipy` to be translated to your language please read [contributing guidelines](./CONTRIBUTING.md).
 
 Thanks
@@ -127,4 +133,4 @@ Many thanks to the following excellent projects:
 - [plumbum](https://plumbum.readthedocs.io/en/latest/)
 - [requests](https://github.com/kennethreitz/requests)
 
-And to the original author of [habitica]https://github.com/philadams/habitica).
+And to the original author of [habitica](https://github.com/philadams/habitica).

@@ -70,7 +70,7 @@ def load_conf(configfile, config=None):
         config['password'] = conf.get('habitipy.password', default_password)
         if config['login'] == default_login or config['password'] == default_password:
             if cli.terminal.ask(
-                    _("""Your creditentials are invalid. Do you want to enter them now?"""),
+                    _("""Your credentials are invalid. Do you want to enter them now?"""),
                     default=True):
                 msg = _("""
                 You can get your login information at
@@ -87,7 +87,7 @@ def load_conf(configfile, config=None):
                 conf.set('habitipy.login', config['login'])
                 conf.set('habitipy.password', config['password'])
                 print(dedent(_("""
-                Your creditentials are securely stored in
+                Your credentials are securely stored in
                 {configfile}
                 You can edit that file later if you need.
                 """)).format(configfile=configfile))
@@ -394,7 +394,7 @@ class Dailys(TasksPrint):
 
 @HabiticaCli.subcommand('todos')  # pylint: disable=missing-docstring
 class ToDos(TasksPrint):
-    DESCRIPTION = _("List, comlete, add or delete todo tasks")  # noqa: Q000
+    DESCRIPTION = _("List, complete, add or delete todo tasks")  # noqa: Q000
     domain = 'todos'
     def domain_format(self, todo):
         score = ScoreInfo(self.config['show_style'], todo['value'])
@@ -616,7 +616,7 @@ class DailysChange(TasksChange):  # pylint: disable=missing-docstring,abstract-m
 
 @Dailys.subcommand('done')  # pylint: disable=missing-docstring
 class DailysUp(DailysChange):
-    DESCRIPTION = _("Check a dayly with task_id")  # noqa: Q000
+    DESCRIPTION = _("Check a daily with task_id")  # noqa: Q000
     def op(self, tid):
         self.tasks[tid].score['up'].post()
 
