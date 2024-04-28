@@ -9,6 +9,7 @@ from contextlib import contextmanager
 from functools import partial
 from textwrap import dedent
 import re
+from math import ceil
 from typing import Tuple
 # import logging
 import pkg_resources
@@ -19,11 +20,17 @@ except ImportError:
     emojize = None  # type: ignore
 
 
-def progressed_bar(count, total=100, status=None, suffix=None, bar_len=10):
+def progressed_bar(
+        count,
+        total=100, status=None, suffix=None,
+        width=None, bar_len=10):
     """render a progressed.io like progress bar"""
     status = status or ''
     suffix = suffix or '%'
     assert isinstance(count, int)
+    max_width = 60 if status == '' else 90
+    width = max_width if width is None else width
+    bar_len = ceil(bar_len * width / max_width)
     count_normalized = count if count <= total else total
     filled_len = int(round(bar_len * count_normalized / float(total)))
     percents = 100.0 * count / float(total)
@@ -45,12 +52,13 @@ def progressed_bar(count, total=100, status=None, suffix=None, bar_len=10):
 _progressed_regex_str = r"""
 !
 \[[^]]*\]
-\(\s*http://progressed\.io/bar/(?P<progress>[0-9]{1,3})
+\(\s*(http://progressed\.io/bar|https://progress-bar.dev)/(?P<progress>[0-9]{1,3})/?
 (
 \?((
-(title=(?P<title>[^&) "]*))|
-(scale=(?P<scale>[^&) "]*))|
-(suffix=(?P<suffix>[^&) "]*))
+(title=(?P<title>[^&) "]*))
+|(scale=(?P<scale>[^&) "]*))
+|(suffix=(?P<suffix>[^&) "]*))
+|(width=(?P<width>[^&) "]*))
 )&*)*
 ){0,1}
 \s*("[^"]*")*\)
@@ -61,11 +69,14 @@ _progressed_regex = re.compile(_progressed_regex_str, re.VERBOSE)
 def _progressed_match(m, bar_len=10):
     progress = m['progress']
     scale = m['scale']
+    width = m['width']
     progress = int(progress) if progress is not None else 0
     scale = int(scale) if scale is not None else 100
+    width = int(width)  if width is not None else 100
     return progressed_bar(
         progress, total=scale,
         status=m['title'], suffix=m['suffix'],
+        width=width,
         bar_len=bar_len)
 
 
@@ -99,8 +110,12 @@ def prettify(string):
     Write thesis 📖 ██████████0%
     ```
     """
-    string = emojize(string, use_aliases=True) if emojize else string
-    string = progressed(string)
+    try:
+        string = emojize(string, language="alias") if emojize else string
+        string = progressed(string)
+    except Exception as error:
+        warnings.warn('Failed to prettify string: {}'.format(error))
+        pass
     return string
 
 
