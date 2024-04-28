@@ -12,7 +12,7 @@ if sys.version_info < (3, 5):
 
 setup(
     name='habitipy',
-    version='0.3.0',
+    version='0.3.1',
     author='Pavel Pletenev',
     author_email='cpp.create@gmail.com',
     url='https://github.com/ASMfreaK/habitipy',
