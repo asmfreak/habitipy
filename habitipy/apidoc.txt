@@ -618,8 +618,8 @@
 @apiName GetMembersForGroup
 @apiGroup Member
 @apiParam (Path) {UUID} groupId The group id
-@apiParam (Query) {UUID} lastId Query parameter to specify the last member returned in a previous request to this route and get the next batch of results
-@apiParam (Query) {Boolean} includeAllPublicFields Query parameter available only when fetching a party. If === `true` then all public fields for members will be returned (like when making a request for a single member)
+@apiParam (Query) {UUID} [lastId] Query parameter to specify the last member returned in a previous request to this route and get the next batch of results
+@apiParam (Query) {Boolean} [includeAllPublicFields] Query parameter available only when fetching a party. If === `true` then all public fields for members will be returned (like when making a request for a single member)
 @apiSuccess {Array} data An array of members, sorted by _id
 @apiUse ChallengeNotFound
 @apiUse GroupNotFound
@@ -1206,7 +1206,7 @@
 @apiName UserCast
 @apiGroup User
 @apiParam (Path) {String=fireball, mpheal, earth, frost, smash, defensiveStance, valorousPresence, intimidate, pickPocket, backStab, toolsOfTrade, stealth, heal, protectAura, brightness, healAll} spellId The skill to cast.
-@apiParam (Query) {UUID} targetId Query parameter, necessary if the spell is cast on a party member or task. Not used if the spell is case on the user or the user's current party.
+@apiParam (Query) {UUID} [targetId] Query parameter, necessary if the spell is cast on a party member or task. Not used if the spell is case on the user or the user's current party.
 @apiParamExample {json} Query example:
 @apiSuccess data Will return the modified targets. For party members only the necessary fields will be populated. The user is always returned.
 @apiDescription Skill Key to Name Mapping
