@@ -5,6 +5,7 @@
 # pylint: disable=invalid-name,too-few-public-methods,too-many-locals, bad-continuation
 # pylint: disable=bad-whitespace
 
+import importlib.resources
 import json
 import re
 import uuid
@@ -14,7 +15,6 @@ import textwrap
 from collections import defaultdict
 from typing import Dict, Union, List, Tuple, Iterator, Any, Optional
 
-import pkg_resources
 import requests
 from plumbum import local
 
@@ -171,7 +171,7 @@ class Habitipy:
             if not apis:
                 fn = local.path(APIDOC_LOCAL_FILE)
                 if not fn.exists():
-                    fn = pkg_resources.resource_filename('habitipy', 'apidoc.txt')
+                    fn = str(importlib.resources.files('habitipy').joinpath('apidoc.txt'))
                 fn = branch if from_github else fn
                 with warnings.catch_warnings():
                     warnings.simplefilter('error' if strict else 'ignore')

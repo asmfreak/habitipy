@@ -1,14 +1,10 @@
 """ habitipy - tools and library for Habitica restful API"""
-import sys
 from setuptools import setup
 
 INSTALL_REQUIRES = [
     'plumbum',
     'requests',
-    'setuptools',
 ]
-if sys.version_info < (3, 5):
-    INSTALL_REQUIRES.append('typing')
 
 setup(
     name='habitipy',
@@ -19,6 +15,7 @@ setup(
     license='MIT',
     description='tools and library for Habitica restful API (http://habitica.com)',
     packages=['habitipy'],
+    python_requires='>=3.9',
     install_requires=INSTALL_REQUIRES,
     package_data={
         'habitipy': [
@@ -39,8 +36,6 @@ setup(
     classifiers=[
         'License :: OSI Approved :: MIT License',
         'Development Status :: 4 - Beta',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
         'Topic :: Software Development :: Libraries :: Python Modules',
         'Topic :: Utilities',
         'Topic :: Games/Entertainment',

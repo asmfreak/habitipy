@@ -1,8 +1,8 @@
+import importlib.resources
 import unittest
 from unittest.mock import patch, MagicMock, call
 import os
 
-import pkg_resources
 import responses
 
 from habitipy import Habitipy
@@ -64,7 +64,7 @@ class TestHabitipy(unittest.TestCase):
 
     @patch('habitipy.api.download_api')
     def test_github(self, mock):
-        with open(pkg_resources.resource_filename('habitipy','apidoc.txt')) as f:
+        with importlib.resources.files('habitipy').joinpath('apidoc.txt').open() as f:
             mock.return_value = f.read()
         import builtins
         lp = local.path(APIDOC_LOCAL_FILE)
