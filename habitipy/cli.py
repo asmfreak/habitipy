@@ -13,10 +13,10 @@ import time
 from bisect import bisect
 from collections.abc import Mapping
 from collections import defaultdict
+from importlib.metadata import metadata
 from itertools import chain
 from textwrap import dedent
 from typing import List, Union, Dict, Any  # pylint: disable=unused-import
-import pkg_resources
 from plumbum import local, cli, colors
 import requests
 from .api import Habitipy
@@ -225,7 +225,7 @@ class ApplicationWithApi(ConfiguredApplication):
 
 class HabiticaCli(ConfiguredApplication):  # pylint: disable=missing-class-docstring
     DESCRIPTION = _("tools and library for Habitica restful API")  # noqa: Q000
-    VERSION = pkg_resources.get_distribution('habitipy').version
+    VERSION = metadata('habitipy')['version']
     def main(self):
         if self.nested_command:
             return

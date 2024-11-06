@@ -7,11 +7,11 @@ import os
 import gettext
 from contextlib import contextmanager
 from functools import partial
+import importlib.resources
 from textwrap import dedent
 import re
 from math import ceil
 from typing import Tuple
-import pkg_resources
 from plumbum import colors
 try:
     from emoji import emojize
@@ -170,7 +170,7 @@ def assert_secure_file(file):
 def get_translation_for(package_name: str) -> gettext.NullTranslations:
     """find and return gettext translation for package"""
     localedir = None
-    for localedir in pkg_resources.resource_filename(package_name, 'i18n'), None:
+    for localedir in str(importlib.resources.files(package_name).joinpath('i18n')), None:
         localefile = gettext.find(package_name, localedir)  # type: ignore
         if localefile:
             break
