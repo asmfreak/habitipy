@@ -366,7 +366,12 @@ class TasksPrint(ApplicationWithApi):
 @HabiticaCli.subcommand('pets')
 class Pets(ApplicationWithApi):
     DESCRIPTION = _("List pets and their status")
-    DESCRIPTION = _("Show HP, XP, GP, and more")  # noqa: Q000
+    pet_specifier = cli.SwitchAttr(
+        ['-P', '--pet'],
+        help=_("Only show information about a particular pet"))  # noqa: Q000
+    color_specifier = cli.SwitchAttr(
+        ['-C', '--color'],
+        help=_("Only show information about a particular color"))  # noqa: Q000
 
     def main(self):
         super().main()
@@ -382,8 +387,17 @@ class Pets(ApplicationWithApi):
                 pet_summaries[pettype][color] = -1
 
         for pet in pet_summaries:
-            print(f"  {pet}:")
+            if self.pet_specifier and pet != self.pet_specifier:
+                continue
+            pet_printed = False
             for color in pet_summaries[pet]:
+                if self.color_specifier and color != self.color_specifier:
+                    continue
+
+                if not pet_printed:
+                    print(f"  {pet}:")
+                    pet_printed = True
+
                 full = pet_summaries[pet][color]
                 amount_needed = int((50 - full)/5)
                 if amount_needed == 0 or full == -1:
