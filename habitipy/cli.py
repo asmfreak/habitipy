@@ -23,6 +23,7 @@ from .api import Habitipy
 from .util import assert_secure_file, secure_filestore
 from .util import get_translation_functions, get_translation_for
 from .util import prettify
+import time
 
 try:
     from json import JSONDecodeError  # type: ignore
@@ -386,11 +387,62 @@ class Pets(ApplicationWithApi):
             print(f"  {pet}:")
             for color in pet_summaries[pet]:
                 full = pet_summaries[pet][color]
-                amount_needed = int((50 - full)/5)
-                if amount_needed == 0 or full == -1:
-                    amount_needed = "None"
-                print(f"    {color:<30} food_needed={amount_needed}")
+                food_needed = int((50 - full)/5)
+                if food_needed == 0 or full == -1:
+                    food_needed = "None"
+                print(f"    {color:<30} food_needed={food_needed}")
             
+@Pets.subcommand('feed')
+class FeedPet(ApplicationWithApi):
+    pet_specifier = cli.SwitchAttr(
+        ['-P', '--pet'],
+        help=_("Only show information about a particular pet"))  # noqa: Q000
+    color_specifier = cli.SwitchAttr(
+        ['-C', '--color'],
+        help=_("Only show information about a particular color"))  # noqa: Q000
+    def main(self, *food):
+        super().main()
+        if len(food) != 1:
+            self.log.error(_("error: must specify one food to feed."))  # noqa: Q000
+            return
+
+        food = food[0]
+        user = self.api.user.get()
+        pets = user['items']['pets']
+        mounts = user['items']['mounts']
+        sleep_time = 1
+
+        for pet in user['items']['pets']:
+            (pettype, color) = pet.split("-")
+            if self.pet_specifier and pettype != self.pet_specifier:
+                continue
+            if self.color_specifier and color != self.color_specifier:
+                continue
+        
+            pet_fullness = pets[pet]
+            food_needed = int((50 - pet_fullness)/5)
+            if food_needed > 0 and pet_fullness != -1 and pet not in mounts:
+                print(f"feeding {food_needed} {food} to {color} {pettype}")
+                response = self.api.user.feed[pet][food].post(uri_params = {
+                    'amount': food_needed
+                })
+                print(f"   response:{response}")
+                time.sleep(sleep_time)
+            else:
+                print(f"NOT feeding {color} {pettype}")
+
+
+@HabiticaCli.subcommand('food')
+class Food(ApplicationWithApi):
+    DESCRIPTION = _("List inventory food and their quantities available")
+
+    def main(self):
+        super().main()
+        user = self.api.user.get()
+        food_list = user['items']['food']
+        food_list_keys = sorted(food_list, key=lambda x: food_list[x])
+        for food in food_list_keys:
+            print(f"{food:<30}: {food_list[food]}")
 
 @HabiticaCli.subcommand('pets')
 class Pets(ApplicationWithApi):
