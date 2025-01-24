@@ -364,6 +364,33 @@ class TasksPrint(ApplicationWithApi):
             res = i + prettify(self.domain_format(task))
             print(res)
 
+@HabiticaCli.subcommand('pets')
+class Pets(ApplicationWithApi):
+    DESCRIPTION = _("List pets and their status")
+    DESCRIPTION = _("Show HP, XP, GP, and more")  # noqa: Q000
+
+    def main(self):
+        super().main()
+        user = self.api.user.get()
+        print("Pets:")
+
+        # split pets into type and color
+        pet_summaries = defaultdict(dict)
+        for pet in user['items']['pets']:
+            (pettype, color) = pet.split("-")
+            pet_summaries[pettype][color] = user['items']['pets'][pet]
+            if pet in user['items']['mounts']:
+                pet_summaries[pettype][color] = -1
+
+        for pet in pet_summaries:
+            print(f"  {pet}:")
+            for color in pet_summaries[pet]:
+                full = pet_summaries[pet][color]
+                amount_needed = int((50 - full)/5)
+                if amount_needed == 0 or full == -1:
+                    amount_needed = "None"
+                print(f"    {color:<30} food_needed={amount_needed}")
+            
 
 @HabiticaCli.subcommand('pets')
 class Pets(ApplicationWithApi):
