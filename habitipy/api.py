@@ -252,6 +252,11 @@ class Habitipy:
             raise ValueError('{} is not an endpoint!'.format(uri))
         method = self._node.method
         headers = self._make_headers()
+
+        # allow a caller to force URI parameters when API document is incorrect
+        if 'uri_params'in kwargs:
+            uri += "?" + "&".join([str(x) + "=" + str(y) for x,y in kwargs['uri_params'].items()])
+
         query = {}
         if 'query' in self._node.params:
             for name, param in self._node.params['query'].items():
