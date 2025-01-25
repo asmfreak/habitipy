@@ -374,6 +374,18 @@ class Pets(ApplicationWithApi):
         ['-C', '--color'],
         help=_("Only show information about a particular color"))  # noqa: Q000
 
+    def get_full_percent(self, amount: int):
+        if amount == -1:
+            amount = 100
+        else:
+            amount *= 2
+        return str(amount)
+
+    def get_food_needed(self, pet_fullness: int, amount_per_food: int = 5):
+        if pet_fullness == -1:
+            return 0
+        return int((50 - int(pet_fullness))/amount_per_food)
+
     def main(self):
         super().main()
         user = self.api.user.get()
@@ -384,8 +396,6 @@ class Pets(ApplicationWithApi):
         for pet in user['items']['pets']:
             (pettype, color) = pet.split("-")
             pet_summaries[pettype][color] = user['items']['pets'][pet]
-            if pet in user['items']['mounts']:
-                pet_summaries[pettype][color] = -1
 
         for pet in pet_summaries:
             if self.pet_specifier and pet != self.pet_specifier:
@@ -399,20 +409,22 @@ class Pets(ApplicationWithApi):
                     print(f"  {pet}:")
                     pet_printed = True
 
-                full = pet_summaries[pet][color]
-                food_needed = int((50 - full)/5)
-                if food_needed == 0 or full == -1:
-                    food_needed = "None"
-                print(f"    {color:<30} food_needed={food_needed}")
+                pet_full_level = pet_summaries[pet][color]
+                if pet_full_level == -1:
+                    full_percentage = "No Pet"
+                    if color in user["items"]["hatchingPotions"]:
+                        if pet in user["items"]["eggs"] and user["items"]["hatchingPotions"][color] > 0:
+                            full_percentage += " (hatchable)"
+                    elif pet in user["items"]["eggs"]:
+                        full_percentage += " (hatchable)"
+                elif pet + "-" + color in user['items']['mounts']:
+                    full_percentage = "100%"
+                else:
+                    full_percentage = self.get_full_percent(pet_full_level) + "%"
+                print(f"    {color:<30} {full_percentage}")
             
 @Pets.subcommand('feed')
-class FeedPet(ApplicationWithApi):
-    pet_specifier = cli.SwitchAttr(
-        ['-P', '--pet'],
-        help=_("Only feed this specific type of pet"))  # noqa: Q000
-    color_specifier = cli.SwitchAttr(
-        ['-C', '--color'],
-        help=_("Only feed pets of this type of color"))  # noqa: Q000
+class FeedPet(Pets):
     sleep_time = cli.SwitchAttr(
         ['-S', '--sleep-time'], argtype=int, default=1,
         help=_("Time to wait between feeding each pet to avoid overloading the server"))  # noqa: Q000
@@ -420,19 +432,6 @@ class FeedPet(ApplicationWithApi):
         ['-M', '--maxmimum-food'], argtype=int, default=10,
         help=_("Maximum amount of food to feed a pet")
     )
-
-    def get_full_percent(self, amount: int):
-        if amount == -1:
-            amount = 100
-        else:
-            amount *= 2
-        return str(amount)
-
-    def get_food_needed(self, pet_fullness: int, amount_per_food: int = 5):
-        print(pet_fullness)
-        if pet_fullness == -1:
-            return 0
-        return int((50 - int(pet_fullness))/amount_per_food)
 
     def main(self, *food):
         super().main()
