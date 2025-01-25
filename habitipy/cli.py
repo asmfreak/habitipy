@@ -407,7 +407,7 @@ class ListPets(Pets):
     def main(self):
         super().main()
         user = self.api.user.get()
-        print("Pets:")
+        print(_("Pets:"))
 
         # split pets into type and color
         pet_summaries = defaultdict(dict)
@@ -429,11 +429,11 @@ class ListPets(Pets):
 
                 pet_full_level = pet_summaries[pet][color]
                 if pet_full_level == -1:
-                    full_percentage = "No Pet"
+                    full_percentage = colors.red | _("No Pet")
                     if self.is_hatchable(user, pet, color):
-                        full_percentage += " (hatchable)"
+                        full_percentage += " " + colors.green | _("(hatchable)")
                 elif pet + "-" + color in user['items']['mounts']:
-                    full_percentage = "100%"
+                    full_percentage = colors.green | "100%"
                 else:
                     full_percentage = self.get_full_percent(pet_full_level) + "%"
                 print(f"    {color:<30} {full_percentage}")
@@ -470,14 +470,14 @@ class FeedPet(Pets):
             food_needed = self.get_food_needed(pets[pet])
             if food_needed > 0 and pet not in mounts:
                 food_amount = min(food_needed, self.maximum_food)
-                print(f"feeding {food_amount} {food} to {color} {pettype}")
+                print(_(f"feeding {food_amount} {food} to {color} {pettype}"))
                 response = self.api.user.feed[pet][food].post(uri_params = {
                     'amount': food_amount,
                 })
-                print(f"   new fullness: {self.get_full_percent(response)}%")
+                print(_(f"   new fullness: {self.get_full_percent(response)}%"))
                 time.sleep(self.sleep_time)
             else:
-                print(f"NOT feeding {color} {pettype}")
+                print(_(f"NOT feeding {color} {pettype}"))
 
 @Pets.subcommand('hatch')
 class HatchPet(Pets):
@@ -504,11 +504,11 @@ class HatchPet(Pets):
                 continue
         
             if self.is_hatchable(user, pettype, color):
-                print(f"hatching {color} {pettype}")
+                print(_(f"hatching {color} {pettype}"))
                 response = self.api.user.hatch[pettype][color].post()
                 time.sleep(self.sleep_time)
             else:
-                print(f"NOT hatching {color} {pettype}")
+                print(_(f"NOT hatching {color} {pettype}"))
 
 
 @HabiticaCli.subcommand('food')
