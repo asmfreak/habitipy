@@ -412,11 +412,9 @@ class Pets(ApplicationWithApi):
                 pet_full_level = pet_summaries[pet][color]
                 if pet_full_level == -1:
                     full_percentage = "No Pet"
-                    if color in user["items"]["hatchingPotions"]:
-                        if pet in user["items"]["eggs"] and user["items"]["hatchingPotions"][color] > 0:
+                    if color in user["items"]["hatchingPotions"] and pet in user["items"]["eggs"]:
+                        if user["items"]["hatchingPotions"][color] > 0 and user["items"]["eggs"][pet] > 0:
                             full_percentage += " (hatchable)"
-                    elif pet in user["items"]["eggs"]:
-                        full_percentage += " (hatchable)"
                 elif pet + "-" + color in user['items']['mounts']:
                     full_percentage = "100%"
                 else:
