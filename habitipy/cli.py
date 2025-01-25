@@ -439,7 +439,7 @@ class FeedPet(ApplicationWithApi):
                 response = self.api.user.feed[pet][food].post(uri_params = {
                     'amount': food_needed
                 })
-                print(f"   response:{response}")
+                print(f"   new hunger (-1 = full):{response}")
                 time.sleep(sleep_time)
             else:
                 print(f"NOT feeding {color} {pettype}")
