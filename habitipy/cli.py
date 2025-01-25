@@ -381,11 +381,29 @@ class Pets(ApplicationWithApi):
             amount *= 2
         return str(amount)
 
-    def get_food_needed(self, pet_fullness: int, amount_per_food: int = 5):
+    def get_food_needed(self, pet_fullness: int, amount_per_food: int = 5) -> int:
         if pet_fullness == -1:
             return 0
         return int((50 - int(pet_fullness))/amount_per_food)
 
+    def is_hatchable(self, user: list, pet: str, color: str) -> bool:
+        "Return true when a pat of a particular type and color can be hatched."
+
+        combined = pet + "-" + color
+
+        # check if pet exists or name is wrong
+        if user["items"]["pets"].get(combined, 100) != -1:
+            return False
+
+        if color not in user["items"]["hatchingPotions"] or pet not in user["items"]["eggs"]:
+            return False
+        if user["items"]["hatchingPotions"][color] > 0 and user["items"]["eggs"][pet] > 0:
+            return True
+        return False
+        
+
+@Pets.subcommand('list')
+class ListPets(Pets):
     def main(self):
         super().main()
         user = self.api.user.get()
@@ -412,9 +430,8 @@ class Pets(ApplicationWithApi):
                 pet_full_level = pet_summaries[pet][color]
                 if pet_full_level == -1:
                     full_percentage = "No Pet"
-                    if color in user["items"]["hatchingPotions"] and pet in user["items"]["eggs"]:
-                        if user["items"]["hatchingPotions"][color] > 0 and user["items"]["eggs"][pet] > 0:
-                            full_percentage += " (hatchable)"
+                    if self.is_hatchable(user, pet, color):
+                        full_percentage += " (hatchable)"
                 elif pet + "-" + color in user['items']['mounts']:
                     full_percentage = "100%"
                 else:
@@ -442,7 +459,7 @@ class FeedPet(Pets):
         pets = user['items']['pets']
         mounts = user['items']['mounts']
 
-        for pet in user['items']['pets']:
+        for pet in pets:
             (pettype, color) = pet.split("-")
             if self.pet_specifier and pettype != self.pet_specifier:
                 continue
@@ -461,6 +478,37 @@ class FeedPet(Pets):
                 time.sleep(self.sleep_time)
             else:
                 print(f"NOT feeding {color} {pettype}")
+
+@Pets.subcommand('hatch')
+class HatchPet(Pets):
+    sleep_time = cli.SwitchAttr(
+        ['-S', '--sleep-time'], argtype=int, default=1,
+        help=_("Time to wait between feeding each pet to avoid overloading the server"))  # noqa: Q000
+    maximum_food = cli.SwitchAttr(
+        ['-M', '--maxmimum-food'], argtype=int, default=10,
+        help=_("Maximum amount of food to feed a pet")
+    )
+
+    def main(self):
+        super().main()
+        user = self.api.user.get()
+        pets = user['items']['pets']
+        mounts = user['items']['mounts']
+
+        for pet in user['items']['pets']:
+            (pettype, color) = pet.split("-")
+
+            if self.pet_specifier and pettype != self.pet_specifier:
+                continue
+            if self.color_specifier and color != self.color_specifier:
+                continue
+        
+            if self.is_hatchable(user, pettype, color):
+                print(f"hatching {color} {pettype}")
+                response = self.api.user.hatch[pettype][color].post()
+                time.sleep(self.sleep_time)
+            else:
+                print(f"NOT hatching {color} {pettype}")
 
 
 @HabiticaCli.subcommand('food')
