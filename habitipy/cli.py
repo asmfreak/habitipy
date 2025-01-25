@@ -409,6 +409,13 @@ class ListPets(Pets):
         user = self.api.user.get()
         print(_("Pets:"))
 
+        color_specifier = self.color_specifier
+        if color_specifier:
+            color_specifier = color_specifier[0].capitalize() + color_specifier[1:]
+        pet_specifier = self.pet_specifier
+        if pet_specifier:
+            pet_specifier = pet_specifier[0].capitalize() + pet_specifier[1:]
+
         # split pets into type and color
         pet_summaries = defaultdict(dict)
         for pet in user['items']['pets']:
@@ -416,11 +423,11 @@ class ListPets(Pets):
             pet_summaries[pettype][color] = user['items']['pets'][pet]
 
         for pet in pet_summaries:
-            if self.pet_specifier and pet != self.pet_specifier:
+            if pet_specifier and pet != pet_specifier:
                 continue
             pet_printed = False
             for color in pet_summaries[pet]:
-                if self.color_specifier and color != self.color_specifier:
+                if color_specifier and color != color_specifier:
                     continue
 
                 if not pet_printed:
@@ -431,11 +438,15 @@ class ListPets(Pets):
                 if pet_full_level == -1:
                     full_percentage = colors.red | _("No Pet")
                     if self.is_hatchable(user, pet, color):
-                        full_percentage += " " + colors.green | _("(hatchable)")
+                        full_percentage += " " + (colors.green | _("(hatchable)"))
                 elif pet + "-" + color in user['items']['mounts']:
                     full_percentage = colors.green | "100%"
                 else:
                     full_percentage = self.get_full_percent(pet_full_level) + "%"
+                    if full_percentage == "100%":
+                        full_percentage = colors.green | full_percentage
+                    else:
+                        full_percentage = colors.yellow | full_percentage
                 print(f"    {color:<30} {full_percentage}")
             
 @Pets.subcommand('feed')
@@ -459,11 +470,18 @@ class FeedPet(Pets):
         pets = user['items']['pets']
         mounts = user['items']['mounts']
 
+        color_specifier = self.color_specifier
+        if color_specifier:
+            color_specifier = color_specifier[0].capitalize() + color_specifier[1:]
+        pet_specifier = self.pet_specifier
+        if pet_specifier:
+            pet_specifier = pet_specifier[0].capitalize() + pet_specifier[1:]
+
         for pet in pets:
             (pettype, color) = pet.split("-")
-            if self.pet_specifier and pettype != self.pet_specifier:
+            if pet_specifier and pettype != pet_specifier:
                 continue
-            if self.color_specifier and color != self.color_specifier:
+            if color_specifier and color != color_specifier:
                 continue
         
             pet_fullness = pets[pet]
@@ -495,12 +513,19 @@ class HatchPet(Pets):
         pets = user['items']['pets']
         mounts = user['items']['mounts']
 
+        color_specifier = self.color_specifier
+        if color_specifier:
+            color_specifier = color_specifier[0].capitalize() + color_specifier[1:]
+        pet_specifier = self.pet_specifier
+        if pet_specifier:
+            pet_specifier = pet_specifier[0].capitalize() + pet_specifier[1:]
+
         for pet in user['items']['pets']:
             (pettype, color) = pet.split("-")
 
-            if self.pet_specifier and pettype != self.pet_specifier:
+            if pet_specifier and pettype != pet_specifier:
                 continue
-            if self.color_specifier and color != self.color_specifier:
+            if color_specifier and color != color_specifier:
                 continue
         
             if self.is_hatchable(user, pettype, color):
