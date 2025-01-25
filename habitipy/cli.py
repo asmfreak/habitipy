@@ -409,10 +409,31 @@ class Pets(ApplicationWithApi):
 class FeedPet(ApplicationWithApi):
     pet_specifier = cli.SwitchAttr(
         ['-P', '--pet'],
-        help=_("Only show information about a particular pet"))  # noqa: Q000
+        help=_("Only feed this specific type of pet"))  # noqa: Q000
     color_specifier = cli.SwitchAttr(
         ['-C', '--color'],
-        help=_("Only show information about a particular color"))  # noqa: Q000
+        help=_("Only feed pets of this type of color"))  # noqa: Q000
+    sleep_time = cli.SwitchAttr(
+        ['-S', '--sleep-time'], argtype=int, default=1,
+        help=_("Time to wait between feeding each pet to avoid overloading the server"))  # noqa: Q000
+    maximum_food = cli.SwitchAttr(
+        ['-M', '--maxmimum-food'], argtype=int, default=10,
+        help=_("Maximum amount of food to feed a pet")
+    )
+
+    def get_full_percent(self, amount: int):
+        if amount == -1:
+            amount = 100
+        else:
+            amount *= 2
+        return str(amount)
+
+    def get_food_needed(self, pet_fullness: int, amount_per_food: int = 5):
+        print(pet_fullness)
+        if pet_fullness == -1:
+            return 0
+        return int((50 - int(pet_fullness))/amount_per_food)
+
     def main(self, *food):
         super().main()
         if len(food) != 1:
@@ -423,7 +444,6 @@ class FeedPet(ApplicationWithApi):
         user = self.api.user.get()
         pets = user['items']['pets']
         mounts = user['items']['mounts']
-        sleep_time = 1
 
         for pet in user['items']['pets']:
             (pettype, color) = pet.split("-")
@@ -433,14 +453,15 @@ class FeedPet(ApplicationWithApi):
                 continue
         
             pet_fullness = pets[pet]
-            food_needed = int((50 - pet_fullness)/5)
-            if food_needed > 0 and pet_fullness != -1 and pet not in mounts:
-                print(f"feeding {food_needed} {food} to {color} {pettype}")
+            food_needed = self.get_food_needed(pets[pet])
+            if food_needed > 0 and pet not in mounts:
+                food_amount = min(food_needed, self.maximum_food)
+                print(f"feeding {food_amount} {food} to {color} {pettype}")
                 response = self.api.user.feed[pet][food].post(uri_params = {
-                    'amount': food_needed
+                    'amount': food_amount,
                 })
-                print(f"   new hunger (-1 = full):{response}")
-                time.sleep(sleep_time)
+                print(f"   new fullness: {self.get_full_percent(response)}%")
+                time.sleep(self.sleep_time)
             else:
                 print(f"NOT feeding {color} {pettype}")
 
