@@ -23,7 +23,6 @@ from .api import Habitipy
 from .util import assert_secure_file, secure_filestore
 from .util import get_translation_functions, get_translation_for
 from .util import prettify
-import time
 
 try:
     from json import JSONDecodeError  # type: ignore
@@ -219,7 +218,7 @@ class ApplicationWithApi(ConfiguredApplication):
     """Application with configured Habitica API"""
     api = None  # type: Habitipy
 
-    def main(self):
+    def main(self, *_args):
         super().main()
         self.api = Habitipy(self.config)
 
@@ -365,84 +364,6 @@ class TasksPrint(ApplicationWithApi):
             res = i + prettify(self.domain_format(task))
             print(res)
 
-@HabiticaCli.subcommand('pets')
-class Pets(ApplicationWithApi):
-    DESCRIPTION = _("List pets and their status")
-    DESCRIPTION = _("Show HP, XP, GP, and more")  # noqa: Q000
-
-    def main(self):
-        super().main()
-        user = self.api.user.get()
-        print("Pets:")
-
-        # split pets into type and color
-        pet_summaries = defaultdict(dict)
-        for pet in user['items']['pets']:
-            (pettype, color) = pet.split("-")
-            pet_summaries[pettype][color] = user['items']['pets'][pet]
-            if pet in user['items']['mounts']:
-                pet_summaries[pettype][color] = -1
-
-        for pet in pet_summaries:
-            print(f"  {pet}:")
-            for color in pet_summaries[pet]:
-                full = pet_summaries[pet][color]
-                food_needed = int((50 - full)/5)
-                if food_needed == 0 or full == -1:
-                    food_needed = "None"
-                print(f"    {color:<30} food_needed={food_needed}")
-            
-@Pets.subcommand('feed')
-class FeedPet(ApplicationWithApi):
-    pet_specifier = cli.SwitchAttr(
-        ['-P', '--pet'],
-        help=_("Only show information about a particular pet"))  # noqa: Q000
-    color_specifier = cli.SwitchAttr(
-        ['-C', '--color'],
-        help=_("Only show information about a particular color"))  # noqa: Q000
-    def main(self, *food):
-        super().main()
-        if len(food) != 1:
-            self.log.error(_("error: must specify one food to feed."))  # noqa: Q000
-            return
-
-        food = food[0]
-        user = self.api.user.get()
-        pets = user['items']['pets']
-        mounts = user['items']['mounts']
-        sleep_time = 1
-
-        for pet in user['items']['pets']:
-            (pettype, color) = pet.split("-")
-            if self.pet_specifier and pettype != self.pet_specifier:
-                continue
-            if self.color_specifier and color != self.color_specifier:
-                continue
-        
-            pet_fullness = pets[pet]
-            food_needed = int((50 - pet_fullness)/5)
-            if food_needed > 0 and pet_fullness != -1 and pet not in mounts:
-                print(f"feeding {food_needed} {food} to {color} {pettype}")
-                response = self.api.user.feed[pet][food].post(uri_params = {
-                    'amount': food_needed
-                })
-                print(f"   response:{response}")
-                time.sleep(sleep_time)
-            else:
-                print(f"NOT feeding {color} {pettype}")
-
-
-@HabiticaCli.subcommand('food')
-class Food(ApplicationWithApi):
-    DESCRIPTION = _("List inventory food and their quantities available")
-
-    def main(self):
-        super().main()
-        user = self.api.user.get()
-        food_list = user['items']['food']
-        food_list_keys = sorted(food_list, key=lambda x: food_list[x])
-        for food in food_list_keys:
-            print(f"{food:<30}: {food_list[food]}")
 
 @HabiticaCli.subcommand('pets')
 class Pets(ApplicationWithApi):
@@ -635,6 +556,57 @@ class Food(ApplicationWithApi):
             print(f'{food:<30}: {food_list[food]}')
 
 
+@HabiticaCli.subcommand('cast')
+class Cast(ApplicationWithApi):
+    """Casts spells"""
+    DESCRIPTION=_("Cast a spell")
+
+    cast_count = cli.SwitchAttr(
+        ['-C', '--cast-times'], argtype=int, default=1,
+        help=_("Number of times to cast the spell.")
+    )  # noqa: Q000
+    sleep_time = cli.SwitchAttr(
+        ['-S', '--sleep-time'], argtype=int, default=1,
+        help=_("Time to wait between each cast to avoid overloading the server"))  # noqa: Q000
+
+    def main(self, *_arguments):
+        super().main()
+
+class CastDamage(Cast):
+    """Casts damaging spells"""
+    def main(self, *arguments):
+        super().main(*arguments)
+        if len(arguments) != 3 or arguments[0] not in ["todos", "habits", "dailies"]:
+            self.log.error(_("usage: cast SPELL task (todos|habits|dailies) number"))
+            return
+
+        (spell, domain, number) = arguments
+        number = int(number)
+        tasks = self.api.tasks.user.get(type=domain)
+
+        if number > len(tasks):
+            self.log.error(_("selection number is too high"))
+            return
+
+        for _i in range(self.cast_count):
+            print(_(f"casting {spell}..."))
+            self.api.user["class"].cast[spell].post(uri_params = {
+                'targetId': tasks[number-1]['id'],
+            })
+            time.sleep(self.sleep_time)
+
+@Cast.subcommand('fireball')
+class FireBall(CastDamage):
+    """Cast fireball"""
+    def main(self, *args, **kwargs):
+        super().main('fireball', *args, **kwargs)
+
+@Cast.subcommand('smash')
+class Smash(CastDamage):
+    """Cast smash"""
+    def main(self, *args, **kwargs):
+        super().main('smash', *args, **kwargs)
+
 @HabiticaCli.subcommand('habits')
 class Habits(TasksPrint):  # pylint: disable=missing-class-docstring
     DESCRIPTION = _("List, up and down habit tasks")  # noqa: Q000
@@ -642,7 +614,6 @@ class Habits(TasksPrint):  # pylint: disable=missing-class-docstring
     def domain_format(self, habit):  # pylint: disable=arguments-renamed
         score = ScoreInfo(self.config['show_style'], habit['value'])
         return _("{0} {text}").format(score, **habit)  # noqa: Q000
-
 
 @HabiticaCli.subcommand('dailies')
 class Dailys(TasksPrint):  # pylint: disable=missing-class-docstring
