@@ -572,12 +572,12 @@ class Cast(ApplicationWithApi):
     def main(self, *_arguments):
         super().main()
 
-class CastDamage(Cast):
-    """Casts damaging spells"""
-    def main(self, *arguments):
-        super().main(*arguments)
-        if len(arguments) != 3 or arguments[0] not in ["todos", "habits", "dailies"]:
-            self.log.error(_("usage: cast SPELL task (todos|habits|dailies) number"))
+class CastOnTask(Cast):
+    """Casts spells on a task"""
+    def main(self, spell: str, *arguments):
+        super().main()
+        if len(arguments) != 3 or arguments[1] not in ["todos", "habits", "dailies"]:
+            self.log.error(_("usage: cast task (todos|habits|dailies) number"))
             return
 
         (spell, domain, number) = arguments
@@ -596,14 +596,30 @@ class CastDamage(Cast):
             time.sleep(self.sleep_time)
 
 @Cast.subcommand('fireball')
-class FireBall(CastDamage):
+class FireBall(CastOnTask):
     """Cast fireball"""
+    DESCRIPTION=_("Cast Burst of Flames on a task")
     def main(self, *args, **kwargs):
         super().main('fireball', *args, **kwargs)
 
 @Cast.subcommand('smash')
-class Smash(CastDamage):
+class Smash(CastOnTask):
     """Cast smash"""
+    DESCRIPTION=_("Cast Brutal Smash on a task")
+    def main(self, *args, **kwargs):
+        super().main('smash', *args, **kwargs)
+
+@Cast.subcommand('backstab')
+class Backstab(CastOnTask):
+    "Cast backstab"
+    DESCRIPTION=_("Cast Backstab on a task")
+    def main(self, *args, **kwargs):
+        super().main('smash', *args, **kwargs)
+
+@Cast.subcommand('pickpocket')
+class PickPocket(CastOnTask):
+    "Cast pickpocket"
+    DESCRIPTION=_("Cast Pickpocket on a task")
     def main(self, *args, **kwargs):
         super().main('smash', *args, **kwargs)
 
