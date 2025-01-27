@@ -5,7 +5,7 @@ mypy
 types-requests
 types-setuptools
 nose2
-coverage
+coverage==7.6.10
 hypothesis
 responses
 pylint
