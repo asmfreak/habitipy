@@ -2,7 +2,7 @@
 flake8
 flake8-quotes
 mypy
-types-requests
+types-requests==2.32.0.20241016
 types-setuptools
 nose2
 coverage
