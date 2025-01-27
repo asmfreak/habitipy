@@ -203,7 +203,7 @@ class Content(Mapping):
     def _lang_from_locale():
         import locale  # pylint: disable=import-outside-toplevel
         try:
-            loc = locale.getdefaultlocale()[0]
+            loc = locale.getlocale()[0]
             if loc:
                 # handle something like 'ru_RU' not available - only 'ru'
                 yield loc

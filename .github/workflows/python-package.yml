@@ -40,4 +40,4 @@ jobs:
       - name: Tests
         run: |
           pip install -e . &&
-          nosetests --rednose -v --with-coverage --cover-package=habitipy
+          nose2 -v --with-coverage --coverage=habitipy

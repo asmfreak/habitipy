@@ -4,8 +4,7 @@ flake8-quotes
 mypy
 types-requests
 types-setuptools
-nose
-rednose
+nose2
 coverage
 hypothesis
 responses
