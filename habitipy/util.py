@@ -2,7 +2,7 @@
     habitipy - tools and library for Habitica restful API
     utility functions
 """
-# pylint: disable=invalid-name,bad-whitespace
+# pylint: disable=invalid-name
 import os
 import gettext
 from contextlib import contextmanager
@@ -11,7 +11,6 @@ from textwrap import dedent
 import re
 from math import ceil
 from typing import Tuple
-# import logging
 import pkg_resources
 from plumbum import colors
 try:
@@ -20,8 +19,10 @@ except ImportError:
     emojize = None  # type: ignore
 
 
+# pylint: disable=too-many-arguments
 def progressed_bar(
         count,
+        *,
         total=100, status=None, suffix=None,
         width=None, bar_len=10):
     """render a progressed.io like progress bar"""
@@ -111,11 +112,11 @@ def prettify(string):
     ```
     """
     try:
-        string = emojize(string, language="alias") if emojize else string
+        string = emojize(string, language='alias') if emojize else string
         string = progressed(string)
-    except Exception as error:
+    except Exception as error:  # pylint: disable=broad-exception-caught
+        import warnings  # pylint: disable=import-outside-toplevel
         warnings.warn('Failed to prettify string: {}'.format(error))
-        pass
     return string
 
 

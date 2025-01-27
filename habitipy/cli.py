@@ -181,11 +181,11 @@ class Content(Mapping):
                     Content._lang_from_locale())
                 if lang in server_lang.possible_values
             ), {}))  # default
-            with open(CONTENT_JSON, 'w') as f:
+            with open(CONTENT_JSON, 'w', encoding='utf-8') as f:
                 json.dump(Content._cache, f)
             return Content._cache
         try:
-            with open(CONTENT_JSON) as f:
+            with open(CONTENT_JSON, encoding='utf-8') as f:
                 Content._cache = json.load(f)
             return Content._cache
         except JSONDecodeError:
@@ -201,9 +201,9 @@ class Content(Mapping):
 
     @staticmethod
     def _lang_from_locale():
-        import locale
+        import locale  # pylint: disable=import-outside-toplevel
         try:
-            loc = locale.getdefaultlocale()[0]
+            loc = locale.getlocale()[0]
             if loc:
                 # handle something like 'ru_RU' not available - only 'ru'
                 yield loc
@@ -221,7 +221,7 @@ class ApplicationWithApi(ConfiguredApplication):
         self.api = Habitipy(self.config)
 
 
-class HabiticaCli(ConfiguredApplication):  # pylint: disable=missing-docstring
+class HabiticaCli(ConfiguredApplication):  # pylint: disable=missing-class-docstring
     DESCRIPTION = _("tools and library for Habitica restful API")  # noqa: Q000
     VERSION = pkg_resources.get_distribution('habitipy').version
     def main(self):
@@ -231,8 +231,8 @@ class HabiticaCli(ConfiguredApplication):  # pylint: disable=missing-docstring
         self.log.error(_("No subcommand given, exiting"))  # noqa: Q000
 
 
-@HabiticaCli.subcommand('status')  # pylint: disable=missing-docstring
-class Status(ApplicationWithApi):
+@HabiticaCli.subcommand('status')
+class Status(ApplicationWithApi):  # pylint: disable=missing-class-docstring
     DESCRIPTION = _("Show HP, XP, GP, and more")  # noqa: Q000
 
     def main(self):
@@ -363,20 +363,20 @@ class TasksPrint(ApplicationWithApi):
             print(res)
 
 
-@HabiticaCli.subcommand('habits')  # pylint: disable=missing-docstring
-class Habits(TasksPrint):
+@HabiticaCli.subcommand('habits')
+class Habits(TasksPrint):  # pylint: disable=missing-class-docstring
     DESCRIPTION = _("List, up and down habit tasks")  # noqa: Q000
     domain = 'habits'
-    def domain_format(self, habit):
+    def domain_format(self, habit):  # pylint: disable=arguments-renamed
         score = ScoreInfo(self.config['show_style'], habit['value'])
         return _("{0} {text}").format(score, **habit)  # noqa: Q000
 
 
-@HabiticaCli.subcommand('dailies')  # pylint: disable=missing-docstring
-class Dailys(TasksPrint):
+@HabiticaCli.subcommand('dailies')
+class Dailys(TasksPrint):  # pylint: disable=missing-class-docstring
     DESCRIPTION = _("List, check, uncheck daily tasks")  # noqa: Q000
     domain = 'dailys'
-    def domain_format(self, daily):
+    def domain_format(self, daily):  # pylint: disable=arguments-renamed
         score = ScoreInfo(self.config['show_style'], daily['value'])
         check = CHECK if daily['completed'] else UNCHECK
         check = check[self.config['show_style']]
@@ -392,11 +392,11 @@ class Dailys(TasksPrint):
         return res
 
 
-@HabiticaCli.subcommand('todos')  # pylint: disable=missing-docstring
-class ToDos(TasksPrint):
+@HabiticaCli.subcommand('todos')
+class ToDos(TasksPrint):  # pylint: disable=missing-class-docstring
     DESCRIPTION = _("List, comlete, add or delete todo tasks")  # noqa: Q000
     domain = 'todos'
-    def domain_format(self, todo):
+    def domain_format(self, todo):  # pylint: disable=arguments-renamed
         score = ScoreInfo(self.config['show_style'], todo['value'])
         check = CHECK if todo['completed'] else UNCHECK
         check = check[self.config['show_style']]
@@ -420,8 +420,8 @@ def get_additional_rewards(api):
     return tasks
 
 
-@HabiticaCli.subcommand('rewards')  # pylint: disable=missing-docstring
-class Rewards(TasksPrint):
+@HabiticaCli.subcommand('rewards')
+class Rewards(TasksPrint):  # pylint: disable=missing-class-docstring
     DESCRIPTION = _("List, buy and add rewards")  # noqa: Q000
     domain = 'rewards'
 
@@ -432,7 +432,7 @@ class Rewards(TasksPrint):
         self.more_tasks = get_additional_rewards(self.api)
         super().main()
 
-    def domain_format(self, reward):
+    def domain_format(self, reward):  # pylint: disable=arguments-renamed
         score = colors.yellow | _("{value} gp").format(**reward)  # noqa: Q000
         return _("{} {text}").format(score, **reward)  # noqa: Q000
 
@@ -493,12 +493,12 @@ class TasksChange(ApplicationWithApi):
                     changing_tasks_ids.append(task_uuids[tid])
                     self.changing_tasks[task_uuids[tid]] = tasks[tid]
                     continue
-            elif isinstance(tid, str):
+            if isinstance(tid, str):
                 if tid in task_uuids:
                     changing_tasks_ids.append(tid)
                     self.changing_tasks[tid] = tasks[task_uuids.index(tid)]
                     continue
-                elif tid in aliases:
+                if tid in aliases:
                     t_id = aliases[tid]['id']
                     changing_tasks_ids.append(t_id)
                     self.changing_tasks[t_id] = aliases[tid]
@@ -517,7 +517,7 @@ class TasksChange(ApplicationWithApi):
             print(prettify(res))
         self.domain_print()
 
-    def validate(self, task):  # pylint: disable=no-self-use,unused-argument
+    def validate(self, task):  # pylint: disable=unused-argument
         """check if task is valid for the operation"""
         return True
 
@@ -534,15 +534,15 @@ class TasksChange(ApplicationWithApi):
         raise NotImplementedError
 
 
-class HabitsChange(TasksChange):  # pylint: disable=missing-docstring,abstract-method
+class HabitsChange(TasksChange):  # pylint: disable=missing-class-docstring,abstract-method
     domain = 'habits'
     ids_can_overlap = True
     def domain_print(self):
         Habits.invoke(config_filename=self.config_filename)
 
 
-@Habits.subcommand('add')  # pylint: disable=missing-docstring
-class HabitsAdd(ApplicationWithApi):
+@Habits.subcommand('add')
+class HabitsAdd(ApplicationWithApi):  # pylint: disable=missing-class-docstring
     DESCRIPTION = _("Add a habit <habit>")  # noqa: Q000
     priority = cli.SwitchAttr(
         ['-p', '--priority'],
@@ -562,7 +562,7 @@ class HabitsAdd(ApplicationWithApi):
         self.api.tasks.user.post(
             type='habit', text=habit_str,
             priority=self.priority, up=(self.direction != 'negative'),
-            down=(self.direction != 'positive'))
+            down=self.direction != 'positive')
 
         res = _("Added habit '{}' with priority {} and direction {}").format(  # noqa: Q000
             habit_str, self.priority, self.direction)
@@ -571,8 +571,8 @@ class HabitsAdd(ApplicationWithApi):
         return None
 
 
-@Habits.subcommand('delete')  # pylint: disable=missing-docstring
-class HabitsDelete(HabitsChange):
+@Habits.subcommand('delete')
+class HabitsDelete(HabitsChange):  # pylint: disable=missing-class-docstring
     DESCRIPTION = _("Delete a habit with task_id")  # noqa: Q000
     def op(self, tid):
         self.tasks[tid].delete()
@@ -581,8 +581,8 @@ class HabitsDelete(HabitsChange):
         return _("Deleted habit {text}").format(**self.changing_tasks[tid])  # noqa: Q000
 
 
-@Habits.subcommand('up')  # pylint: disable=missing-docstring
-class HabitsUp(HabitsChange):
+@Habits.subcommand('up')
+class HabitsUp(HabitsChange):  # pylint: disable=missing-class-docstring
     DESCRIPTION = _("Up (+) a habit with task_id")  # noqa: Q000
     def op(self, tid):
         self.tasks[tid].score['up'].post()
@@ -594,8 +594,8 @@ class HabitsUp(HabitsChange):
         return _("Incremented habit {text}").format(**self.changing_tasks[tid])  # noqa: Q000
 
 
-@Habits.subcommand('down')  # pylint: disable=missing-docstring
-class HabitsDown(HabitsChange):
+@Habits.subcommand('down')
+class HabitsDown(HabitsChange):  # pylint: disable=missing-class-docstring
     DESCRIPTION = _("Down (-) a habit with task_id")  # noqa: Q000
     def op(self, tid):
         self.tasks[tid].score['down'].post()
@@ -608,14 +608,14 @@ class HabitsDown(HabitsChange):
         return _("Decremented habit {text}").format(**self.changing_tasks[tid])  # noqa: Q000
 
 
-class DailysChange(TasksChange):  # pylint: disable=missing-docstring,abstract-method
+class DailysChange(TasksChange):  # pylint: disable=missing-class-docstring,abstract-method
     domain = 'dailys'
     def domain_print(self):
         Dailys.invoke(config_filename=self.config_filename)
 
 
-@Dailys.subcommand('done')  # pylint: disable=missing-docstring
-class DailysUp(DailysChange):
+@Dailys.subcommand('done')
+class DailysUp(DailysChange):  # pylint: disable=missing-class-docstring
     DESCRIPTION = _("Check a dayly with task_id")  # noqa: Q000
     def op(self, tid):
         self.tasks[tid].score['up'].post()
@@ -624,8 +624,8 @@ class DailysUp(DailysChange):
         return _("Completed daily {text}").format(**self.changing_tasks[tid])  # noqa: Q000
 
 
-@Dailys.subcommand('undo')  # pylint: disable=missing-docstring
-class DailyDown(DailysChange):
+@Dailys.subcommand('undo')
+class DailyDown(DailysChange):  # pylint: disable=missing-class-docstring
     DESCRIPTION = _("Uncheck a daily with task_id")  # noqa: Q000
     def op(self, tid):
         self.tasks[tid].score['down'].post()
@@ -634,14 +634,14 @@ class DailyDown(DailysChange):
         return _("Unchecked daily {text}").format(**self.changing_tasks[tid])  # noqa: Q000
 
 
-class TodosChange(TasksChange):  # pylint: disable=missing-docstring,abstract-method
+class TodosChange(TasksChange):  # pylint: disable=missing-class-docstring,abstract-method
     domain = 'todos'
     def domain_print(self):
         ToDos.invoke(config_filename=self.config_filename)
 
 
-@ToDos.subcommand('done')  # pylint: disable=missing-docstring
-class TodosUp(TodosChange):
+@ToDos.subcommand('done')
+class TodosUp(TodosChange):  # pylint: disable=missing-class-docstring
     DESCRIPTION = _("Check a todo with task_id")  # noqa: Q000
     def op(self, tid):
         self.tasks[tid].score['up'].post()
@@ -650,8 +650,8 @@ class TodosUp(TodosChange):
         return _("Completed todo {text}").format(**self.changing_tasks[tid])  # noqa: Q000
 
 
-@ToDos.subcommand('delete')  # pylint: disable=missing-docstring
-class TodosDelete(TodosChange):
+@ToDos.subcommand('delete')
+class TodosDelete(TodosChange):  # pylint: disable=missing-class-docstring
     DESCRIPTION = _("Delete a todo with task_id")  # noqa: Q000
     def op(self, tid):
         self.tasks[tid].delete()
@@ -660,8 +660,8 @@ class TodosDelete(TodosChange):
         return _("Deleted todo {text}").format(**self.changing_tasks[tid])  # noqa: Q000
 
 
-@ToDos.subcommand('add')  # pylint: disable=missing-docstring
-class TodosAdd(ApplicationWithApi):
+@ToDos.subcommand('add')
+class TodosAdd(ApplicationWithApi):  # pylint: disable=missing-class-docstring
     DESCRIPTION = _("Add a todo <todo>")  # noqa: Q000
     priority = cli.SwitchAttr(
         ['-p', '--priority'],
@@ -684,8 +684,8 @@ class TodosAdd(ApplicationWithApi):
 RewardId = TaskId
 
 
-@Rewards.subcommand('buy')  # pylint: disable=missing-docstring
-class RewardsBuy(TasksChange):
+@Rewards.subcommand('buy')
+class RewardsBuy(TasksChange):  # pylint: disable=missing-class-docstring
     DESCRIPTION = _("Buy a reward with reward_id")  # noqa: Q000
     domain = 'rewards'
     ids_can_overlap = True
@@ -711,8 +711,8 @@ class RewardsBuy(TasksChange):
         Rewards.invoke(config_filename=self.config_filename)
 
 
-@Rewards.subcommand('add')  # pylint: disable=missing-docstring
-class RewardsAdd(ApplicationWithApi):
+@Rewards.subcommand('add')
+class RewardsAdd(ApplicationWithApi):  # pylint: disable=missing-class-docstring
     DESCRIPTION = _("Add a reward <reward>")  # noqa: Q000
     cost = cli.SwitchAttr(
         ['--cost'], default='10',
@@ -731,20 +731,20 @@ class RewardsAdd(ApplicationWithApi):
         return 0
 
 
-@HabiticaCli.subcommand('home')  # pylint: disable=missing-docstring
-class Home(ConfiguredApplication):
+@HabiticaCli.subcommand('home')
+class Home(ConfiguredApplication):  # pylint: disable=missing-class-docstring
     DESCRIPTION = _("Open habitica site in browser")  # noqa: Q000
     def main(self):
         super().main()
-        from webbrowser import open_new_tab
+        from webbrowser import open_new_tab  # pylint: disable=import-outside-toplevel
         HABITICA_TASKS_PAGE = '/#/tasks'
         home_url = '{}{}'.format(self.config['url'], HABITICA_TASKS_PAGE)
         print(_("Opening {}").format(home_url))  # noqa: Q000
         open_new_tab(home_url)
 
 
-@HabiticaCli.subcommand('server')  # pylint: disable=missing-docstring
-class Server(ApplicationWithApi):
+@HabiticaCli.subcommand('server')
+class Server(ApplicationWithApi):  # pylint: disable=missing-class-docstring
     DESCRIPTION = _("Check habitica server availability")  # noqa: Q000
     def main(self):
         super().main()
@@ -760,8 +760,8 @@ class Server(ApplicationWithApi):
         return -1
 
 
-@HabiticaCli.subcommand('spells')  # pylint: disable=missing-docstring
-class Spells(ApplicationWithApi):
+@HabiticaCli.subcommand('spells')
+class Spells(ApplicationWithApi):  # pylint: disable=missing-class-docstring
     DESCRIPTION = _("Prints all available spells")  # noqa: Q000
     def main(self):
         if self.nested_command:
@@ -786,7 +786,7 @@ class Spells(ApplicationWithApi):
 subcommands_file = local.path(SUBCOMMANDS_JSON)
 if subcommands_file.exists():
     try:
-        with open(subcommands_file) as subcommands_file_obj:
+        with open(subcommands_file, encoding='utf-8') as subcommands_file_obj:
             subcommands = json.load(subcommands_file_obj)
         del subcommands_file_obj
         for name, module in subcommands.items():

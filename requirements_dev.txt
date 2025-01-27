@@ -1,0 +1,11 @@
+-r requirements.txt
+flake8
+flake8-quotes
+mypy
+types-requests
+types-setuptools
+nose2
+coverage
+hypothesis
+responses
+pylint

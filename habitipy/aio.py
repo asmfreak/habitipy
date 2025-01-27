@@ -52,7 +52,7 @@ class HabitipyAsync(Habitipy):
             **kwargs) -> Union[Dict, List]:
         return self._request(*self._prepare_request(backend=session, **kwargs))
 
-    async def _request(self, request, request_args, request_kwargs):
+    async def _request(self, request, request_args, request_kwargs):  # pylint: disable=invalid-overridden-method
         async with request(*request_args, **request_kwargs) as resp:
             if resp.status != self._node.retcode:
                 resp.raise_for_status()
