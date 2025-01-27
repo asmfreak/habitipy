@@ -1,3 +1,3 @@
 setuptools
 requests
-plumbum
+plumbum==1.9.0
