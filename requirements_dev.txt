@@ -8,4 +8,4 @@ nose2
 coverage
 hypothesis
 responses
-pylint
+pylint==3.3.3
