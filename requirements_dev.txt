@@ -4,7 +4,7 @@ flake8-quotes
 mypy
 types-requests
 types-setuptools
-nose2
+nose2==0.15.1
 coverage
 hypothesis
 responses
