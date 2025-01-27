@@ -111,7 +111,7 @@ def prettify(string):
     ```
     """
     try:
-        string = emojize(string, language="alias") if emojize else string
+        string = emojize(string, language='alias') if emojize else string
         string = progressed(string)
     except Exception as error:
         warnings.warn('Failed to prettify string: {}'.format(error))
