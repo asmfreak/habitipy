@@ -6,6 +6,6 @@ types-requests
 types-setuptools
 nose2
 coverage
-hypothesis
+hypothesis==6.124.7
 responses
 pylint
