@@ -2,8 +2,7 @@
     habitipy - tools and library for Habitica restful API
     RESTful api abstraction module using requests
 """
-# pylint: disable=invalid-name,too-few-public-methods,too-many-locals, bad-continuation
-# pylint: disable=bad-whitespace
+# pylint: disable=invalid-name,too-few-public-methods,too-many-locals
 
 import json
 import re
@@ -161,6 +160,7 @@ class Habitipy:
 
     ```
     """
+    # pylint: disable=too-many-arguments
     def __init__(self, conf: Dict[str, str], *,
                  apis=None, current: Optional[List[str]] = None,
                  from_github=False, branch=None,
@@ -261,7 +261,7 @@ class Habitipy:
                     raise TypeError('Mandatory param {} is missing'.format(name))
         request = getattr(backend, method)
         request_args = (uri,)
-        request_kwargs = dict(headers=headers, params=query)
+        request_kwargs = {'headers': headers, 'params': query}
         if method in ['put', 'post', 'delete']:
             request_kwargs['data'] = json.dumps(kwargs)
         return request, request_args, request_kwargs
@@ -285,11 +285,14 @@ class Habitipy:
         return self._request(*self._prepare_request(**kwargs))
 
 
-def download_api(branch=None) -> str:
+def download_api(branch=None, timeout=None) -> str:
     """download API documentation from _branch_ of Habitica\'s repo on Github"""
     habitica_github_api = 'https://api.github.com/repos/HabitRPG/habitica'
     if not branch:
-        branch = requests.get(habitica_github_api + '/releases/latest').json()['tag_name']
+        branch = requests.get(
+            habitica_github_api + '/releases/latest',
+            timeout=timeout
+        ).json()['tag_name']
     curl = local['curl']['-sL', habitica_github_api + '/tarball/{}'.format(branch)]
     tar = local['tar'][
         'axzf', '-', '--wildcards', '*/website/server/controllers/api-v3/*', '--to-stdout']
@@ -303,7 +306,7 @@ def save_apidoc(text: str) -> None:
     apidoc_local = local.path(APIDOC_LOCAL_FILE)
     if not apidoc_local.dirname.exists():
         apidoc_local.dirname.mkdir()
-    with open(apidoc_local, 'w') as f:
+    with open(apidoc_local, 'w', encoding='utf-8') as f:
         f.write(text)
 
 
@@ -323,7 +326,7 @@ def parse_apidoc(
         if save_github_version:
             save_apidoc(text)
     else:
-        with open(file_or_branch) as f:
+        with open(file_or_branch, encoding='utf-8') as f:
             text = f.read()
     for line in text.split('\n'):
         line = line.replace('\n', '')

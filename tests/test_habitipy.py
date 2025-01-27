@@ -73,12 +73,12 @@ class TestHabitipy(unittest.TestCase):
         self.assertTrue(lp.exists())
         with patch('builtins.open', MagicMock(wraps=builtins.open)) as mock:
             Habitipy(None)
-            mock.assert_called_with(lp)
+            mock.assert_called_with(lp, encoding='utf-8')
         os.remove(lp)
         Habitipy(None, from_github=True)
         self.assertTrue(mock.called)
         self.assertTrue(lp.exists())
         with patch('builtins.open', MagicMock(wraps=builtins.open)) as mock:
             Habitipy(None)
-            mock.assert_called_with(lp)
+            mock.assert_called_with(lp, encoding='utf-8')
         os.remove(lp)

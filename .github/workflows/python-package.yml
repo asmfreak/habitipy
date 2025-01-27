@@ -28,12 +28,16 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install flake8 flake8-quotes mypy nose rednose coverage hypothesis responses pylint
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-      - name: Lints and tests
+          if [ -f requirements_dev.txt ]; then pip install -r requirements_dev.txt; fi
+      - name: Lints
         run: |
           # stop the build if there are Python syntax errors or undefined names
-          flake8 --count --select=E9,F63,F7,F82 --show-source --statistics setup.py habitipy
+          flake8 --count --select=E9,F63,F7,F82 --show-source --statistics setup.py habitipy &&
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-          flake8 --count --exit-zero --max-complexity=15 --max-line-length=127 --statistics setup.py habitipy
-          pylint --rcfile=pylintrc --output-format=colorized --reports=no setup.py habitipy
+          flake8 --count --exit-zero --max-complexity=15 --max-line-length=127 --statistics setup.py habitipy  &&
+          pylint --rcfile=pylintrc --output-format=colorized --reports=no setup.py habitipy  &&
           mypy --ignore-missing-imports habitipy
+      - name: Tests
+        run: |
+          pip install -e . &&
           nosetests --rednose -v --with-coverage --cover-package=habitipy
