@@ -1,6 +1,6 @@
 -r requirements.txt
 flake8
-flake8-quotes
+flake8-quotes==3.4.0
 mypy
 types-requests
 types-setuptools
