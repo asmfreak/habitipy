@@ -3,7 +3,7 @@ flake8
 flake8-quotes
 mypy
 types-requests
-types-setuptools
+types-setuptools==75.8.0.20250110
 nose2
 coverage
 hypothesis
