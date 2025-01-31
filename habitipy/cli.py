@@ -408,7 +408,7 @@ class Pets(ApplicationWithApi):
 @Pets.subcommand('list')
 class ListPets(Pets):
     """Lists all pets from the inventory."""
-    def main(self):  # pylint: disable=too-many-braches
+    def main(self):  # pylint: disable=too-many-branches
         super().main()
         user = self.api.user.get()
         print(_('Pets:'))
