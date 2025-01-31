@@ -530,7 +530,7 @@ class HatchPet(Pets):
 
             if self.is_hatchable(user, pettype, color):
                 print(_(f'hatching {color} {pettype}'))
-                response = self.api.user.hatch[pettype][color].post()
+                self.api.user.hatch[pettype][color].post()
                 time.sleep(self.sleep_time)
             else:
                 print(_(f'NOT hatching {color} {pettype}'))
