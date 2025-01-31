@@ -390,7 +390,7 @@ class Pets(ApplicationWithApi):
             return 0
         return int((50 - int(pet_fullness)) / amount_per_food)
 
-    def is_hatchable(self, user: list, pet: str, color: str) -> bool:
+    def is_hatchable(self, user: dict, pet: str, color: str) -> bool:
         """Return true when a pat of a particular type and color can be hatched."""
         combined = pet + '-' + color
 
