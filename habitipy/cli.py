@@ -9,6 +9,7 @@ import logging
 import os
 import json
 import uuid
+import time
 from bisect import bisect
 from collections.abc import Mapping
 from collections import defaultdict
@@ -22,7 +23,6 @@ from .api import Habitipy
 from .util import assert_secure_file, secure_filestore
 from .util import get_translation_functions, get_translation_for
 from .util import prettify
-import time
 
 try:
     from json import JSONDecodeError  # type: ignore
@@ -367,6 +367,7 @@ class TasksPrint(ApplicationWithApi):
 
 @HabiticaCli.subcommand('pets')
 class Pets(ApplicationWithApi):
+    """Core inheritable class for dealing with actions on pets."""
     DESCRIPTION = _('List pets and their status')
     pet_specifier = cli.SwitchAttr(
         ['-P', '--pet'],
@@ -376,6 +377,7 @@ class Pets(ApplicationWithApi):
         help=_('Only show information about a particular color'))  # noqa: Q000
 
     def get_full_percent(self, amount: int):
+        """Return the percentage of "fullness" for a pet."""
         if amount == -1:
             amount = 100
         else:
@@ -383,6 +385,7 @@ class Pets(ApplicationWithApi):
         return str(amount)
 
     def get_food_needed(self, pet_fullness: int, amount_per_food: int = 5) -> int:
+        """Return the amount of food needed to feed a pet till full."""
         if pet_fullness == -1:
             return 0
         return int((50 - int(pet_fullness)) / amount_per_food)
@@ -404,7 +407,8 @@ class Pets(ApplicationWithApi):
 
 @Pets.subcommand('list')
 class ListPets(Pets):
-    def main(self):
+    """Lists all pets from the inventory."""
+    def main(self):  # pylint: disable=too-many-braches
         super().main()
         user = self.api.user.get()
         print(_('Pets:'))
@@ -452,9 +456,10 @@ class ListPets(Pets):
 
 @Pets.subcommand('feed')
 class FeedPet(Pets):
+    """Feeds a pet or pets with specified food."""
     sleep_time = cli.SwitchAttr(
         ['-S', '--sleep-time'], argtype=int, default=1,
-        help=_('Time to wait between feeding each pet to avoid overloading the server'))  # noqa: Q000
+        help=_('Time to wait between feeding each pet to avoid overloading the server'))  # pylint: disable=line-too-long
     maximum_food = cli.SwitchAttr(
         ['-M', '--maxmimum-food'], argtype=int, default=10,
         help=_('Maximum amount of food to feed a pet')
@@ -500,9 +505,10 @@ class FeedPet(Pets):
 
 @Pets.subcommand('hatch')
 class HatchPet(Pets):
+    """Hatches pets with eggs when possible."""
     sleep_time = cli.SwitchAttr(
         ['-S', '--sleep-time'], argtype=int, default=1,
-        help=_('Time to wait between feeding each pet to avoid overloading the server'))  # noqa: Q000
+        help=_('Time to wait between feeding each pet to avoid overloading the server'))  # pylint: disable=line-too-long
     maximum_food = cli.SwitchAttr(
         ['-M', '--maxmimum-food'], argtype=int, default=10,
         help=_('Maximum amount of food to feed a pet')
@@ -538,6 +544,7 @@ class HatchPet(Pets):
 
 @HabiticaCli.subcommand('food')
 class Food(ApplicationWithApi):
+    """Lists food from the inventory."""
     DESCRIPTION = _('List inventory food and their quantities available')
 
     def main(self):
