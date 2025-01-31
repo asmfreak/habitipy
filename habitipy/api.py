@@ -254,8 +254,8 @@ class Habitipy:
         headers = self._make_headers()
 
         # allow a caller to force URI parameters when API document is incorrect
-        if 'uri_params'in kwargs:
-            uri += "?" + "&".join([str(x) + "=" + str(y) for x,y in kwargs['uri_params'].items()])
+        if 'uri_params' in kwargs:
+            uri += '?' + '&'.join([str(x) + '=' + str(y) for x, y in kwargs['uri_params'].items()])
 
         query = {}
         if 'query' in self._node.params:

@@ -364,15 +364,16 @@ class TasksPrint(ApplicationWithApi):
             res = i + prettify(self.domain_format(task))
             print(res)
 
+
 @HabiticaCli.subcommand('pets')
 class Pets(ApplicationWithApi):
-    DESCRIPTION = _("List pets and their status")
+    DESCRIPTION = _('List pets and their status')
     pet_specifier = cli.SwitchAttr(
         ['-P', '--pet'],
-        help=_("Only show information about a particular pet"))  # noqa: Q000
+        help=_('Only show information about a particular pet'))  # noqa: Q000
     color_specifier = cli.SwitchAttr(
         ['-C', '--color'],
-        help=_("Only show information about a particular color"))  # noqa: Q000
+        help=_('Only show information about a particular color'))  # noqa: Q000
 
     def get_full_percent(self, amount: int):
         if amount == -1:
@@ -384,30 +385,29 @@ class Pets(ApplicationWithApi):
     def get_food_needed(self, pet_fullness: int, amount_per_food: int = 5) -> int:
         if pet_fullness == -1:
             return 0
-        return int((50 - int(pet_fullness))/amount_per_food)
+        return int((50 - int(pet_fullness)) / amount_per_food)
 
     def is_hatchable(self, user: list, pet: str, color: str) -> bool:
         "Return true when a pat of a particular type and color can be hatched."
-
-        combined = pet + "-" + color
+        combined = pet + '-' + color
 
         # check if pet exists or name is wrong
-        if user["items"]["pets"].get(combined, 100) != -1:
+        if user['items']['pets'].get(combined, 100) != -1:
             return False
 
-        if color not in user["items"]["hatchingPotions"] or pet not in user["items"]["eggs"]:
+        if color not in user['items']['hatchingPotions'] or pet not in user['items']['eggs']:
             return False
-        if user["items"]["hatchingPotions"][color] > 0 and user["items"]["eggs"][pet] > 0:
+        if user['items']['hatchingPotions'][color] > 0 and user['items']['eggs'][pet] > 0:
             return True
         return False
-        
+
 
 @Pets.subcommand('list')
 class ListPets(Pets):
     def main(self):
         super().main()
         user = self.api.user.get()
-        print(_("Pets:"))
+        print(_('Pets:'))
 
         color_specifier = self.color_specifier
         if color_specifier:
@@ -419,7 +419,7 @@ class ListPets(Pets):
         # split pets into type and color
         pet_summaries = defaultdict(dict)
         for pet in user['items']['pets']:
-            (pettype, color) = pet.split("-")
+            (pettype, color) = pet.split('-')
             pet_summaries[pettype][color] = user['items']['pets'][pet]
 
         for pet in pet_summaries:
@@ -431,38 +431,39 @@ class ListPets(Pets):
                     continue
 
                 if not pet_printed:
-                    print(f"  {pet}:")
+                    print(f'  {pet}:')
                     pet_printed = True
 
                 pet_full_level = pet_summaries[pet][color]
                 if pet_full_level == -1:
-                    full_percentage = colors.red | _("No Pet")
+                    full_percentage = colors.red | _('No Pet')
                     if self.is_hatchable(user, pet, color):
-                        full_percentage += " " + (colors.green | _("(hatchable)"))
-                elif pet + "-" + color in user['items']['mounts']:
-                    full_percentage = colors.green | "100%"
+                        full_percentage += ' ' + (colors.green | _('(hatchable)'))
+                elif pet + '-' + color in user['items']['mounts']:
+                    full_percentage = colors.green | '100%'
                 else:
-                    full_percentage = self.get_full_percent(pet_full_level) + "%"
-                    if full_percentage == "100%":
+                    full_percentage = self.get_full_percent(pet_full_level) + '%'
+                    if full_percentage == '100%':
                         full_percentage = colors.green | full_percentage
                     else:
                         full_percentage = colors.yellow | full_percentage
-                print(f"    {color:<30} {full_percentage}")
-            
+                print(f'    {color:<30} {full_percentage}')
+
+
 @Pets.subcommand('feed')
 class FeedPet(Pets):
     sleep_time = cli.SwitchAttr(
         ['-S', '--sleep-time'], argtype=int, default=1,
-        help=_("Time to wait between feeding each pet to avoid overloading the server"))  # noqa: Q000
+        help=_('Time to wait between feeding each pet to avoid overloading the server'))  # noqa: Q000
     maximum_food = cli.SwitchAttr(
         ['-M', '--maxmimum-food'], argtype=int, default=10,
-        help=_("Maximum amount of food to feed a pet")
+        help=_('Maximum amount of food to feed a pet')
     )
 
     def main(self, *food):
         super().main()
         if len(food) != 1:
-            self.log.error(_("error: must specify one food to feed."))  # noqa: Q000
+            self.log.error(_('error: must specify one food to feed.'))  # noqa: Q000
             return
 
         food = food[0]
@@ -478,40 +479,39 @@ class FeedPet(Pets):
             pet_specifier = pet_specifier[0].capitalize() + pet_specifier[1:]
 
         for pet in pets:
-            (pettype, color) = pet.split("-")
+            (pettype, color) = pet.split('-')
             if pet_specifier and pettype != pet_specifier:
                 continue
             if color_specifier and color != color_specifier:
                 continue
-        
-            pet_fullness = pets[pet]
+
             food_needed = self.get_food_needed(pets[pet])
             if food_needed > 0 and pet not in mounts:
                 food_amount = min(food_needed, self.maximum_food)
-                print(_(f"feeding {food_amount} {food} to {color} {pettype}"))
-                response = self.api.user.feed[pet][food].post(uri_params = {
+                print(_(f'feeding {food_amount} {food} to {color} {pettype}'))
+                response = self.api.user.feed[pet][food].post(uri_params={
                     'amount': food_amount,
                 })
-                print(_(f"   new fullness: {self.get_full_percent(response)}%"))
+                print(_(f'   new fullness: {self.get_full_percent(response)}%'))
                 time.sleep(self.sleep_time)
             else:
-                print(_(f"NOT feeding {color} {pettype}"))
+                print(_(f'NOT feeding {color} {pettype}'))
+
 
 @Pets.subcommand('hatch')
 class HatchPet(Pets):
     sleep_time = cli.SwitchAttr(
         ['-S', '--sleep-time'], argtype=int, default=1,
-        help=_("Time to wait between feeding each pet to avoid overloading the server"))  # noqa: Q000
+        help=_('Time to wait between feeding each pet to avoid overloading the server'))  # noqa: Q000
     maximum_food = cli.SwitchAttr(
         ['-M', '--maxmimum-food'], argtype=int, default=10,
-        help=_("Maximum amount of food to feed a pet")
+        help=_('Maximum amount of food to feed a pet')
     )
 
     def main(self):
         super().main()
         user = self.api.user.get()
         pets = user['items']['pets']
-        mounts = user['items']['mounts']
 
         color_specifier = self.color_specifier
         if color_specifier:
@@ -520,25 +520,25 @@ class HatchPet(Pets):
         if pet_specifier:
             pet_specifier = pet_specifier[0].capitalize() + pet_specifier[1:]
 
-        for pet in user['items']['pets']:
-            (pettype, color) = pet.split("-")
+        for pet in pets:
+            (pettype, color) = pet.split('-')
 
             if pet_specifier and pettype != pet_specifier:
                 continue
             if color_specifier and color != color_specifier:
                 continue
-        
+
             if self.is_hatchable(user, pettype, color):
-                print(_(f"hatching {color} {pettype}"))
+                print(_(f'hatching {color} {pettype}'))
                 response = self.api.user.hatch[pettype][color].post()
                 time.sleep(self.sleep_time)
             else:
-                print(_(f"NOT hatching {color} {pettype}"))
+                print(_(f'NOT hatching {color} {pettype}'))
 
 
 @HabiticaCli.subcommand('food')
 class Food(ApplicationWithApi):
-    DESCRIPTION = _("List inventory food and their quantities available")
+    DESCRIPTION = _('List inventory food and their quantities available')
 
     def main(self):
         super().main()
@@ -546,7 +546,8 @@ class Food(ApplicationWithApi):
         food_list = user['items']['food']
         food_list_keys = sorted(food_list, key=lambda x: food_list[x])
         for food in food_list_keys:
-            print(f"{food:<30}: {food_list[food]}")
+            print(f'{food:<30}: {food_list[food]}')
+
 
 @HabiticaCli.subcommand('habits')
 class Habits(TasksPrint):  # pylint: disable=missing-class-docstring
