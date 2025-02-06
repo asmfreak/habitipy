@@ -218,7 +218,7 @@ class ApplicationWithApi(ConfiguredApplication):
     """Application with configured Habitica API"""
     api = None  # type: Habitipy
 
-    def main(self):
+    def main(self, *_args):
         super().main()
         self.api = Habitipy(self.config)
 
@@ -556,14 +556,200 @@ class Food(ApplicationWithApi):
             print(f'{food:<30}: {food_list[food]}')
 
 
+@HabiticaCli.subcommand('cast')
+class Cast(ApplicationWithApi):
+    """Casts spells"""
+    DESCRIPTION=_("Cast a spell")
+
+    cast_count = cli.SwitchAttr(
+        ['-C', '--cast-times'], argtype=int, default=1,
+        help=_("Number of times to cast the spell.")
+    )  # noqa: Q000
+    sleep_time = cli.SwitchAttr(
+        ['-S', '--sleep-time'], argtype=int, default=1,
+        help=_("Time to wait between each cast to avoid overloading the server"))  # noqa: Q000
+
+    def main(self, *_arguments):
+        super().main()
+
+
+class CastNoArguments(Cast):
+    """Cast a spell with no arguments."""
+    def main(self, *arguments):
+        super().main()
+        spell = arguments[0]
+
+        for _i in range(self.cast_count):
+            print(_(f"casting {spell}..."))
+            _response = self.api.user["class"].cast[spell].post()
+            time.sleep(self.sleep_time)
+
+
+class CastOnTask(Cast):
+    """Casts spells on a task"""
+    def main(self, *arguments):
+        super().main()
+        if len(arguments) != 3 or arguments[1] not in ["todos", "habits", "dailies"]:
+            self.log.error(_("usage: cast task (todos|habits|dailies) number"))
+            return
+
+        (spell, domain, number) = arguments
+        number = int(number)
+        tasks = self.api.tasks.user.get(type=domain)
+
+        if number > len(tasks):
+            self.log.error(_("selection number is too high"))
+            return
+
+        for _i in range(self.cast_count):
+            print(_(f"casting {spell}..."))
+            self.api.user["class"].cast[spell].post(uri_params = {
+                'targetId': tasks[number-1]['id'],
+            })
+            time.sleep(self.sleep_time)
+
+
+# Healer spells
+@Cast.subcommand('heal')
+class Heal(CastNoArguments):
+    """Cast heal."""
+    DESCRIPTION=_("Cast Healer's Healing Light")
+    def main(self, *args, **kwargs):
+        super().main('heal', *args, **kwargs)
+
+
+@Cast.subcommand('brightness')
+class Brightness(CastNoArguments):
+    """Cast brightness."""
+    DESCRIPTION=_("Cast Healer's Searing Brightness")
+    def main(self, *args, **kwargs):
+        super().main('brightness', *args, **kwargs)
+
+
+@Cast.subcommand('protectAura')
+class ProtectAura(CastNoArguments):
+    """Cast protectaura."""
+    DESCRIPTION=_("Cast Healer's Protective Aura")
+    def main(self, *args, **kwargs):
+        super().main('protectAura', *args, **kwargs)
+
+
+@Cast.subcommand('healAll')
+class HealAll(CastNoArguments):
+    """Cast healall"""
+    DESCRIPTION=_("Cast Healer's Blessing")
+    def main(self, *args, **kwargs):
+        super().main('healAll', *args, **kwargs)
+
+
+# Mage Spells
+@Cast.subcommand('fireball')
+class FireBall(CastOnTask):
+    """Cast fireball."""
+    DESCRIPTION=_("Cast Mage's Burst of Flames on a task")
+    def main(self, *args, **kwargs):
+        super().main('fireball', *args, **kwargs)
+
+
+@Cast.subcommand('ethereal') # deliberately different
+class Ethereal(CastNoArguments):
+    """Cast ethereal."""
+    DESCRIPTION=_("Cast Mage's Ethereal Surge")
+    def main(self, *args, **kwargs):
+        super().main('mpheal', *args, **kwargs)
+
+
+@Cast.subcommand('earth')
+class Earth(CastNoArguments):
+    """Cast earth."""
+    DESCRIPTION=_("Cast Mage's Earthquake")
+    def main(self, *args, **kwargs):
+        super().main('earth', *args, **kwargs)
+
+
+@Cast.subcommand('frost')
+class Frost(CastNoArguments):
+    """Cast frost."""
+    DESCRIPTION=_("Cast Mage's Chilling Frost")
+    def main(self, *args, **kwargs):
+        super().main('frost', *args, **kwargs)
+
+
+# Rogue spells
+
+@Cast.subcommand('backstab')
+class Backstab(CastOnTask):
+    "Cast backstab"
+    DESCRIPTION=_("Cast Thief's Backstab on a task")
+    def main(self, *args, **kwargs):
+        super().main('backStab', *args, **kwargs)
+
+
+@Cast.subcommand('pickpocket')
+class PickPocket(CastOnTask):
+    "Cast pickpocket"
+    DESCRIPTION=_("Cast Thief's Pickpocket on a task")
+    def main(self, *args, **kwargs):
+        super().main('pickPocket', *args, **kwargs)
+
+@Cast.subcommand('tools')  # deliberately different
+class ToolsOfTrade(CastNoArguments):
+    """Cast tools of the trade."""
+    DESCRIPTION=_("Cast Thief's Tools of the Trade")
+    def main(self, *args, **kwargs):
+        super().main('toolsOfTrade', *args, **kwargs)
+
+
+@Cast.subcommand('stealth')
+class Stealth(CastNoArguments):
+    """Cast stealth."""
+    DESCRIPTION=_("Cast Thief's Stealth")
+    def main(self, *args, **kwargs):
+        super().main('stealth', *args, **kwargs)
+
+
+# Warrior spells
+
+
+@Cast.subcommand('smash')
+class Smash(CastOnTask):
+    """Cast smash."""
+    DESCRIPTION=_("Cast Warrior's Brutal Smash on a task")
+    def main(self, *args, **kwargs):
+        super().main('smash', *args, **kwargs)
+
+
+@Cast.subcommand('defense')  # deliberately different
+class DefensiveStance(CastNoArguments):
+    """Cast defense."""
+    DESCRIPTION=_("Cast Warrior's Defensive Stance")
+    def main(self, *args, **kwargs):
+        super().main('defensiveStance', *args, **kwargs)
+
+
+@Cast.subcommand('intimidate')
+class Intimidate(CastNoArguments):
+    """Cast intimidate."""
+    DESCRIPTION=_("Cast Warrior's Intimidating Gaze")
+    def main(self, *args, **kwargs):
+        super().main('intimidate', *args, **kwargs)
+
+
+@Cast.subcommand('presence')
+class ValorousPresence(CastNoArguments):
+    """Cast ValorousPresence"""
+    DESCRIPTION=_("Cast Warrior's Valorous Presence")
+    def main(self, *args, **kwargs):
+        super().main('valorousPresence', *args, **kwargs)
+
+
 @HabiticaCli.subcommand('habits')
-class Habits(TasksPrint):  # pylint: disable=missing-class-docstring
+class Habits(TasksPrint):  # pylint: disable=missing-docstring
     DESCRIPTION = _("List, up and down habit tasks")  # noqa: Q000
     domain = 'habits'
     def domain_format(self, habit):  # pylint: disable=arguments-renamed
         score = ScoreInfo(self.config['show_style'], habit['value'])
         return _("{0} {text}").format(score, **habit)  # noqa: Q000
-
 
 @HabiticaCli.subcommand('dailies')
 class Dailys(TasksPrint):  # pylint: disable=missing-class-docstring
