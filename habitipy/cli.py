@@ -9,8 +9,10 @@ import logging
 import os
 import json
 import uuid
+import time
 from bisect import bisect
 from collections.abc import Mapping
+from collections import defaultdict
 from itertools import chain
 from textwrap import dedent
 from typing import List, Union, Dict, Any  # pylint: disable=unused-import
@@ -361,6 +363,197 @@ class TasksPrint(ApplicationWithApi):
             i = number_format.format(i + 1) if self.config['show_numbers'] else ''
             res = i + prettify(self.domain_format(task))
             print(res)
+
+
+@HabiticaCli.subcommand('pets')
+class Pets(ApplicationWithApi):
+    """Core inheritable class for dealing with actions on pets."""
+    DESCRIPTION = _('List pets and their status')
+    pet_specifier = cli.SwitchAttr(
+        ['-P', '--pet'],
+        help=_('Only show information about a particular pet'))  # noqa: Q000
+    color_specifier = cli.SwitchAttr(
+        ['-C', '--color'],
+        help=_('Only show information about a particular color'))  # noqa: Q000
+
+    def get_full_percent(self, amount: int):
+        """Return the percentage of "fullness" for a pet."""
+        if amount == -1:
+            amount = 100
+        else:
+            amount *= 2
+        return str(amount)
+
+    def get_food_needed(self, pet_fullness: int, amount_per_food: int = 5) -> int:
+        """Return the amount of food needed to feed a pet till full."""
+        if pet_fullness == -1:
+            return 0
+        return int((50 - int(pet_fullness)) / amount_per_food)
+
+    def is_hatchable(self, user: dict, pet: str, color: str) -> bool:
+        """Return true when a pat of a particular type and color can be hatched."""
+        combined = pet + '-' + color
+
+        # check if pet exists or name is wrong
+        if user['items']['pets'].get(combined, 100) != -1:
+            return False
+
+        if color not in user['items']['hatchingPotions'] or pet not in user['items']['eggs']:
+            return False
+        if user['items']['hatchingPotions'][color] > 0 and user['items']['eggs'][pet] > 0:
+            return True
+        return False
+
+
+@Pets.subcommand('list')
+class ListPets(Pets):
+    """Lists all pets from the inventory."""
+    def main(self):  # pylint: disable=too-many-branches
+        super().main()
+        user = self.api.user.get()
+        print(_('Pets:'))
+
+        color_specifier = self.color_specifier
+        if color_specifier:
+            color_specifier = color_specifier[0].capitalize() + color_specifier[1:]
+        pet_specifier = self.pet_specifier
+        if pet_specifier:
+            pet_specifier = pet_specifier[0].capitalize() + pet_specifier[1:]
+
+        # split pets into type and color
+        pet_summaries = defaultdict(dict)
+        for pet in user['items']['pets']:
+            (pettype, color) = pet.split('-')
+            pet_summaries[pettype][color] = user['items']['pets'][pet]
+
+        for pet in pet_summaries:
+            if pet_specifier and pet != pet_specifier:
+                continue
+            pet_printed = False
+            for color in pet_summaries[pet]:
+                if color_specifier and color != color_specifier:
+                    continue
+
+                if not pet_printed:
+                    print(f'  {pet}:')
+                    pet_printed = True
+
+                pet_full_level = pet_summaries[pet][color]
+                if pet_full_level == -1:
+                    full_percentage = colors.red | _('No Pet')
+                    if self.is_hatchable(user, pet, color):
+                        full_percentage += ' ' + (colors.green | _('(hatchable)'))
+                elif pet + '-' + color in user['items']['mounts']:
+                    full_percentage = colors.green | '100%'
+                else:
+                    full_percentage = self.get_full_percent(pet_full_level) + '%'
+                    if full_percentage == '100%':
+                        full_percentage = colors.green | full_percentage
+                    else:
+                        full_percentage = colors.yellow | full_percentage
+                print(f'    {color:<30} {full_percentage}')
+
+
+@Pets.subcommand('feed')
+class FeedPet(Pets):
+    """Feeds a pet or pets with specified food."""
+    sleep_time = cli.SwitchAttr(
+        ['-S', '--sleep-time'], argtype=int, default=1,
+        help=_('Time to wait between feeding each pet to avoid overloading the server'))  # pylint: disable=line-too-long
+    maximum_food = cli.SwitchAttr(
+        ['-M', '--maxmimum-food'], argtype=int, default=10,
+        help=_('Maximum amount of food to feed a pet')
+    )
+
+    def main(self, *food):
+        super().main()
+        if len(food) != 1:
+            self.log.error(_('error: must specify one food to feed.'))  # noqa: Q000
+            return
+
+        food = food[0]
+        user = self.api.user.get()
+        pets = user['items']['pets']
+        mounts = user['items']['mounts']
+
+        color_specifier = self.color_specifier
+        if color_specifier:
+            color_specifier = color_specifier[0].capitalize() + color_specifier[1:]
+        pet_specifier = self.pet_specifier
+        if pet_specifier:
+            pet_specifier = pet_specifier[0].capitalize() + pet_specifier[1:]
+
+        for pet in pets:
+            (pettype, color) = pet.split('-')
+            if pet_specifier and pettype != pet_specifier:
+                continue
+            if color_specifier and color != color_specifier:
+                continue
+
+            food_needed = self.get_food_needed(pets[pet])
+            if food_needed > 0 and pet not in mounts:
+                food_amount = min(food_needed, self.maximum_food)
+                print(_(f'feeding {food_amount} {food} to {color} {pettype}'))
+                response = self.api.user.feed[pet][food].post(uri_params={
+                    'amount': food_amount,
+                })
+                print(_(f'   new fullness: {self.get_full_percent(response)}%'))
+                time.sleep(self.sleep_time)
+            else:
+                print(_(f'NOT feeding {color} {pettype}'))
+
+
+@Pets.subcommand('hatch')
+class HatchPet(Pets):
+    """Hatches pets with eggs when possible."""
+    sleep_time = cli.SwitchAttr(
+        ['-S', '--sleep-time'], argtype=int, default=1,
+        help=_('Time to wait between feeding each pet to avoid overloading the server'))  # pylint: disable=line-too-long
+    maximum_food = cli.SwitchAttr(
+        ['-M', '--maxmimum-food'], argtype=int, default=10,
+        help=_('Maximum amount of food to feed a pet')
+    )
+
+    def main(self):
+        super().main()
+        user = self.api.user.get()
+        pets = user['items']['pets']
+
+        color_specifier = self.color_specifier
+        if color_specifier:
+            color_specifier = color_specifier[0].capitalize() + color_specifier[1:]
+        pet_specifier = self.pet_specifier
+        if pet_specifier:
+            pet_specifier = pet_specifier[0].capitalize() + pet_specifier[1:]
+
+        for pet in pets:
+            (pettype, color) = pet.split('-')
+
+            if pet_specifier and pettype != pet_specifier:
+                continue
+            if color_specifier and color != color_specifier:
+                continue
+
+            if self.is_hatchable(user, pettype, color):
+                print(_(f'hatching {color} {pettype}'))
+                self.api.user.hatch[pettype][color].post()
+                time.sleep(self.sleep_time)
+            else:
+                print(_(f'NOT hatching {color} {pettype}'))
+
+
+@HabiticaCli.subcommand('food')
+class Food(ApplicationWithApi):
+    """Lists food from the inventory."""
+    DESCRIPTION = _('List inventory food and their quantities available')
+
+    def main(self):
+        super().main()
+        user = self.api.user.get()
+        food_list = user['items']['food']
+        food_list_keys = sorted(food_list, key=lambda x: food_list[x])
+        for food in food_list_keys:
+            print(f'{food:<30}: {food_list[food]}')
 
 
 @HabiticaCli.subcommand('habits')
