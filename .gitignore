@@ -1,22 +1,55 @@
-venv-*
-*.pyc
-*.egg-info
-*.swp
-.mypy_*
-cover
-.coverage
-.tox
-*.po.new
-*messages.pot
+# Python bytecode and cache
+__pycache__/
+*.py[cod]
+*.so
+
+# Distribution and packaging
 build/
 _build/
+develop-eggs/
 dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environments
+venv*/
+.env
+.venv
+env/
+ENV/
 .*env/
-mkdocs.yml
-pydocmd.yml
+
+# Testing and coverage
+.coverage
+.tox
+cover
 .hypothesis
 .py34
+.mypy_*
 
-# Habitica credentials
-.config/habitica/auth.cfg
+# Documentation
+mkdocs.yml
+pydocmd.yml
+
+# Translations
+*.po.new
+*messages.pot
+
+# Editor files
+*.swp
+
+# Habitica credentials and configs
+~/.config/habitipy/config
+~/.config/habitica/auth.cfg
+*.cfg
+!auth.cfg.template
 **/auth.cfg
