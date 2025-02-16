@@ -53,3 +53,15 @@ pydocmd.yml
 *.cfg
 !auth.cfg.template
 **/auth.cfg
+
+# Additional security-related ignores
+.env*
+*.pem
+*.key
+*secret*
+.aws/
+.ssh/
+credentials.json
+token.json
+*password*
+*apikey*
