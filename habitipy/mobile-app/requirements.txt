@@ -1,0 +1,7 @@
+flask>=2.0.0
+flask-socketio>=5.0.0
+python-socketio>=5.0.0
+habitipy>=0.1.0
+# Add security packages
+flask-talisman>=1.0.0
+flask-seasurf>=1.0.0 

@@ -1,0 +1,29 @@
+name: Daily Check
+
+on:
+  schedule:
+    - cron: "0 6 * * *" # Runs at 6 AM UTC daily
+  workflow_dispatch: # Allows manual trigger
+
+jobs:
+  daily-check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./habitipy/daily_check
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Run daily check
+        env:
+          HABITICA_API_USER: ${{ secrets.HABITICA_API_USER }}
+          HABITICA_API_KEY: ${{ secrets.HABITICA_API_KEY }}
+        run: python daily_check.py

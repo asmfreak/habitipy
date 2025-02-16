@@ -65,3 +65,17 @@ credentials.json
 token.json
 *password*
 *apikey*
+
+# Config files with credentials
+*.config
+*.conf
+
+# Environment files
+.env
+.venv
+env/
+venv/
+
+# IDE files
+.vscode/
+.idea/
