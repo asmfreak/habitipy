@@ -66,3 +66,12 @@ class HabitipyAsync(Habitipy):
                     raise WrongReturnCode(msg)
                 warnings.warn(msg)
             return (await resp.json())['data']
+
+    def _make_headers(self):
+        """Create headers without logging sensitive data"""
+        headers = {
+            'x-api-user': '[REDACTED]' if self._conf else None,
+            'x-api-key': '[REDACTED]' if self._conf else None
+        } if self._conf else {}
+        headers.update({'content-type': API_CONTENT_TYPE})
+        return headers

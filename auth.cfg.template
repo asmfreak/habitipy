@@ -1,0 +1,4 @@
+[Habitica]
+url = https://habitica.com
+login = your-user-id-here
+password = your-api-token-here 

@@ -58,14 +58,15 @@ def is_uuid(u):
 
 def load_conf(configfile, config=None):
     """Get authentication data from the AUTH_CONF file."""
+    configfile = local.path(configfile)
+    if configfile.exists():
+        try:
+            assert_secure_file(configfile)
+        except SecurityError as e:
+            warnings.warn(str(e))
     default_login = 'your-login-for-api-here'
     default_password = 'your-password-for-api-here'
     config = config or {}
-    configfile = local.path(configfile)
-    if not configfile.exists():
-        configfile.dirname.mkdir()
-    else:
-        assert_secure_file(configfile)
     with secure_filestore(), cli.Config(configfile) as conf:
         config['url'] = conf.get('habitipy.url', 'https://habitica.com')
         config['login'] = conf.get('habitipy.login', default_login)

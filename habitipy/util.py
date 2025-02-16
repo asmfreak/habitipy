@@ -17,6 +17,7 @@ try:
     from emoji import emojize
 except ImportError:
     emojize = None  # type: ignore
+import platform
 
 
 # pylint: disable=too-many-arguments
@@ -149,8 +150,13 @@ secure_filestore = partial(umask, 0o077)
 
 def is_secure_file(fn):
     """checks if a file can be accessed only by the owner"""
+    if platform.system() == 'Windows':
+        return True
+        
     st = os.stat(fn)
-    return (st.st_mode & 0o777) == 0o600
+    mode = st.st_mode & 0o777
+    # Check for owner-only read/write
+    return mode == 0o600 or mode == 0o400
 
 
 class SecurityError(ValueError):
@@ -159,6 +165,10 @@ class SecurityError(ValueError):
 
 def assert_secure_file(file):
     """checks if a file is stored securely"""
+    # Skip permission check on Windows
+    if platform.system() == 'Windows':
+        return True
+        
     if not is_secure_file(file):
         msg = """
         File {0} can be read by other users.

@@ -16,3 +16,7 @@ mkdocs.yml
 pydocmd.yml
 .hypothesis
 .py34
+
+# Habitica credentials
+.config/habitica/auth.cfg
+**/auth.cfg
