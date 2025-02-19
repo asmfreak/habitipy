@@ -15,7 +15,7 @@ from collections.abc import Mapping
 from collections import defaultdict
 from itertools import chain
 from textwrap import dedent
-from typing import List, Union, Dict, Any, cast  # pylint: disable=unused-import
+from typing import List, Union, Dict, Any  # pylint: disable=unused-import
 import pkg_resources
 from plumbum import local, cli, colors
 import requests
@@ -358,8 +358,10 @@ class TagsHelper(ApplicationWithApi):
             return self.tags_by_name[tag_name]['id']
 
         new_tag = self.api.tags.post(name=tag_name)
-        # Note: we cast because it returns a dict, but mypy expects a list
-        return cast(dict, new_tag)['id']
+        if not isinstance(new_tag, dict):
+            raise TypeError("API returned a list, but a dict was expected")
+
+        return new_tag['id']
 
     def apply_tags_to(self, apply_to: str, tag_names_list: list[str]):
         """Apply a list of tags to a given task."""
@@ -1012,12 +1014,14 @@ class HabitsAdd(TagsHelper):  # pylint: disable=missing-class-docstring
             priority=self.priority, up=(self.direction != 'negative'),
             down=self.direction != 'positive')
 
+        if not isinstance(response, dict):
+            raise TypeError("API returned a list, but a dict was expected")
+
         res = _("Added habit '{}' with priority {} and direction {}").format(  # noqa: Q000
             habit_str, self.priority, self.direction)
 
         # apply requested tags
-        # Note: we cast because it returns a dict, but mypy expects a list
-        self.apply_tags_to(cast(dict, response)["id"], self.tags.split(","))
+        self.apply_tags_to(response["id"], self.tags.split(","))
 
         print(prettify(res))
         Habits.invoke(config_filename=self.config_filename)
@@ -1133,12 +1137,14 @@ class TodosAdd(TagsHelper):  # pylint: disable=missing-class-docstring
             return 1
         super().main()
         response = self.api.tasks.user.post(type='todo', text=todo_str, priority=self.priority)
+        if not isinstance(response, dict):
+            raise TypeError("API returned a list, but a dict was expected")
+
         res = _("Added todo '{}' with priority {}").format(todo_str, self.priority)  # noqa: Q000
 
         # apply requested tags
         if self.tags:
-            # Note: we cast because it returns a dict, but mypy expects a list
-            self.apply_tags_to(cast(dict, response)["id"], self.tags.split(","))
+            self.apply_tags_to(response["id"], self.tags.split(","))
 
         print(prettify(res))
         ToDos.invoke(config_filename=self.config_filename)
