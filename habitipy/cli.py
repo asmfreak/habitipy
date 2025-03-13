@@ -589,12 +589,15 @@ class CastOnTask(Cast):
     """Casts spells on a task"""
     def main(self, *arguments):
         super().main()
-        if len(arguments) != 3 or arguments[1] not in ["todos", "habits", "dailies"]:
+        if len(arguments) != 3 or arguments[1] not in ["todos", "habits", "dailies", "dailys"]:
             self.log.error(_("usage: cast task (todos|habits|dailies) number"))
             return
 
         (spell, domain, number) = arguments
         number = int(number)
+        if domain == "dailies":
+            domain = "dailys"  # match what the API expects
+
         tasks = self.api.tasks.user.get(type=domain)
 
         if number > len(tasks):
