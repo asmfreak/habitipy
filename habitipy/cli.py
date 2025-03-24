@@ -788,7 +788,12 @@ class ToDos(TasksPrint):  # pylint: disable=missing-class-docstring
                 checklist_done,
                 len(todo['checklist'])
             ) if todo['checklist'] else ''
+        checklist_full = ''
+        if len(todo['checklist']) > 0:
+            for item in todo['checklist']:
+                if not item['completed']: checklist_full = checklist_full + "\n       - " + item['text']
         res = _("{1}{0}{text}{2}").format(check, score, checklist, **todo)  # noqa: Q000
+        res = res + checklist_full
         return res
 
 
@@ -1049,6 +1054,9 @@ class TodosAdd(ApplicationWithApi):  # pylint: disable=missing-class-docstring
         ['-p', '--priority'],
         cli.Set('0.1', '1', '1.5', '2'), default='1',
         help=_("Priority (complexity) of a todo"))  # noqa: Q000
+    checklist = cli.SwitchAttr(
+        ['-l', '--check'], default='', list=True,
+        help=_("checklist item"))
 
     def main(self, *todo: str):
         todo_str = ' '.join(todo)
@@ -1056,9 +1064,11 @@ class TodosAdd(ApplicationWithApi):  # pylint: disable=missing-class-docstring
             self.log.error(_("Empty todo text!"))  # noqa: Q000
             return 1
         super().main()
-        self.api.tasks.user.post(type='todo', text=todo_str, priority=self.priority)
+        result = self.api.tasks.user.post(type='todo', text=todo_str, priority=self.priority)
         res = _("Added todo '{}' with priority {}").format(todo_str, self.priority)  # noqa: Q000
         print(prettify(res))
+        id = result['id']
+        for item in self.checklist: self.api.tasks[id].checklist.post(text=item)
         ToDos.invoke(config_filename=self.config_filename)
         return 0
 
