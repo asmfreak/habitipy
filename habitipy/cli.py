@@ -1071,6 +1071,7 @@ class TodosAdd(ApplicationWithApi):  # pylint: disable=missing-class-docstring
             checklist.append({'text':item, 'completed':False})
         self.api.tasks.user.post(type='todo', text=todo_str, priority=self.priority, checklist=checklist)
         res = _("Added todo '{}' with priority {}").format(todo_str, self.priority)  # noqa: Q000
+        print(prettify(res))
         ToDos.invoke(config_filename=self.config_filename)
         return 0
 
