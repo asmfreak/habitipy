@@ -1057,7 +1057,7 @@ class TodosAdd(ApplicationWithApi):  # pylint: disable=missing-class-docstring
         cli.Set('0.1', '1', '1.5', '2'), default='1',
         help=_("Priority (complexity) of a todo"))  # noqa: Q000
     checks = cli.SwitchAttr(
-        ['-l', '--check'], default='', list=True,
+        ['-l', '--check'], list=True,
         help=_("Add <check> to checklist for a todo"))
 
     def main(self, *todo: str):
