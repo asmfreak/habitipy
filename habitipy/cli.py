@@ -778,6 +778,9 @@ class Dailys(TasksPrint):  # pylint: disable=missing-class-docstring
 class ToDos(TasksPrint):  # pylint: disable=missing-class-docstring
     DESCRIPTION = _("List, comlete, add or delete todo tasks")  # noqa: Q000
     domain = 'todos'
+    full = cli.Flag(
+        ['-f', '--full'],
+        help=_("Print todos with checklist items."))  # noqa: Q000
     def domain_format(self, todo):  # pylint: disable=arguments-renamed
         score = ScoreInfo(self.config['show_style'], todo['value'])
         check = CHECK if todo['completed'] else UNCHECK
@@ -789,7 +792,7 @@ class ToDos(TasksPrint):  # pylint: disable=missing-class-docstring
                 len(todo['checklist'])
             ) if todo['checklist'] else ''
         checklist_full = ''
-        if len(todo['checklist']) > 0:
+        if self.full and len(todo['checklist']) > 0:
             for item in todo['checklist']:
                 if not item['completed']: checklist_full = checklist_full + "\n       - " + item['text']
         res = _("{1}{0}{text}{2}{3}").format(check, score, checklist, checklist_full, **todo)  # noqa: Q000
