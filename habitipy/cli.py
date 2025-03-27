@@ -375,6 +375,9 @@ class Pets(ApplicationWithApi):
     color_specifier = cli.SwitchAttr(
         ['-C', '--color'],
         help=_('Only show information about a particular color'))  # noqa: Q000
+    only_hatchable = cli.Flag(
+        ['-H', '--only-hatchable'],
+        help=_('Only show hatchable pets with appropriate eggs'))  # noqa: Q000
 
     def get_full_percent(self, amount: int):
         """Return the percentage of "fullness" for a pet."""
@@ -412,6 +415,8 @@ class ListPets(Pets):
         super().main()
         user = self.api.user.get()
         print(_('Pets:'))
+        print('  {color:<30}   {full_percentage:<11} {mount}'.format(
+            color='Name', full_percentage='Fed', mount='Mount'))
 
         color_specifier = self.color_specifier
         if color_specifier:
@@ -429,21 +434,25 @@ class ListPets(Pets):
         for pet in pet_summaries:
             if pet_specifier and pet != pet_specifier:
                 continue
-            pet_printed = False
+            pet_name_printed = False
             for color in pet_summaries[pet]:
                 if color_specifier and color != color_specifier:
                     continue
 
-                if not pet_printed:
-                    print(f'  {pet}:')
-                    pet_printed = True
+                if self.only_hatchable and not self.is_hatchable(user, pet, color):
+                    continue
 
+                if not pet_name_printed:
+                    print(f'  {pet}:')
+                    pet_name_printed = True
+
+                pet_full_name = pet + '-' + color
                 pet_full_level = pet_summaries[pet][color]
                 if pet_full_level == -1:
                     full_percentage = colors.red | _('No Pet')
                     if self.is_hatchable(user, pet, color):
-                        full_percentage += ' ' + (colors.green | _('(hatchable)'))
-                elif pet + '-' + color in user['items']['mounts']:
+                        full_percentage = colors.green | _('(hatchable)')
+                elif pet_full_name in user['items']['mounts']:
                     full_percentage = colors.green | '100%'
                 else:
                     full_percentage = self.get_full_percent(pet_full_level) + '%'
@@ -451,8 +460,11 @@ class ListPets(Pets):
                         full_percentage = colors.green | full_percentage
                     else:
                         full_percentage = colors.yellow | full_percentage
-                print(f'    {color:<30} {full_percentage}')
 
+                mount = UNCHECK[self.config['show_style']]
+                if pet_full_name in user['items']['mounts']:
+                    mount = CHECK[self.config['show_style']]
+                print(f'    {color:<30} {full_percentage:<21} {mount}')
 
 @Pets.subcommand('feed')
 class FeedPet(Pets):
