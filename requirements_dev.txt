@@ -5,7 +5,7 @@ mypy==1.15.0
 types-requests==2.32.0.20241016
 types-setuptools==75.8.0.20250110
 nose2==0.15.1
-coverage==7.6.10
+coverage==7.8.0
 hypothesis==6.125.2
 responses==0.25.6
 pylint==3.3.4
