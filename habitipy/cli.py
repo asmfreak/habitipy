@@ -393,12 +393,16 @@ class Pets(ApplicationWithApi):
             return 0
         return int((50 - int(pet_fullness)) / amount_per_food)
 
-    def is_hatchable(self, user: dict, pet: str, color: str) -> bool:
+    def is_hatchable(self, user: dict, pet: str, color: str, even_if_pet: bool = False) -> bool:
         """Return true when a pat of a particular type and color can be hatched."""
         combined = pet + '-' + color
 
         # check if pet exists or name is wrong
-        if user['items']['pets'].get(combined, 100) != -1:
+        if not even_if_pet and user['items']['pets'].get(combined, 100) != -1:
+            return False
+
+        if user['items']['pets'].get(combined, 100) != -1 and combined in user['items']['mounts']:
+            # with both a pet and a mount we can never hatch this one
             return False
 
         if color not in user['items']['hatchingPotions'] or pet not in user['items']['eggs']:
@@ -411,12 +415,17 @@ class Pets(ApplicationWithApi):
 @Pets.subcommand('list')
 class ListPets(Pets):
     """Lists all pets from the inventory."""
-    def main(self):  # pylint: disable=too-many-branches
+    def main(self):  # pylint: disable=too-many-branches,too-many-locals
         super().main()
         user = self.api.user.get()
         print(_('Pets:'))
         print('  {color:<30}   {full_percentage:<11} {mount}'.format(
             color='Name', full_percentage='Fed', mount='Mount'))
+
+        standard_pets = ["Wolf", "TigerCub", "PandaCub", "LionCub", "Fox",
+                         "Pig", "Dragon", "Cactus", "BearCub"]
+        standard_colors = ["Base", "White", "Desert", "Red", "Shade", "Skeleton",
+                           "Zombie", "CottonCandyBlue", "CottonCandyPink", "Golden"]
 
         color_specifier = self.color_specifier
         if color_specifier:
@@ -427,15 +436,24 @@ class ListPets(Pets):
 
         # split pets into type and color
         pet_summaries = defaultdict(dict)
+        potion_color_list = set(user['items']['hatchingPotions'].keys())
         for pet in user['items']['pets']:
             (pettype, color) = pet.split('-')
             pet_summaries[pettype][color] = user['items']['pets'][pet]
+            if pettype in standard_pets:
+                # these get added all the time so build dynamically based on data
+                potion_color_list.add(color)
 
         for pet in pet_summaries:
             if pet_specifier and pet != pet_specifier:
                 continue
             pet_name_printed = False
-            for color in pet_summaries[pet]:
+
+            color_list = standard_colors
+            if pet in standard_pets:
+                color_list = potion_color_list
+
+            for color in color_list:
                 if color_specifier and color != color_specifier:
                     continue
 
@@ -447,11 +465,9 @@ class ListPets(Pets):
                     pet_name_printed = True
 
                 pet_full_name = pet + '-' + color
-                pet_full_level = pet_summaries[pet][color]
+                pet_full_level = pet_summaries[pet].get(color, -1)
                 if pet_full_level == -1:
                     full_percentage = colors.red | _('No Pet')
-                    if self.is_hatchable(user, pet, color):
-                        full_percentage = colors.green | _('(hatchable)')
                 elif pet_full_name in user['items']['mounts']:
                     full_percentage = colors.green | '100%'
                 else:
@@ -464,6 +480,10 @@ class ListPets(Pets):
                 mount = UNCHECK[self.config['show_style']]
                 if pet_full_name in user['items']['mounts']:
                     mount = CHECK[self.config['show_style']]
+
+                if self.is_hatchable(user, pet, color, even_if_pet=True):
+                    mount += colors.green | _('      (hatchable)')
+
                 print(f'    {color:<30} {full_percentage:<21} {mount}')
 
 @Pets.subcommand('feed')
