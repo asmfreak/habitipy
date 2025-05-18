@@ -342,10 +342,41 @@ class ScoreInfo:
         return colors.fg(cls.colors_[index])
 
 
-class TasksPrint(ApplicationWithApi):
+class TagsHelper(ApplicationWithApi):
+    """A base class for getting and setting tags."""
+    def get_tags(self):
+        """Fetch all the tags defined by a user."""
+        self.tags_list = self.api.tags.get()
+        self.tags_by_id = {x['id']: x for x in self.tags_list}
+        self.tags_by_name = {x['name']: x for x in self.tags_list}
+
+    def get_or_create_tag_id_by_name(self, tag_name: str):
+        """Get the ID of an existing tag or create it if it doesn't exist."""
+        if not getattr(self, 'tags_list', False):
+            self.get_tags()
+        if tag_name in self.tags_by_name:
+            return self.tags_by_name[tag_name]['id']
+
+        new_tag = self.api.tags.post(name=tag_name)
+        if not isinstance(new_tag, dict):
+            raise TypeError("API returned a list, but a dict was expected")
+
+        return new_tag['id']
+
+    def apply_tags_to(self, apply_to: str, tag_names_list: list[str]):
+        """Apply a list of tags to a given task."""
+        # apply requested tags
+        self.get_tags()
+        for tag in tag_names_list:
+            tag_id = self.get_or_create_tag_id_by_name(tag)
+            self.api.tasks[apply_to]['tags'][tag_id].post()
+
+
+class TasksPrint(TagsHelper):
     """Put all tasks from `domain` to print"""
     domain = ''  # type: str
     more_tasks = []  # type: List[Dict[str, Any]]
+    tag = None
     def domain_format(self, task):
         """format task for domain"""
         raise NotImplementedError()
@@ -354,14 +385,34 @@ class TasksPrint(ApplicationWithApi):
         if self.nested_command:
             return
         super().main()
+        if self.tag:
+            self.get_tags()
         tasks = self.api.tasks.user.get(type=self.domain)
         tasks.extend(self.more_tasks)
         habits_len = len(tasks)
         ident_size = len(str(habits_len)) + 2
         number_format = '{{:{}d}}. '.format(ident_size - 2)
+
+        self.get_tags()
+
+        filter_by_tag = self.tag
+        if filter_by_tag:
+            filter_by_tag = self.get_or_create_tag_id_by_name(self.tag)
+
         for i, task in enumerate(tasks):
+            if filter_by_tag and filter_by_tag not in task['tags']:
+                continue
+
             i = number_format.format(i + 1) if self.config['show_numbers'] else ''
             res = i + prettify(self.domain_format(task))
+
+            tag_list = ""
+            if task['tags']:
+                tag_list = ", ".join([self.tags_by_id[x]["name"] for x in task['tags']])
+                tag_list = colors.dark_gray | " (" + tag_list + ")"
+
+            res = i + prettify(self.domain_format(task)) + tag_list
+
             print(res)
 
 
@@ -750,6 +801,11 @@ class ValorousPresence(CastNoArguments):
 class Habits(TasksPrint):  # pylint: disable=missing-docstring
     DESCRIPTION = _("List, up and down habit tasks")  # noqa: Q000
     domain = 'habits'
+    tag = cli.SwitchAttr(
+        ['-t', '--tag'],
+        default="",
+        help=_("Tag name to limit the list by")
+    )
     def domain_format(self, habit):  # pylint: disable=arguments-renamed
         score = ScoreInfo(self.config['show_style'], habit['value'])
         return _("{0} {text}").format(score, **habit)  # noqa: Q000
@@ -758,6 +814,11 @@ class Habits(TasksPrint):  # pylint: disable=missing-docstring
 class Dailys(TasksPrint):  # pylint: disable=missing-class-docstring
     DESCRIPTION = _("List, check, uncheck daily tasks")  # noqa: Q000
     domain = 'dailys'
+    tag = cli.SwitchAttr(
+        ['-t', '--tag'],
+        default="",
+        help=_("Tag name to limit the list by")
+    )
     def domain_format(self, daily):  # pylint: disable=arguments-renamed
         score = ScoreInfo(self.config['show_style'], daily['value'])
         check = CHECK if daily['completed'] else UNCHECK
@@ -778,6 +839,11 @@ class Dailys(TasksPrint):  # pylint: disable=missing-class-docstring
 class ToDos(TasksPrint):  # pylint: disable=missing-class-docstring
     DESCRIPTION = _("List, comlete, add or delete todo tasks")  # noqa: Q000
     domain = 'todos'
+    tag = cli.SwitchAttr(
+        ['-t', '--tag'],
+        default="",
+        help=_("Tag name to limit the list by")
+    )
     def domain_format(self, todo):  # pylint: disable=arguments-renamed
         score = ScoreInfo(self.config['show_style'], todo['value'])
         check = CHECK if todo['completed'] else UNCHECK
@@ -924,12 +990,17 @@ class HabitsChange(TasksChange):  # pylint: disable=missing-class-docstring,abst
 
 
 @Habits.subcommand('add')
-class HabitsAdd(ApplicationWithApi):  # pylint: disable=missing-class-docstring
+class HabitsAdd(TagsHelper):  # pylint: disable=missing-class-docstring
     DESCRIPTION = _("Add a habit <habit>")  # noqa: Q000
     priority = cli.SwitchAttr(
         ['-p', '--priority'],
         cli.Set('0.1', '1', '1.5', '2'), default='1',
         help=_("Priority (complexity) of a habit"))  # noqa: Q000
+    tags = cli.SwitchAttr(
+        ['-t', '--tag'],
+        default="",
+        help=_("List of tag names to add to the new task.")
+    )
     direction = cli.SwitchAttr(
         ['-d', '--direction'],
         cli.Set('positive', 'negative', 'both'), default='both',
@@ -941,13 +1012,20 @@ class HabitsAdd(ApplicationWithApi):  # pylint: disable=missing-class-docstring
             self.log.error(_("Empty habit text!"))  # noqa: Q000
             return 1
         super().main()
-        self.api.tasks.user.post(
+        response = self.api.tasks.user.post(
             type='habit', text=habit_str,
             priority=self.priority, up=(self.direction != 'negative'),
             down=self.direction != 'positive')
 
+        if not isinstance(response, dict):
+            raise TypeError("API returned a list, but a dict was expected")
+
         res = _("Added habit '{}' with priority {} and direction {}").format(  # noqa: Q000
             habit_str, self.priority, self.direction)
+
+        # apply requested tags
+        self.apply_tags_to(response["id"], self.tags.split(","))
+
         print(prettify(res))
         Habits.invoke(config_filename=self.config_filename)
         return None
@@ -1043,12 +1121,17 @@ class TodosDelete(TodosChange):  # pylint: disable=missing-class-docstring
 
 
 @ToDos.subcommand('add')
-class TodosAdd(ApplicationWithApi):  # pylint: disable=missing-class-docstring
+class TodosAdd(TagsHelper):  # pylint: disable=missing-class-docstring
     DESCRIPTION = _("Add a todo <todo>")  # noqa: Q000
     priority = cli.SwitchAttr(
         ['-p', '--priority'],
         cli.Set('0.1', '1', '1.5', '2'), default='1',
         help=_("Priority (complexity) of a todo"))  # noqa: Q000
+    tags = cli.SwitchAttr(
+        ['-t', '--tags'],
+        default="",
+        help=_("Comma separated list of tags to apply")
+    )
 
     def main(self, *todo: str):
         todo_str = ' '.join(todo)
@@ -1056,8 +1139,16 @@ class TodosAdd(ApplicationWithApi):  # pylint: disable=missing-class-docstring
             self.log.error(_("Empty todo text!"))  # noqa: Q000
             return 1
         super().main()
-        self.api.tasks.user.post(type='todo', text=todo_str, priority=self.priority)
+        response = self.api.tasks.user.post(type='todo', text=todo_str, priority=self.priority)
+        if not isinstance(response, dict):
+            raise TypeError("API returned a list, but a dict was expected")
+
         res = _("Added todo '{}' with priority {}").format(todo_str, self.priority)  # noqa: Q000
+
+        # apply requested tags
+        if self.tags:
+            self.apply_tags_to(response["id"], self.tags.split(","))
+
         print(prettify(res))
         ToDos.invoke(config_filename=self.config_filename)
         return 0
