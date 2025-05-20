@@ -469,7 +469,15 @@ class ListPets(Pets):
                     continue
 
                 if not pet_name_printed:
-                    print(f'  {pet}:')
+                    egg_text: str = ""
+                    egg_count: int = 0
+
+                    if pet in user['items']['eggs']:
+                        egg_count = user['items']['eggs'][pet]
+                    if egg_count > 0:
+                        egg_text = _(f"({egg_count} Eggs)")
+
+                    print(f'  {pet + ":"} {egg_text}')
                     pet_name_printed = True
 
                 if pet in special_pets and color != "Base":
