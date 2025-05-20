@@ -415,7 +415,7 @@ class Pets(ApplicationWithApi):
 @Pets.subcommand('list')
 class ListPets(Pets):
     """Lists all pets from the inventory."""
-    def main(self):  # pylint: disable=too-many-branches,too-many-locals
+    def main(self):  # pylint: disable=too-many-branches,too-many-locals,too-many-statements
         super().main()
         user = self.api.user.get()
         print(_('Pets:'))
@@ -426,6 +426,9 @@ class ListPets(Pets):
                          "Pig", "Dragon", "Cactus", "BearCub"]
         standard_colors = ["Base", "White", "Desert", "Red", "Shade", "Skeleton",
                            "Zombie", "CottonCandyBlue", "CottonCandyPink", "Golden"]
+        special_pets = ["VetranWolf", "Hydra", "Turkey", "PolarBearCub", "MantisShrimp",
+                        "JackOLantern", "Mammoth", "VetranTiger", "Phoenix", "MagicalBee",
+                        "Jackolope", "Orca", "Hippogriff", "Gryphatrice"]
 
         color_specifier = self.color_specifier
         if color_specifier:
@@ -436,6 +439,11 @@ class ListPets(Pets):
 
         # split pets into type and color
         pet_summaries = defaultdict(dict)
+
+        # force the standard pets to the top because dicts are now ordered
+        for pet in standard_pets:
+            pet_summaries[pet] = {}
+
         potion_color_list = set(user['items']['hatchingPotions'].keys())
         for pet in user['items']['pets']:
             (pettype, color) = pet.split('-')
@@ -463,6 +471,9 @@ class ListPets(Pets):
                 if not pet_name_printed:
                     print(f'  {pet}:')
                     pet_name_printed = True
+
+                if pet in special_pets and color != "Base":
+                    continue
 
                 pet_full_name = pet + '-' + color
                 pet_full_level = pet_summaries[pet].get(color, -1)
