@@ -423,7 +423,7 @@ class ListPets(Pets):
             color='Name', full_percentage='Fed', mount='Mount'))
 
         standard_pets = ["Wolf", "TigerCub", "PandaCub", "LionCub", "Fox",
-                         "Pig", "Dragon", "Cactus", "BearCub"]
+                         "FlyingPig", "Dragon", "Cactus", "BearCub"]
         standard_colors = ["Base", "White", "Desert", "Red", "Shade", "Skeleton",
                            "Zombie", "CottonCandyBlue", "CottonCandyPink", "Golden"]
         special_pets = ["VetranWolf", "Hydra", "Turkey", "PolarBearCub", "MantisShrimp",
