@@ -379,6 +379,15 @@ class Pets(ApplicationWithApi):
         ['-H', '--only-hatchable'],
         help=_('Only show hatchable pets with appropriate eggs'))  # noqa: Q000
 
+    standard_pets = ["Wolf", "TigerCub", "PandaCub", "LionCub", "Fox",
+                     "FlyingPig", "Dragon", "Cactus", "BearCub"]
+    standard_colors = ["Base", "White", "Desert", "Red", "Shade", "Skeleton",
+                       "Zombie", "CottonCandyBlue", "CottonCandyPink", "Golden"]
+    special_pets = ["VetranWolf", "Hydra", "Turkey", "PolarBearCub", "MantisShrimp",
+                    "JackOLantern", "Mammoth", "VetranTiger", "Phoenix", "MagicalBee",
+                    "Jackolope", "Orca", "Hippogriff", "Gryphatrice"]
+
+
     def get_full_percent(self, amount: int):
         """Return the percentage of "fullness" for a pet."""
         if amount == -1:
@@ -398,18 +407,61 @@ class Pets(ApplicationWithApi):
         combined = pet + '-' + color
 
         # check if pet exists or name is wrong
-        if not even_if_pet and user['items']['pets'].get(combined, 100) != -1:
+        if not even_if_pet and user['items']['pets'].get(combined, -1) != -1:
             return False
 
-        if user['items']['pets'].get(combined, 100) != -1 and combined in user['items']['mounts']:
-            # with both a pet and a mount we can never hatch this one
+        # do we have both a pet and a mount already?
+        if user['items']['pets'].get(combined, -1) != -1 and combined in user['items']['mounts']:
             return False
 
+        # do we have the required egg and potion?
         if color not in user['items']['hatchingPotions'] or pet not in user['items']['eggs']:
             return False
         if user['items']['hatchingPotions'][color] > 0 and user['items']['eggs'][pet] > 0:
             return True
+
         return False
+
+    def get_all_possible_filtered_pets(self, user: dict):
+        """Return a set of all possible pets filtered by user choices of type/color"""
+        color_specifier = self.color_specifier
+        if color_specifier:
+            color_specifier = color_specifier[0].capitalize() + color_specifier[1:]
+        pet_specifier = self.pet_specifier
+        if pet_specifier:
+            pet_specifier = pet_specifier[0].capitalize() + pet_specifier[1:]
+
+        # split pets into type and color
+        pet_summaries: defaultdict[Any, dict[str, int]] = defaultdict(dict)
+
+        potion_color_list = set(user['items']['hatchingPotions'].keys())
+        for pet in user['items']['pets']:
+            (pettype, color) = pet.split('-')
+            pet_summaries[pettype][color] = user['items']['pets'][pet]
+            if pettype in self.standard_pets:
+                # these get added all the time so build dynamically based on data
+                potion_color_list.add(color)
+
+        # truncate the results to just this pet
+        if pet_specifier:
+            pet_summaries = defaultdict(dict, { pet_specifier: pet_summaries[pet_specifier] })
+
+        for pet in pet_summaries:
+            if pet_specifier and pet != pet_specifier:
+                continue
+
+            color_list = self.standard_colors
+            if pet in self.standard_pets:
+                color_list = list(potion_color_list)
+
+            for color in color_list:
+                if color_specifier and color != color_specifier:
+                    continue
+
+                if color not in pet_summaries[pet]:
+                    pet_summaries[pet][color] = -1
+
+        return pet_summaries
 
 
 @Pets.subcommand('list')
@@ -422,49 +474,13 @@ class ListPets(Pets):
         print('  {color:<30}   {full_percentage:<11} {mount}'.format(
             color='Name', full_percentage='Fed', mount='Mount'))
 
-        standard_pets = ["Wolf", "TigerCub", "PandaCub", "LionCub", "Fox",
-                         "FlyingPig", "Dragon", "Cactus", "BearCub"]
-        standard_colors = ["Base", "White", "Desert", "Red", "Shade", "Skeleton",
-                           "Zombie", "CottonCandyBlue", "CottonCandyPink", "Golden"]
-        special_pets = ["VetranWolf", "Hydra", "Turkey", "PolarBearCub", "MantisShrimp",
-                        "JackOLantern", "Mammoth", "VetranTiger", "Phoenix", "MagicalBee",
-                        "Jackolope", "Orca", "Hippogriff", "Gryphatrice"]
-
-        color_specifier = self.color_specifier
-        if color_specifier:
-            color_specifier = color_specifier[0].capitalize() + color_specifier[1:]
-        pet_specifier = self.pet_specifier
-        if pet_specifier:
-            pet_specifier = pet_specifier[0].capitalize() + pet_specifier[1:]
-
-        # split pets into type and color
-        pet_summaries = defaultdict(dict)
-
-        # force the standard pets to the top because dicts are now ordered
-        for pet in standard_pets:
-            pet_summaries[pet] = {}
-
-        potion_color_list = set(user['items']['hatchingPotions'].keys())
-        for pet in user['items']['pets']:
-            (pettype, color) = pet.split('-')
-            pet_summaries[pettype][color] = user['items']['pets'][pet]
-            if pettype in standard_pets:
-                # these get added all the time so build dynamically based on data
-                potion_color_list.add(color)
+        # get a list of all possible summaries, possibly filtered
+        pet_summaries = self.get_all_possible_filtered_pets(user)
 
         for pet in pet_summaries:
-            if pet_specifier and pet != pet_specifier:
-                continue
             pet_name_printed = False
 
-            color_list = standard_colors
-            if pet in standard_pets:
-                color_list = potion_color_list
-
-            for color in color_list:
-                if color_specifier and color != color_specifier:
-                    continue
-
+            for color in pet_summaries[pet]:
                 if self.only_hatchable and not self.is_hatchable(user, pet, color):
                     continue
 
@@ -480,7 +496,7 @@ class ListPets(Pets):
                     print(f'  {pet + ":"} {egg_text}')
                     pet_name_printed = True
 
-                if pet in special_pets and color != "Base":
+                if pet in self.special_pets and color != "Base":
                     continue
 
                 pet_full_name = pet + '-' + color
@@ -568,29 +584,19 @@ class HatchPet(Pets):
     def main(self):
         super().main()
         user = self.api.user.get()
-        pets = user['items']['pets']
 
-        color_specifier = self.color_specifier
-        if color_specifier:
-            color_specifier = color_specifier[0].capitalize() + color_specifier[1:]
-        pet_specifier = self.pet_specifier
-        if pet_specifier:
-            pet_specifier = pet_specifier[0].capitalize() + pet_specifier[1:]
+        # get a list of all possible summaries, possibly filtered
+        pet_summaries = self.get_all_possible_filtered_pets(user)
 
-        for pet in pets:
-            (pettype, color) = pet.split('-')
+        for pet in pet_summaries:
+            for color in pet_summaries[pet]:
 
-            if pet_specifier and pettype != pet_specifier:
-                continue
-            if color_specifier and color != color_specifier:
-                continue
-
-            if self.is_hatchable(user, pettype, color):
-                print(_(f'hatching {color} {pettype}'))
-                self.api.user.hatch[pettype][color].post()
-                time.sleep(self.sleep_time)
-            else:
-                print(_(f'NOT hatching {color} {pettype}'))
+                if self.is_hatchable(user, pet, color):
+                    print(_(f'hatching {color} {pet}'))
+                    self.api.user.hatch[pet][color].post()
+                    time.sleep(self.sleep_time)
+                else:
+                    print(_(f'NOT hatching {color} {pet}'))
 
 
 @HabiticaCli.subcommand('food')
