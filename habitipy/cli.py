@@ -594,6 +594,11 @@ class HatchPet(Pets):
                 if self.is_hatchable(user, pet, color):
                     print(_(f'hatching {color} {pet}'))
                     self.api.user.hatch[pet][color].post()
+
+                    # deduct what we just used from our inventory
+                    user['items']['hatchingPotions'][color] -= 1
+                    user['items']['eggs'][pet] -= 1
+
                     time.sleep(self.sleep_time)
                 else:
                     print(_(f'NOT hatching {color} {pet}'))
