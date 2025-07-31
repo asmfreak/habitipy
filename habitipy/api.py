@@ -222,7 +222,8 @@ class Habitipy:
     def _make_headers(self):
         headers = {
             'x-api-user': self._conf['login'],
-            'x-api-key': self._conf['password']
+            'x-api-key': self._conf['password'],
+            'x-client': 'python-habitipy',
         } if self._conf else {}
         headers.update({'content-type': API_CONTENT_TYPE})
         return headers
