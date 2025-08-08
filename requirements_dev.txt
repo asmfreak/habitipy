@@ -8,4 +8,4 @@ nose2==0.15.1
 coverage==7.8.0
 hypothesis==6.125.2
 pylint==3.3.7
-responses==0.25.7
+responses==0.25.8
