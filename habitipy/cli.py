@@ -778,6 +778,9 @@ class Dailys(TasksPrint):  # pylint: disable=missing-class-docstring
 class ToDos(TasksPrint):  # pylint: disable=missing-class-docstring
     DESCRIPTION = _("List, comlete, add or delete todo tasks")  # noqa: Q000
     domain = 'todos'
+    full = cli.Flag(
+        ['-f', '--full'],
+        help=_("Print todos with checklist items."))  # noqa: Q000
     def domain_format(self, todo):  # pylint: disable=arguments-renamed
         score = ScoreInfo(self.config['show_style'], todo['value'])
         check = CHECK if todo['completed'] else UNCHECK
@@ -788,7 +791,11 @@ class ToDos(TasksPrint):  # pylint: disable=missing-class-docstring
                 checklist_done,
                 len(todo['checklist'])
             ) if todo['checklist'] else ''
-        res = _("{1}{0}{text}{2}").format(check, score, checklist, **todo)  # noqa: Q000
+        checklist_full = ''
+        if self.full and len(todo['checklist']) > 0:
+            for item in todo['checklist']:
+                if not item['completed']: checklist_full = checklist_full + "\n       - " + item['text']
+        res = _("{1}{0}{text}{2}{3}").format(check, score, checklist, checklist_full, **todo)  # noqa: Q000
         return res
 
 
@@ -1049,6 +1056,9 @@ class TodosAdd(ApplicationWithApi):  # pylint: disable=missing-class-docstring
         ['-p', '--priority'],
         cli.Set('0.1', '1', '1.5', '2'), default='1',
         help=_("Priority (complexity) of a todo"))  # noqa: Q000
+    checks = cli.SwitchAttr(
+        ['-l', '--check'], list=True,
+        help=_("Add <check> to checklist for a todo"))
 
     def main(self, *todo: str):
         todo_str = ' '.join(todo)
@@ -1056,7 +1066,10 @@ class TodosAdd(ApplicationWithApi):  # pylint: disable=missing-class-docstring
             self.log.error(_("Empty todo text!"))  # noqa: Q000
             return 1
         super().main()
-        self.api.tasks.user.post(type='todo', text=todo_str, priority=self.priority)
+        checklist = list()
+        for item in self.checks:
+            checklist.append({'text':item, 'completed':False})
+        self.api.tasks.user.post(type='todo', text=todo_str, priority=self.priority, checklist=checklist)
         res = _("Added todo '{}' with priority {}").format(todo_str, self.priority)  # noqa: Q000
         print(prettify(res))
         ToDos.invoke(config_filename=self.config_filename)
