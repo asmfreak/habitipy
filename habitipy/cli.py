@@ -51,8 +51,13 @@ UNCHECK = {
 
 def is_uuid(u):
     """validator for plumbum prompt"""
-    if isinstance(u, str) and u.replace('-', '') == uuid.UUID(u).hex:
-        return u
+    if isinstance(u, str):
+        try:
+            valid = u.replace('-', '') == uuid.UUID(u).hex
+        except ValueError:
+            return False
+        if valid:
+            return u
     return False
 
 
